@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Remove Metadata from Word, PDF &amp; Photos — Online, 100% Local | Barecopy</title>
+<meta name="description" content="See the hidden author, company, edit history and GPS location inside your files — then remove it. Works with DOCX, XLSX, PPTX, PDF, JPG, PNG, WebP. Runs entirely in your browser: nothing is uploaded.">
+<link rel="canonical" href="https://barecopy.com/">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Your files carry your name. Remove it — locally.">
+<meta property="og:description" content="Barecopy shows the hidden metadata in Word, PDF and photos, then strips it in your browser. Nothing is uploaded, ever.">
+<meta property="og:url" content="https://barecopy.com/">
+<meta property="og:image" content="https://barecopy.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Barecopy",
+"applicationCategory":"UtilitiesApplication","operatingSystem":"Any (browser)",
+"description":"Inspect and remove hidden metadata from Word, Excel, PowerPoint, PDF and image files. All processing happens locally in the browser.",
+"offers":[{"@type":"Offer","price":"0","priceCurrency":"EUR","name":"Free"},
+{"@type":"Offer","price":"4","priceCurrency":"EUR","name":"Pro — monthly subscription"}]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F5F0;
+    --card:#FFFFFF;
+    --ink:#1C2430;
+    --ink-soft:#5B6472;
+    --ink-faint:#8A8F98;
+    --line:#DCD9CF;
+    --line-soft:#E8E6DE;
+    --leak:#C2273A;
+    --leak-bg:#FBEEEF;
+    --leak-line:#EFCBD0;
+    --clean:#1E7F4F;
+    --clean-bg:#E9F4EE;
+    --clean-line:#C4E0D0;
+    --warn:#8A5A00;
+    --warn-bg:#FBF3E2;
+    --warn-line:#EBD9AE;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.55;
+    min-height:100vh;
+  }
+  .wrap{max-width:780px;margin:0 auto;padding:0 20px}
+
+  /* ---------- header ---------- */
+  header{
+    border-bottom:1px solid var(--line);
+    background:var(--paper);
+  }
+  .head-in{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 0;gap:12px;flex-wrap:wrap;
+  }
+  .wordmark{
+    font-family:var(--cond);font-weight:700;font-size:20px;
+    letter-spacing:.04em;text-transform:uppercase;
+    display:flex;align-items:center;gap:9px;
+  }
+  .wordmark .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--ink);position:relative;flex:0 0 auto;
+  }
+  .wordmark .dot::after{
+    content:"";position:absolute;inset:3px;border-radius:50%;background:var(--paper);
+  }
+  .local-badge{
+    font-family:var(--mono);font-size:11px;font-weight:500;
+    letter-spacing:.08em;text-transform:uppercase;
+    border:1px solid var(--ink);border-radius:3px;
+    padding:5px 9px;display:inline-flex;align-items:center;gap:7px;
+    white-space:nowrap;
+  }
+  .local-badge .pulse{
+    width:7px;height:7px;border-radius:50%;background:var(--clean);
+    flex:0 0 auto;
+  }
+
+  /* ---------- hero ---------- */
+  .hero{padding:52px 0 8px}
+  h1{
+    font-weight:650;font-size:clamp(28px,5.4vw,40px);
+    line-height:1.14;letter-spacing:-.015em;max-width:15ch;
+  }
+  h1 .strike{
+    position:relative;white-space:nowrap;
+  }
+  h1 .strike::after{
+    content:"";position:absolute;left:-2%;right:-2%;top:52%;
+    height:.14em;background:var(--leak);border-radius:1px;
+    transform:rotate(-1.2deg);
+  }
+  .sub{
+    margin-top:16px;color:var(--ink-soft);max-width:52ch;font-size:17px;
+  }
+  .sub strong{color:var(--ink);font-weight:600}
+
+  /* ---------- dropzone ---------- */
+  .dropzone{
+    margin-top:30px;
+    border:1.5px dashed var(--ink-faint);
+    border-radius:10px;
+    background:var(--card);
+    padding:44px 24px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease, transform .15s ease;
+    outline:none;
+  }
+  .dropzone:hover,.dropzone:focus-visible{border-color:var(--ink)}
+  .dropzone:focus-visible{box-shadow:0 0 0 3px rgba(28,36,48,.18)}
+  .dropzone.dragover{
+    border-color:var(--ink);background:#FDFDFB;transform:scale(1.006);
+  }
+  .dz-glyph{
+    font-family:var(--mono);font-size:13px;letter-spacing:.06em;
+    color:var(--ink-faint);display:block;margin-bottom:14px;
+    user-select:none;
+  }
+  .dz-title{font-weight:600;font-size:17px}
+  .dz-formats{
+    margin-top:10px;font-family:var(--mono);font-size:12px;
+    color:var(--ink-soft);letter-spacing:.03em;
+  }
+  .dz-note{
+    margin-top:14px;font-size:13px;color:var(--ink-faint);
+  }
+  input[type=file]{display:none}
+
+  /* ---------- actions bar ---------- */
+  .actions{
+    margin-top:22px;display:none;align-items:center;justify-content:space-between;
+    gap:12px;flex-wrap:wrap;
+  }
+  .actions.show{display:flex}
+  .files-count{
+    font-family:var(--mono);font-size:12px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ink-soft);
+  }
+
+  /* ---------- buttons ---------- */
+  .btn{
+    font-family:var(--sans);font-weight:600;font-size:14.5px;
+    border-radius:6px;border:1px solid var(--ink);
+    padding:10px 18px;cursor:pointer;
+    background:var(--ink);color:var(--paper);
+    transition:opacity .12s ease, transform .06s ease;
+  }
+  .btn:hover{opacity:.88}
+  .btn:active{transform:translateY(1px)}
+  .btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .btn.ghost{background:transparent;color:var(--ink)}
+  .btn:disabled{opacity:.45;cursor:default;transform:none}
+  .btn.done{background:var(--clean);border-color:var(--clean)}
+
+  /* ---------- file cards ---------- */
+  .cards{margin-top:8px}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin-top:16px;
+    overflow:hidden;
+    animation:cardIn .28s ease both;
+  }
+  @keyframes cardIn{
+    from{opacity:0;transform:translateY(8px)}
+    to{opacity:1;transform:none}
+  }
+  .card-head{
+    display:flex;align-items:flex-start;justify-content:space-between;
+    gap:12px;padding:16px 18px 14px;border-bottom:1px solid var(--line-soft);
+  }
+  .fmeta{min-width:0}
+  .fname{
+    font-weight:600;font-size:15.5px;word-break:break-all;line-height:1.35;
+  }
+  .finfo{
+    margin-top:3px;font-family:var(--mono);font-size:11.5px;
+    letter-spacing:.05em;color:var(--ink-soft);text-transform:uppercase;
+  }
+  .stamp{
+    flex:0 0 auto;
+    font-family:var(--cond);font-weight:700;font-size:12px;
+    letter-spacing:.14em;text-transform:uppercase;
+    border:1.5px solid currentColor;border-radius:3px;
+    padding:4px 9px;transform:rotate(2deg);
+    user-select:none;
+  }
+  .stamp.analyzed{color:var(--leak)}
+  .stamp.cleanfile{color:var(--clean)}
+  .stamp.cleaned{color:var(--clean);animation:stampIn .3s cubic-bezier(.2,1.4,.4,1) both}
+  .stamp.working{color:var(--ink-faint);transform:none;border-style:dashed}
+  .stamp.failed{color:var(--warn)}
+  @keyframes stampIn{
+    from{opacity:0;transform:rotate(2deg) scale(1.6)}
+    to{opacity:1;transform:rotate(2deg) scale(1)}
+  }
+
+  .card-body{padding:6px 18px 16px}
+  .report-label{
+    font-family:var(--cond);font-weight:600;font-size:11.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);
+    margin:12px 0 6px;
+  }
+  .rows{border-top:1px solid var(--line-soft)}
+  .row{
+    display:flex;gap:14px;align-items:baseline;
+    padding:8px 0;border-bottom:1px solid var(--line-soft);
+    animation:rowIn .25s ease both;
+  }
+  @keyframes rowIn{
+    from{opacity:0;transform:translateX(-4px)}
+    to{opacity:1;transform:none}
+  }
+  .row .k{
+    flex:0 0 148px;font-size:13px;color:var(--ink-soft);
+  }
+  .row .v{
+    font-family:var(--mono);font-size:13px;word-break:break-word;min-width:0;
+  }
+  .row.leak .v{
+    color:var(--leak);font-weight:500;
+    background:var(--leak-bg);border:1px solid var(--leak-line);
+    border-radius:3px;padding:1px 6px;
+  }
+  .card.is-clean .row.leak .v{
+    color:var(--ink-faint);background:transparent;border-color:transparent;
+    text-decoration:line-through;padding:1px 0;
+  }
+  .leak-summary{
+    margin-top:12px;font-size:13.5px;font-weight:600;color:var(--leak);
+  }
+  .leak-summary.none{color:var(--clean)}
+  .card.is-clean .leak-summary{color:var(--clean)}
+  .warnbox{
+    margin-top:12px;background:var(--warn-bg);border:1px solid var(--warn-line);
+    border-radius:6px;padding:10px 12px;font-size:13px;color:var(--warn);
+    line-height:1.5;
+  }
+  .errbox{
+    margin-top:12px;background:var(--leak-bg);border:1px solid var(--leak-line);
+    border-radius:6px;padding:10px 12px;font-size:13px;color:var(--leak);
+    line-height:1.5;
+  }
+  .card-foot{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:0 18px 16px;
+  }
+  .verify-hint{
+    font-size:12.5px;color:var(--ink-faint);
+  }
+  .spin{
+    display:inline-block;width:14px;height:14px;border-radius:50%;
+    border:2px solid var(--line);border-top-color:var(--ink);
+    animation:spin .7s linear infinite;vertical-align:-2px;margin-right:8px;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ---------- trust / how ---------- */
+  .how{
+    margin-top:64px;border-top:1px solid var(--line);padding-top:36px;
+  }
+  .how h2{
+    font-family:var(--cond);font-weight:700;font-size:14px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);
+  }
+  .how-grid{
+    margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:26px;
+  }
+  .how-item h3{font-size:15px;font-weight:600;margin-bottom:6px}
+  .how-item p{font-size:13.5px;color:var(--ink-soft);line-height:1.55}
+  .how-item .k-mono{font-family:var(--mono);font-size:12px}
+  @media (max-width:640px){
+    .how-grid{grid-template-columns:1fr;gap:20px}
+    .row .k{flex-basis:118px}
+  }
+
+  footer{
+    margin-top:56px;border-top:1px solid var(--line);
+  }
+  .foot-in{
+    padding:22px 0 40px;display:flex;justify-content:space-between;gap:14px;
+    flex-wrap:wrap;font-size:13px;color:var(--ink-faint);
+  }
+  .foot-in a{color:var(--ink-soft)}
+
+  /* ---------- pro / pricing ---------- */
+  .pro{margin-top:64px;border-top:1px solid var(--line);padding-top:36px}
+  .pro h2{font-family:var(--cond);font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .tiers{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .tier{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
+  .tier.highlight{border-color:var(--ink);border-width:1.5px}
+  .tier h3{font-size:16px;font-weight:650}
+  .tier .price{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:6px}
+  .tier .price small{font-size:12px;color:var(--ink-soft);font-weight:400}
+  .tier ul{margin:14px 0 0 0;padding:0;list-style:none}
+  .tier li{font-size:13.5px;color:var(--ink-soft);padding:5px 0;border-top:1px solid var(--line-soft)}
+  .tier li::before{content:"— ";color:var(--ink-faint)}
+  .tier .btn{margin-top:16px;width:100%}
+  .license-row{margin-top:14px;display:flex;gap:8px}
+  .license-row input{flex:1;min-width:0;font-family:var(--mono);font-size:13px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
+  .license-row input:focus{outline:2px solid var(--ink);outline-offset:1px}
+  .license-msg{margin-top:8px;font-size:12.5px;color:var(--ink-soft);min-height:1em}
+  .license-msg.ok{color:var(--clean)} .license-msg.err{color:var(--leak)}
+  .pro-chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--clean);color:var(--clean);border-radius:3px;padding:3px 7px}
+  /* ---------- faq ---------- */
+  .faq{margin-top:64px;border-top:1px solid var(--line);padding-top:36px}
+  .faq h2{font-family:var(--cond);font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .faq details{border-bottom:1px solid var(--line-soft);padding:14px 0}
+  .faq summary{font-weight:600;font-size:15px;cursor:pointer;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq details[open] summary::before{content:"–"}
+  .faq p{margin-top:8px;font-size:14px;color:var(--ink-soft);line-height:1.6}
+  @media (max-width:640px){.tiers{grid-template-columns:1fr}}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap head-in">
+    <div class="wordmark"><span class="dot" aria-hidden="true"></span>Barecopy</div>
+    <div class="local-badge" title="All processing happens in this browser tab. You can disconnect from the internet and it still works.">
+      <span class="pulse" aria-hidden="true"></span>Runs locally · nothing uploaded
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>Your files carry <span class="strike">your&nbsp;name</span>.</h1>
+    <p class="sub">Documents and photos hide the author, company, edit history and even GPS location in metadata. Drop a file to see what it reveals, then download a clean copy. <strong>Everything runs in your browser — the file never leaves this device.</strong></p>
+  </section>
+
+  <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose files to inspect">
+    <span class="dz-glyph">[ ▒▒▒▒▒▒▒▒▒▒ ]</span>
+    <div class="dz-title">Drop files here or tap to choose</div>
+    <div class="dz-formats">DOCX · XLSX · PPTX · PDF · JPG · PNG · WEBP</div>
+    <div class="dz-note">Files are read by this page only. Airplane mode works too.</div>
+    <input type="file" id="fileInput" multiple
+      accept=".docx,.xlsx,.pptx,.pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp">
+  </div>
+
+  <div class="actions" id="actionsBar">
+    <span class="files-count" id="filesCount"></span>
+    <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="pro-chip" id="proChip" style="display:none">Pro active</span>
+      <button class="btn ghost" id="zipBtn" style="display:none">ZIP + report</button>
+      <button class="btn" id="cleanAllBtn">Clean all &amp; download</button>
+    </span>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <section class="how">
+    <h2>What gets removed</h2>
+    <div class="how-grid">
+      <div class="how-item">
+        <h3>Word, Excel, PowerPoint</h3>
+        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file.</p>
+      </div>
+      <div class="how-item">
+        <h3>PDF</h3>
+        <p>Author, title, subject, keywords, creator and producer application, creation and modification dates — cleared from both the info dictionary and embedded XMP metadata.</p>
+      </div>
+      <div class="how-item">
+        <h3>Photos</h3>
+        <p>All EXIF data: GPS coordinates, camera make and model, capture date, editing software. Metadata segments are cut out at byte level — pixels are copied untouched, so the clean copy is lossless. Works with full-size phone photos.</p>
+      </div>
+    </div>
+    <div class="how-grid" style="margin-top:26px">
+      <div class="how-item">
+        <h3>Honest limits</h3>
+        <p>Tracked changes and comments in Word are content, not metadata — Barecopy detects them and warns you, but you should accept or reject them in Word before sending.</p>
+      </div>
+      <div class="how-item">
+        <h3>Verify it yourself</h3>
+        <p>Reopen the clean copy and check File → Info, or right-click → Properties → Details. The identifying fields will be empty.</p>
+      </div>
+      <div class="how-item">
+        <h3>Zero servers</h3>
+        <p>This page has no backend and sends no requests with your data. Open DevTools → Network while cleaning a file: nothing leaves.</p>
+      </div>
+    </div>
+  <section class="pro" id="pro">
+    <h2>Pricing</h2>
+    <div class="tiers">
+      <div class="tier">
+        <h3>Free</h3>
+        <div class="price">€0</div>
+        <ul>
+          <li>All formats, full cleaning</li>
+          <li>Unlimited files, one by one</li>
+          <li>Batch actions up to 3 files</li>
+          <li>Runs locally — nothing uploaded</li>
+        </ul>
+      </div>
+      <div class="tier highlight">
+        <h3>Pro</h3>
+        <div class="price">€4 <small>per month · cancel anytime from your receipt email</small></div>
+        <ul>
+          <li>Unlimited batch — clean a whole folder at once</li>
+          <li>Everything as one ZIP download</li>
+          <li>Verification report: every removed field + SHA-256 of each clean file</li>
+          <li>Still 100% local — a lightweight subscription check is the only network call</li>
+        </ul>
+        <button class="btn" id="buyBtn">Get Pro — €4/mo</button>
+        <div class="license-row">
+          <input id="licenseInput" type="text" placeholder="Paste license key" autocomplete="off" spellcheck="false">
+          <button class="btn ghost" id="activateBtn">Activate</button>
+        </div>
+        <div class="license-msg" id="licenseMsg"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq">
+    <h2>Questions</h2>
+    <details>
+      <summary>How do I remove the author name from a Word document?</summary>
+      <p>Drop the .docx above. Barecopy shows the author, "last modified by", company and every custom property, then produces a copy with all of them cleared — including fields Word's own Document Inspector misses on Mac. The file never leaves your device.</p>
+    </details>
+    <details>
+      <summary>Does exporting Word to PDF remove metadata?</summary>
+      <p>No. The author name, creator application and timestamps are carried over into the PDF's info dictionary and XMP block. Clean the PDF here after exporting, or clean the Word file before.</p>
+    </details>
+    <details>
+      <summary>How is this different from uploading to an online metadata remover?</summary>
+      <p>You are removing metadata precisely because the file is sensitive — sending it to someone's server defeats the point. Barecopy is a page of JavaScript that processes files inside your browser. Disconnect from the internet after loading the page: it still works.</p>
+    </details>
+    <details>
+      <summary>Do cleaned photos lose quality?</summary>
+      <p>No. Metadata segments (EXIF, GPS, IPTC, comments) are cut out at byte level and the image data is copied untouched — the clean copy is pixel-identical, with the color profile preserved.</p>
+    </details>
+    <details>
+      <summary>What does Barecopy not remove?</summary>
+      <p>Tracked changes and comments in Word are document content, not metadata. Barecopy detects them and warns you; accept or reject them in Word before sending. Password-protected PDFs are refused rather than risk corrupting them.</p>
+    </details>
+    <details>
+      <summary>What exactly does the Pro verification report contain?</summary>
+      <p>A plain-text record generated locally: for each file, every metadata field that was found and removed, any warnings, and the SHA-256 checksum of the clean copy — useful when you need to show a client or a court exactly what was scrubbed and prove which file version you sent.</p>
+    </details>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy v1.1 — clean documents before you send them.</span>
+    <span><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="#pro">Pro</a></span>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ---------------- deploy config ----------------
+   Fill the two TODO values after creating the Polar product
+   (Dashboard → Products → Barecopy Pro → Checkout Link;
+    Dashboard → Settings → General → Organization ID). */
+const BC_CONFIG = {
+  version: "1.2.0",
+  freeBatchLimit: 3,
+  polarApi: "https://api.polar.sh",
+  polarOrgId: "TODO_POLAR_ORG_ID",
+  checkoutUrl: "TODO_POLAR_CHECKOUT_URL",
+  revalidateHours: 24, // how often an active subscription is re-checked
+  graceDays: 7         // offline grace before Pro pauses
+};
+
+/* ---------------- state & dom ---------------- */
+const files = new Map(); // id -> record
+let nextId = 1;
+
+const $drop = document.getElementById("dropzone");
+const $input = document.getElementById("fileInput");
+const $cards = document.getElementById("cards");
+const $bar = document.getElementById("actionsBar");
+const $count = document.getElementById("filesCount");
+const $cleanAll = document.getElementById("cleanAllBtn");
+
+/* ---------------- helpers ---------------- */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
+}
+function fmtSize(bytes){
+  if(bytes < 1024) return bytes + " B";
+  if(bytes < 1048576) return (bytes/1024).toFixed(0) + " KB";
+  return (bytes/1048576).toFixed(1) + " MB";
+}
+function fmtDate(d){
+  if(!d) return "";
+  try{
+    if(!(d instanceof Date)) d = new Date(d);
+    if(isNaN(d)) return String(d);
+    return d.toISOString().replace("T"," ").slice(0,16) + " UTC";
+  }catch(e){ return String(d); }
+}
+function extOf(name){
+  const m = /\.([a-z0-9]+)$/i.exec(name || "");
+  return m ? m[1].toLowerCase() : "";
+}
+function cleanName(name){
+  const i = name.lastIndexOf(".");
+  return i > 0 ? name.slice(0,i) + "_clean" + name.slice(i) : name + "_clean";
+}
+function download(blob, name){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function readBuffer(file){
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(new Error("Could not read the file from disk. Try selecting it again."));
+    r.readAsArrayBuffer(file);
+  });
+}
+
+/* ---------------- intake ---------------- */
+const OOXML = { docx:"Word document", xlsx:"Excel workbook", pptx:"PowerPoint presentation" };
+const IMG = { jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", webp:"image/webp" };
+
+$drop.addEventListener("click", () => $input.click());
+$drop.addEventListener("keydown", e => {
+  if(e.key === "Enter" || e.key === " "){ e.preventDefault(); $input.click(); }
+});
+["dragenter","dragover"].forEach(ev =>
+  $drop.addEventListener(ev, e => { e.preventDefault(); $drop.classList.add("dragover"); })
+);
+["dragleave","drop"].forEach(ev =>
+  $drop.addEventListener(ev, e => { e.preventDefault(); $drop.classList.remove("dragover"); })
+);
+$drop.addEventListener("drop", e => handleFiles(e.dataTransfer.files));
+$input.addEventListener("change", () => { handleFiles($input.files); $input.value = ""; });
+
+function handleFiles(list){
+  for(const f of list) addFile(f);
+  refreshBar();
+}
+
+function addFile(file){
+  const id = nextId++;
+  const ext = extOf(file.name);
+  const rec = {
+    id, file, ext,
+    kind: OOXML[ext] ? "ooxml" : (ext === "pdf" ? "pdf" : (IMG[ext] ? "image" : "unsupported")),
+    fields: [], warnings: [], error: null,
+    leaks: 0, status: "working", cleanedBlob: null
+  };
+  files.set(id, rec);
+  renderCard(rec);
+
+  if(rec.kind === "unsupported"){
+    rec.status = "failed";
+    rec.error = ext === "doc" || ext === "xls" || ext === "ppt"
+      ? "Legacy ." + ext + " format isn't supported. Open it in Office and save as ." + ext + "x, then drop it here."
+      : "This file type isn't supported yet. Supported: DOCX, XLSX, PPTX, PDF, JPG, PNG, WEBP.";
+    renderCard(rec);
+    return;
+  }
+  if(file.size > 150 * 1048576){
+    rec.status = "failed";
+    rec.error = "File is over 150 MB. In-browser processing works best with smaller files.";
+    renderCard(rec);
+    return;
+  }
+  analyze(rec).catch(err => {
+    rec.status = "failed";
+    rec.error = err && err.message ? err.message : "Could not analyze this file.";
+    renderCard(rec);
+  });
+}
+
+async function analyze(rec){
+  const buf = await readBuffer(rec.file);
+  rec.buffer = buf;
+  if(rec.kind === "ooxml") await analyzeOoxml(rec, buf);
+  else if(rec.kind === "pdf") await analyzePdf(rec, buf);
+  else await analyzeImage(rec, buf);
+  rec.leaks = rec.fields.filter(f => f.leak && f.value).length;
+  rec.status = "analyzed";
+  renderCard(rec);
+  refreshBar();
+}
+
+/* ---------------- OOXML (docx / xlsx / pptx) ---------------- */
+const CORE_FIELDS = [
+  ["creator", "Author", true],
+  ["lastModifiedBy", "Last modified by", true],
+  ["company", "Company", true],          // rare in core, usually app.xml
+  ["title", "Title", false],
+  ["subject", "Subject", false],
+  ["description", "Comments field", true],
+  ["keywords", "Keywords", false],
+  ["category", "Category", false],
+  ["contentStatus", "Content status", false],
+  ["revision", "Revision number", false],
+  ["created", "Created", false],
+  ["modified", "Last modified", false],
+  ["lastPrinted", "Last printed", false]
+];
+
+function xmlDoc(str){
+  return new DOMParser().parseFromString(str, "application/xml");
+}
+function allLocal(doc, local){
+  const out = [], all = doc.getElementsByTagName("*");
+  for(let i = 0; i < all.length; i++){
+    if(all[i].localName === local) out.push(all[i]);
+  }
+  return out; // duplicated elements are invalid OOXML but must not survive cleaning
+}
+
+async function analyzeOoxml(rec, buf){
+  let zip;
+  try{ zip = await JSZip.loadAsync(buf); }
+  catch(e){ throw new Error("This file doesn't look like a valid Office document (the internal package can't be opened)."); }
+  rec.zip = zip;
+
+  // core.xml
+  const coreFile = zip.file("docProps/core.xml");
+  if(coreFile){
+    const core = xmlDoc(await coreFile.async("string"));
+    for(const [local, label, leak] of CORE_FIELDS){
+      const vals = [];
+      for(const el of allLocal(core, local)){
+        let v = el.textContent.trim();
+        if(!v) continue;
+        if(local === "created" || local === "modified" || local === "lastPrinted") v = fmtDate(v);
+        if(vals.indexOf(v) === -1) vals.push(v);
+      }
+      if(vals.length) rec.fields.push({ label, value: vals.join(" / "), leak });
+    }
+  }
+
+  // app.xml
+  const appFile = zip.file("docProps/app.xml");
+  if(appFile){
+    const app = xmlDoc(await appFile.async("string"));
+    const grab = (local, label, leak, map) => {
+      const vals = [];
+      for(const el of allLocal(app, local)){
+        let v = el.textContent.trim();
+        if(!v) continue;
+        if(map){ v = map(v); if(v == null) continue; }
+        if(vals.indexOf(v) === -1) vals.push(v);
+      }
+      if(vals.length) rec.fields.push({ label, value: vals.join(" / "), leak });
+    };
+    grab("Company", "Company", true);
+    grab("Manager", "Manager", true);
+    grab("Application", "Created with", false);
+    grab("Template", "Template", true);
+    grab("TotalTime", "Total editing time", true, v => {
+      const m = parseInt(v, 10);
+      if(m === 0) return null; // zero is not a leak
+      return isNaN(m) ? v : (m >= 60 ? Math.floor(m/60) + " h " + (m%60) + " min" : m + " min");
+    });
+  }
+
+  // custom.xml
+  const customFile = zip.file("docProps/custom.xml");
+  if(customFile){
+    const cust = xmlDoc(await customFile.async("string"));
+    const props = cust.getElementsByTagName("*");
+    for(let i = 0; i < props.length; i++){
+      if(props[i].localName === "property"){
+        const nm = props[i].getAttribute("name") || "Custom property";
+        const val = props[i].textContent.trim();
+        if(val) rec.fields.push({ label: "Custom · " + nm, value: val, leak: true });
+      }
+    }
+  }
+
+  // thumbnail
+  rec.thumbPath = null;
+  for(const p of ["docProps/thumbnail.jpeg","docProps/thumbnail.jpg","docProps/thumbnail.emf","docProps/thumbnail.wmf","docProps/thumbnail.png"]){
+    if(zip.file(p)){ rec.thumbPath = p; rec.fields.push({ label:"Preview thumbnail", value:"embedded image of page 1", leak:true }); break; }
+  }
+
+  // content warnings (docx)
+  if(rec.ext === "docx"){
+    const docXmlFile = zip.file("word/document.xml");
+    if(docXmlFile){
+      const s = await docXmlFile.async("string");
+      if(s.indexOf("<w:ins ") !== -1 || s.indexOf("<w:del ") !== -1){
+        rec.warnings.push("Tracked changes found in the text. They contain editor names and deleted passages — accept or reject them in Word before sending. Metadata cleaning does not remove them.");
+      }
+    }
+    if(zip.file("word/comments.xml")){
+      rec.warnings.push("Comments found in the document. They include commenter names — delete them in Word before sending.");
+    }
+  }
+  if(rec.ext === "xlsx"){
+    let hasHidden = false;
+    zip.forEach(path => { if(/^xl\/comments\d*\.xml$/.test(path)) hasHidden = true; });
+    if(hasHidden) rec.warnings.push("Cell comments found — they may include reviewer names. Remove them in Excel before sending.");
+  }
+}
+
+const CLEAN_CORE =
+'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+'<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" ' +
+'xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" ' +
+'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+'<dc:creator></dc:creator><cp:lastModifiedBy></cp:lastModifiedBy>' +
+'</cp:coreProperties>';
+
+const CLEAN_CUSTOM =
+'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+'<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/custom-properties" ' +
+'xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"></Properties>';
+
+async function cleanOoxml(rec){
+  const zip = rec.zip;
+  if(zip.file("docProps/core.xml")) zip.file("docProps/core.xml", CLEAN_CORE);
+  if(zip.file("docProps/custom.xml")) zip.file("docProps/custom.xml", CLEAN_CUSTOM);
+
+  const appFile = zip.file("docProps/app.xml");
+  if(appFile){
+    const app = xmlDoc(await appFile.async("string"));
+    for(const local of ["Company","Manager","Template"]){
+      for(const el of allLocal(app, local)) el.textContent = "";
+    }
+    for(const el of allLocal(app, "TotalTime")) el.textContent = "0";
+    zip.file("docProps/app.xml", new XMLSerializer().serializeToString(app));
+  }
+
+  if(rec.thumbPath){
+    zip.remove(rec.thumbPath);
+    const relsFile = zip.file("_rels/.rels");
+    if(relsFile){
+      const rels = xmlDoc(await relsFile.async("string"));
+      const list = rels.getElementsByTagName("*");
+      for(let i = list.length - 1; i >= 0; i--){
+        const el = list[i];
+        if(el.localName === "Relationship" && /thumbnail/i.test(el.getAttribute("Type") || "")){
+          el.parentNode.removeChild(el);
+        }
+      }
+      zip.file("_rels/.rels", new XMLSerializer().serializeToString(rels));
+    }
+  }
+
+  const mimes = {
+    docx:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xlsx:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    pptx:"application/vnd.openxmlformats-officedocument.presentationml.presentation"
+  };
+  return zip.generateAsync({ type:"blob", mimeType: mimes[rec.ext], compression:"DEFLATE" });
+}
+
+/* ---------------- PDF ---------------- */
+async function analyzePdf(rec, buf){
+  let doc;
+  try{
+    doc = await PDFLib.PDFDocument.load(buf, { updateMetadata:false, ignoreEncryption:true });
+  }catch(e){
+    throw new Error("This PDF couldn't be opened. If it's password-protected, remove the password first.");
+  }
+  if(doc.isEncrypted){
+    throw new Error("This PDF is password-protected — cleaning it would corrupt the file. Open it with the password, save an unlocked copy (Print → Save as PDF works), then drop that copy here.");
+  }
+  rec.pdf = doc;
+  const add = (label, value, leak) => { if(value) rec.fields.push({ label, value:String(value).trim(), leak }); };
+  try{ add("Author", doc.getAuthor(), true); }catch(e){}
+  try{ add("Title", doc.getTitle(), false); }catch(e){}
+  try{ add("Subject", doc.getSubject(), false); }catch(e){}
+  try{ add("Keywords", doc.getKeywords(), false); }catch(e){}
+  try{ add("Created with", doc.getCreator(), true); }catch(e){}
+  try{ add("Produced by", doc.getProducer(), false); }catch(e){}
+  try{ add("Created", fmtDate(doc.getCreationDate()), false); }catch(e){}
+  try{ add("Last modified", fmtDate(doc.getModificationDate()), false); }catch(e){}
+  try{
+    if(doc.catalog.get(PDFLib.PDFName.of("Metadata"))){
+      rec.fields.push({ label:"XMP metadata", value:"embedded XML block (often mirrors author & software)", leak:true });
+    }
+  }catch(e){}
+}
+
+async function cleanPdf(rec){
+  const doc = rec.pdf;
+  doc.setTitle(""); doc.setAuthor(""); doc.setSubject(""); doc.setKeywords([]);
+  doc.setCreator(""); doc.setProducer("");
+  const epoch = new Date(0);
+  try{ doc.setCreationDate(epoch); doc.setModificationDate(epoch); }catch(e){}
+  try{ doc.catalog.delete(PDFLib.PDFName.of("Metadata")); }catch(e){}
+  const bytes = await doc.save({ useObjectStreams:false });
+  return new Blob([bytes], { type:"application/pdf" });
+}
+
+/* ---------------- Images ---------------- */
+function gpsToDecimal(arr, ref){
+  if(!arr || arr.length < 3) return null;
+  const d = Number(arr[0]) + Number(arr[1])/60 + Number(arr[2])/3600;
+  return ((ref === "S" || ref === "W") ? -d : d).toFixed(6);
+}
+
+async function analyzeImage(rec, buf){
+  if(rec.ext === "jpg" || rec.ext === "jpeg"){
+    let tags = {};
+    try{ tags = EXIF.readFromBinaryFile(buf) || {}; }catch(e){ tags = {}; }
+    const lat = gpsToDecimal(tags.GPSLatitude, tags.GPSLatitudeRef);
+    const lon = gpsToDecimal(tags.GPSLongitude, tags.GPSLongitudeRef);
+    if(lat && lon) rec.fields.push({ label:"GPS location", value: lat + ", " + lon + "  ← where this photo was taken", leak:true });
+    if(tags.Make || tags.Model) rec.fields.push({ label:"Camera", value: [tags.Make, tags.Model].filter(Boolean).join(" "), leak:true });
+    const dt = tags.DateTimeOriginal || tags.DateTime;
+    if(dt) rec.fields.push({ label:"Taken", value: String(dt), leak:false });
+    if(tags.Software) rec.fields.push({ label:"Software", value: String(tags.Software), leak:true });
+    if(tags.Artist) rec.fields.push({ label:"Artist", value: String(tags.Artist), leak:true });
+    if(tags.Copyright) rec.fields.push({ label:"Copyright", value: String(tags.Copyright), leak:false });
+    if(!rec.fields.length && Object.keys(tags).length > 2){
+      rec.fields.push({ label:"EXIF block", value: Object.keys(tags).length + " technical fields", leak:false });
+    }
+  }
+  if(rec.ext === "png"){
+    const view = new DataView(buf);
+    let off = 8, texts = 0, hasExif = false;
+    try{
+      while(off + 8 <= view.byteLength){
+        const len = view.getUint32(off);
+        const type = String.fromCharCode(view.getUint8(off+4), view.getUint8(off+5), view.getUint8(off+6), view.getUint8(off+7));
+        if(type === "tEXt" || type === "zTXt" || type === "iTXt") texts++;
+        if(type === "eXIf") hasExif = true;
+        if(type === "IEND") break;
+        off += 12 + len;
+      }
+    }catch(e){}
+    if(texts) rec.fields.push({ label:"Text chunks", value: texts + " embedded text block(s) — may include software or author", leak:true });
+    if(hasExif) rec.fields.push({ label:"EXIF block", value:"embedded EXIF data", leak:true });
+  }
+}
+
+/* Surgical strip: metadata segments are removed at byte level.
+   Pixels are never decoded — works with 48 MP phone photos on any
+   device, and the copy is lossless (zero recompression). */
+
+function asciiAt(u8, start, n){
+  let s = "";
+  for(let i = 0; i < n && start + i < u8.length; i++) s += String.fromCharCode(u8[start + i]);
+  return s;
+}
+
+// JPEG: drop APP1 (Exif/XMP), APP13 (IPTC), COM and other APPn segments.
+// Keep APP0 (JFIF), APP2 ICC profile (color fidelity) and APP14 (Adobe).
+function stripJpeg(buf){
+  const v = new DataView(buf);
+  const u8 = new Uint8Array(buf);
+  if(v.byteLength < 4 || v.getUint16(0) !== 0xFFD8) throw new Error("not a JPEG");
+  const parts = [u8.subarray(0, 2)]; // SOI
+  let off = 2;
+  while(off + 4 <= v.byteLength){
+    if(v.getUint8(off) !== 0xFF) throw new Error("marker sync lost");
+    let marker = v.getUint8(off + 1);
+    while(marker === 0xFF && off + 2 < v.byteLength){ off++; marker = v.getUint8(off + 1); } // fill bytes
+    if(marker === 0xDA){ parts.push(u8.subarray(off)); break; }        // SOS → copy the rest verbatim
+    if(marker === 0xD9){ parts.push(u8.subarray(off, off + 2)); break; } // EOI
+    const len = v.getUint16(off + 2);
+    const segEnd = off + 2 + len;
+    if(len < 2 || segEnd > v.byteLength) throw new Error("corrupt segment length");
+    let keep = true;
+    if(marker === 0xFE) keep = false;                                   // COM
+    else if(marker >= 0xE0 && marker <= 0xEF){                          // APPn
+      if(marker === 0xE0 || marker === 0xEE) keep = true;               // JFIF, Adobe
+      else if(marker === 0xE2) keep = asciiAt(u8, off + 4, 11) === "ICC_PROFILE";
+      else keep = false;                                                // Exif, XMP, IPTC, MPF…
+    }
+    if(keep) parts.push(u8.subarray(off, segEnd));
+    off = segEnd;
+  }
+  return new Blob(parts, { type: "image/jpeg" });
+}
+
+// PNG: drop tEXt / zTXt / iTXt / eXIf / tIME chunks, copy the rest verbatim.
+const PNG_DROP = { tEXt:1, zTXt:1, iTXt:1, eXIf:1, tIME:1 };
+function stripPng(buf){
+  const v = new DataView(buf);
+  const u8 = new Uint8Array(buf);
+  if(v.byteLength < 8 || v.getUint32(0) !== 0x89504E47) throw new Error("not a PNG");
+  const parts = [u8.subarray(0, 8)];
+  let off = 8;
+  while(off + 8 <= v.byteLength){
+    const len = v.getUint32(off);
+    const type = asciiAt(u8, off + 4, 4);
+    const end = off + 12 + len;
+    if(end > v.byteLength) throw new Error("corrupt chunk");
+    if(!PNG_DROP[type]) parts.push(u8.subarray(off, end));
+    if(type === "IEND") break;
+    off = end;
+  }
+  return new Blob(parts, { type: "image/png" });
+}
+
+// WebP: drop EXIF / XMP RIFF chunks, recompute size, clear VP8X flag bits.
+function stripWebp(buf){
+  const v = new DataView(buf);
+  const u8 = new Uint8Array(buf);
+  if(v.byteLength < 12 || asciiAt(u8, 0, 4) !== "RIFF" || asciiAt(u8, 8, 4) !== "WEBP")
+    throw new Error("not a WebP");
+  const kept = [];
+  let off = 12;
+  while(off + 8 <= v.byteLength){
+    const fourcc = asciiAt(u8, off, 4);
+    const size = v.getUint32(off + 4, true);
+    const end = off + 8 + size + (size & 1);
+    if(fourcc !== "EXIF" && fourcc !== "XMP ") kept.push(u8.subarray(off, Math.min(end, v.byteLength)));
+    off = end;
+  }
+  let payload = 4;
+  kept.forEach(p => payload += p.length);
+  const head = new Uint8Array(12);
+  head.set([0x52,0x49,0x46,0x46], 0);
+  new DataView(head.buffer).setUint32(4, payload, true);
+  head.set([0x57,0x45,0x42,0x50], 8);
+  const parts = [head];
+  kept.forEach(p => {
+    if(asciiAt(p, 0, 4) === "VP8X" && p.length >= 9){
+      p = p.slice();          // copy — never mutate the original buffer
+      p[8] = p[8] & ~0x0C;    // clear EXIF + XMP flag bits
+    }
+    parts.push(p);
+  });
+  return new Blob(parts, { type: "image/webp" });
+}
+
+async function cleanImage(rec){
+  try{
+    if(rec.ext === "png") return stripPng(rec.buffer);
+    if(rec.ext === "webp") return stripWebp(rec.buffer);
+    return stripJpeg(rec.buffer);
+  }catch(e){
+    return reencodeFallback(rec); // unusual internal structure → decode & re-encode
+  }
+}
+
+async function reencodeFallback(rec){
+  const blob = new Blob([rec.buffer], { type: IMG[rec.ext] });
+  let bmp;
+  try{ bmp = await createImageBitmap(blob); }
+  catch(e){ throw new Error("This image has an unusual internal structure and couldn't be processed. Export it again from your photo app and drop the new copy here."); }
+  const c = document.createElement("canvas");
+  c.width = bmp.width; c.height = bmp.height;
+  c.getContext("2d").drawImage(bmp, 0, 0);
+  if(bmp.close) bmp.close();
+  return new Promise((res, rej) => {
+    c.toBlob(b => b ? res(b) : rej(new Error("The browser ran out of memory processing this image. Try a smaller copy of the photo.")),
+      IMG[rec.ext], rec.ext === "png" ? undefined : 0.92);
+  });
+}
+
+/* ---------------- clean action ---------------- */
+async function ensureCleanedBlob(rec){
+  if(!rec.cleanedBlob){
+    if(rec.kind === "ooxml") rec.cleanedBlob = await cleanOoxml(rec);
+    else if(rec.kind === "pdf") rec.cleanedBlob = await cleanPdf(rec);
+    else rec.cleanedBlob = await cleanImage(rec);
+  }
+  return rec.cleanedBlob;
+}
+
+async function cleanFile(rec){
+  if(rec.status === "working" || rec.status === "failed") return;
+  const btn = document.querySelector('[data-clean="' + rec.id + '"]');
+  if(btn){ btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Cleaning…'; }
+  try{
+    await ensureCleanedBlob(rec);
+    download(rec.cleanedBlob, cleanName(rec.file.name));
+    rec.status = "cleaned";
+  }catch(e){
+    rec.error = e && e.message ? e.message : "Cleaning failed for this file.";
+    rec.status = "failed";
+  }
+  renderCard(rec);
+  refreshBar();
+}
+
+$cleanAll.addEventListener("click", async () => {
+  const list = readyFiles();
+  if(!isPro() && list.length > BC_CONFIG.freeBatchLimit){
+    nudgePro("Batch actions for more than " + BC_CONFIG.freeBatchLimit + " files are a Pro feature — or clean each file individually for free.");
+    return;
+  }
+  $cleanAll.disabled = true;
+  for(const rec of list){
+    await cleanFile(rec);
+    await new Promise(r => setTimeout(r, 350)); // let the browser accept sequential downloads
+  }
+  $cleanAll.disabled = false;
+});
+
+/* ---------------- render ---------------- */
+function renderCard(rec){
+  let card = document.getElementById("card-" + rec.id);
+  if(!card){
+    card = document.createElement("div");
+    card.className = "card";
+    card.id = "card-" + rec.id;
+    $cards.prepend(card);
+  }
+  card.classList.toggle("is-clean", rec.status === "cleaned");
+
+  const typeLabel = rec.kind === "ooxml" ? rec.ext.toUpperCase()
+    : rec.kind === "pdf" ? "PDF"
+    : rec.kind === "image" ? rec.ext.toUpperCase() : "FILE";
+
+  let stamp;
+  if(rec.status === "working") stamp = '<span class="stamp working">Analyzing…</span>';
+  else if(rec.status === "cleaned") stamp = '<span class="stamp cleaned">Cleaned ✓</span>';
+  else if(rec.status === "failed") stamp = '<span class="stamp failed">Skipped</span>';
+  else stamp = rec.leaks
+    ? '<span class="stamp analyzed">' + rec.leaks + ' leak' + (rec.leaks > 1 ? 's' : '') + '</span>'
+    : '<span class="stamp cleanfile">No leaks</span>';
+
+  let body = "";
+  if(rec.status === "working"){
+    body = '<div class="card-body"><div class="report-label"><span class="spin"></span>Reading metadata locally…</div></div>';
+  } else if(rec.error){
+    body = '<div class="card-body"><div class="errbox">' + esc(rec.error) + '</div></div>';
+  } else {
+    let rows = "";
+    rec.fields.forEach((f, i) => {
+      rows += '<div class="row' + (f.leak ? ' leak' : '') + '" style="animation-delay:' + Math.min(i * 45, 400) + 'ms">' +
+        '<span class="k">' + esc(f.label) + '</span>' +
+        '<span class="v">' + esc(f.value) + '</span></div>';
+    });
+    const summary = rec.status === "cleaned"
+      ? '<div class="leak-summary">Identifying metadata removed. Struck-through fields are no longer in the downloaded copy.</div>'
+      : rec.leaks
+        ? '<div class="leak-summary">' + rec.leaks + ' identifying field' + (rec.leaks > 1 ? 's' : '') + ' found in this file.</div>'
+        : '<div class="leak-summary none">No identifying metadata found' + (rec.fields.length ? ' — remaining fields are technical.' : '.') + '</div>';
+    let warns = "";
+    for(const w of rec.warnings) warns += '<div class="warnbox">' + esc(w) + '</div>';
+    body =
+      '<div class="card-body">' +
+        (rec.fields.length ? '<div class="report-label">What this file reveals</div><div class="rows">' + rows + '</div>' : '') +
+        summary + warns +
+      '</div>' +
+      '<div class="card-foot">' +
+        (rec.status === "cleaned"
+          ? '<button class="btn done" data-clean="' + rec.id + '">Download again</button><span class="verify-hint">Saved as ' + esc(cleanName(rec.file.name)) + '</span>'
+          : '<button class="btn" data-clean="' + rec.id + '">Clean &amp; download</button><span class="verify-hint">Original file is untouched.</span>') +
+      '</div>';
+  }
+
+  card.innerHTML =
+    '<div class="card-head">' +
+      '<div class="fmeta"><div class="fname">' + esc(rec.file.name) + '</div>' +
+      '<div class="finfo">' + typeLabel + ' · ' + fmtSize(rec.file.size) + '</div></div>' +
+      stamp +
+    '</div>' + body;
+
+  const btn = card.querySelector("[data-clean]");
+  if(btn) btn.addEventListener("click", () => cleanFile(rec));
+}
+
+function refreshBar(){
+  const ready = readyFiles().length;
+  if(files.size > 0){
+    $bar.classList.add("show");
+    $count.textContent = files.size + " file" + (files.size > 1 ? "s" : "") + " · processed on this device";
+    $cleanAll.style.display = ready > 1 ? "" : "none";
+    $zip.style.display = ready > 1 ? "" : "none";
+  }
+  $chip.style.display = isPro() ? "" : "none";
+}
+
+/* ---------------- Pro: license, ZIP export, verification report ---------------- */
+const $zip = document.getElementById("zipBtn");
+const $chip = document.getElementById("proChip");
+const $buy = document.getElementById("buyBtn");
+const $licInput = document.getElementById("licenseInput");
+const $licBtn = document.getElementById("activateBtn");
+const $licMsg = document.getElementById("licenseMsg");
+
+function readyFiles(){
+  return [...files.values()].filter(r => r.status === "analyzed" || r.status === "cleaned");
+}
+function store(k, v){ try{ v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+let proActive = load("bc_pro") === "1";
+function isPro(){ return proActive; }
+function setPro(on, key){
+  proActive = !!on;
+  store("bc_pro", on ? "1" : null);
+  store("bc_key", on && key ? key : null);
+  if(on) store("bc_last_ok", String(Date.now()));
+  else store("bc_last_ok", null);
+  refreshBar();
+}
+
+// Pure policy helpers (unit-tested)
+function revalidationDue(lastOkMs, nowMs){
+  return (nowMs - lastOkMs) > BC_CONFIG.revalidateHours * 3600 * 1000;
+}
+function graceExpired(lastOkMs, nowMs){
+  return (nowMs - lastOkMs) > BC_CONFIG.graceDays * 86400 * 1000;
+}
+
+async function validateLicense(key){
+  // Public customer-portal endpoint — safe to call from the browser, no secret involved.
+  const res = await fetch(BC_CONFIG.polarApi + "/v1/customer-portal/license-keys/validate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key: key, organization_id: BC_CONFIG.polarOrgId })
+  });
+  if(res.status === 404 || res.status === 403 || res.status === 422) return { valid: false };
+  if(!res.ok) throw new Error("license server unreachable");
+  const data = await res.json().catch(() => ({}));
+  const status = data && data.status;
+  return { valid: !status || status === "granted" };
+}
+
+function licMsg(text, cls){
+  $licMsg.textContent = text;
+  $licMsg.className = "license-msg" + (cls ? " " + cls : "");
+}
+
+if($licBtn) $licBtn.addEventListener("click", async () => {
+  const key = ($licInput.value || "").trim();
+  if(!key){ licMsg("Paste the license key from your purchase email.", "err"); return; }
+  $licBtn.disabled = true;
+  licMsg("Checking key…");
+  try{
+    const r = await validateLicense(key);
+    if(r.valid){ setPro(true, key); licMsg("Pro activated on this browser. Thank you!", "ok"); }
+    else { setPro(false); licMsg("This key wasn't recognized. Check for typos, or reply to your purchase email for help.", "err"); }
+  }catch(e){
+    licMsg("Couldn't reach the license server — check your connection and try again.", "err");
+  }
+  $licBtn.disabled = false;
+});
+
+if($buy) $buy.addEventListener("click", () => {
+  if(BC_CONFIG.checkoutUrl.indexOf("TODO") === 0){
+    licMsg("Checkout isn't configured yet.", "err");
+    return;
+  }
+  window.open(BC_CONFIG.checkoutUrl, "_blank", "noopener");
+});
+
+// Subscription check on load: re-validate every 24h; keep Pro through a
+// 7-day offline grace window; pause Pro when the subscription has ended.
+(function(){
+  const key = load("bc_key");
+  if(!proActive || !key) return;
+  const lastOk = parseInt(load("bc_last_ok") || "0", 10);
+  const now = Date.now();
+  if(!revalidationDue(lastOk, now)) return;
+  validateLicense(key).then(r => {
+    if(r.valid){
+      store("bc_last_ok", String(now));
+    } else {
+      setPro(false);
+      licMsg("Your Pro subscription has ended. Resubscribe below, or re-activate if you renewed.", "err");
+    }
+  }).catch(() => {
+    if(graceExpired(lastOk, now)){
+      setPro(false);
+      licMsg("Couldn't verify your subscription for 7 days — connect to the internet once and re-activate your key.", "err");
+    } // inside grace: keep Pro, try again next load
+  });
+})();
+
+function nudgePro(text){
+  licMsg(text, "err");
+  const el = document.getElementById("pro");
+  if(el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function sha256hex(blob){
+  const h = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
+  return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function buildReport(list){
+  const lines = [];
+  lines.push("BARECOPY VERIFICATION REPORT");
+  lines.push("Generated: " + new Date().toISOString() + " · Barecopy v" + BC_CONFIG.version);
+  lines.push("All processing performed locally in the user's browser. No file was transmitted.");
+  lines.push("");
+  let i = 0;
+  for(const rec of list){
+    i++;
+    lines.push(i + ". " + rec.file.name + "  (" + fmtSize(rec.file.size) + " → " + fmtSize(rec.cleanedBlob.size) + ")");
+    const removed = rec.fields.filter(f => f.leak && f.value);
+    if(removed.length){
+      lines.push("   Removed:");
+      for(const f of removed) lines.push("     - " + f.label + ": " + f.value);
+    } else {
+      lines.push("   Removed: no identifying fields were present.");
+    }
+    const kept = rec.fields.filter(f => !f.leak && f.value);
+    if(kept.length) lines.push("   Non-identifying fields (also cleared where applicable): " + kept.map(f => f.label).join(", "));
+    for(const w of rec.warnings) lines.push("   Warning: " + w);
+    lines.push("   Clean copy: " + cleanName(rec.file.name));
+    lines.push("   SHA-256:    " + await sha256hex(rec.cleanedBlob));
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
+if($zip) $zip.addEventListener("click", async () => {
+  if(!isPro()){
+    nudgePro("ZIP export with the verification report is a Pro feature.");
+    return;
+  }
+  const list = readyFiles();
+  if(!list.length) return;
+  $zip.disabled = true;
+  $zip.textContent = "Packing…";
+  try{
+    const zip = new JSZip();
+    for(const rec of list){
+      await ensureCleanedBlob(rec);
+      zip.file(cleanName(rec.file.name), rec.cleanedBlob);
+      rec.status = "cleaned";
+      renderCard(rec);
+    }
+    zip.file("barecopy-report.txt", await buildReport(list));
+    const blob = await zip.generateAsync({ type: "blob" });
+    download(blob, "barecopy-clean-files.zip");
+  }catch(e){
+    licMsg("ZIP export failed: " + (e && e.message ? e.message : "unknown error"), "err");
+  }
+  $zip.disabled = false;
+  $zip.textContent = "ZIP + report";
+  refreshBar();
+});
+
+})();
+</script>
+</body>
+</html>
