@@ -12,5 +12,5 @@
                             Checkout Links → your buy.polar.sh/... link
    ============================================================ */
 
-window.BARECOPY_ORG_ID  = "TODO_POLAR_ORG_ID";
-window.BARECOPY_CHECKOUT = "TODO_POLAR_CHECKOUT_URL";
+window.BARECOPY_ORG_ID  = "d52362db-885a-4302-9bd4-353f229d3c9d";
+window.BARECOPY_CHECKOUT = "https://buy.polar.sh/polar_cl_1F7NnzQQhJocQnEyhZ6VM6ikF7UGdepS0SnfQ15JMad";
