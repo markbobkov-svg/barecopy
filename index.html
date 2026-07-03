@@ -249,9 +249,41 @@
     background:var(--leak-bg);border:1px solid var(--leak-line);
     border-radius:3px;padding:1px 6px;
   }
-  .card.is-clean .row.leak .v{
+  .row.removed .v{
     color:var(--ink-faint);background:transparent;border-color:transparent;
     text-decoration:line-through;padding:1px 0;
+  }
+  /* a leak deliberately left in the file (deep item not selected) stays flagged */
+  .row.leak.kept .v{
+    color:var(--leak);background:var(--leak-bg);border:1px solid var(--leak-line);
+    text-decoration:none;
+  }
+  .deep-block{
+    margin-top:14px;border:1px solid var(--line);border-radius:8px;
+    padding:11px 13px;background:var(--card);
+  }
+  .deep-head{
+    font-family:var(--cond);font-weight:700;font-size:11.5px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);
+    margin-bottom:8px;display:flex;align-items:center;gap:7px;
+  }
+  .deep-pro{
+    font-size:10px;letter-spacing:.08em;color:var(--accent,#b45309);
+    border:1px solid currentColor;border-radius:3px;padding:1px 5px;
+  }
+  .deep-opt{
+    display:flex;gap:9px;align-items:flex-start;
+    padding:6px 0;cursor:pointer;font-size:13px;
+  }
+  .deep-opt input{margin-top:2px;flex:0 0 auto;cursor:pointer}
+  .deep-t{display:flex;flex-direction:column;gap:2px;line-height:1.35}
+  .deep-note{font-size:11.5px;color:var(--ink-faint)}
+  .deep-block.locked .deep-opt{opacity:.72}
+  .deep-locked-msg{
+    margin-top:6px;font-size:12px;color:var(--ink-faint);
+  }
+  .verified-badge.partial{
+    color:var(--warn);background:var(--warn-bg);border-color:var(--warn-line);
   }
   .leak-summary{
     margin-top:12px;font-size:13.5px;font-weight:600;color:var(--leak);
@@ -535,7 +567,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.3.0",
+  version: "1.4.0",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
@@ -713,7 +745,8 @@ function addFile(file){
     id, file, ext,
     kind: OOXML[ext] ? "ooxml" : (ext === "pdf" ? "pdf" : (IMG[ext] ? "image" : "unsupported")),
     fields: [], warnings: [], error: null,
-    leaks: 0, status: "working", cleanedBlob: null
+    leaks: 0, status: "working", cleanedBlob: null,
+    deepSelected: new Set(), deepApplied: [], deepInit: false
   };
   files.set(id, rec);
   renderCard(rec);
@@ -778,6 +811,419 @@ function allLocal(doc, local){
   }
   return out; // duplicated elements are invalid OOXML but must not survive cleaning
 }
+
+/* ==DEEP:START==  content-level ("deep") OOXML inspection & removal.
+   These handle what docProps cleaning (and Word's own Document Inspector)
+   miss: tracked-change history that survives "Accept All", comments,
+   speaker notes, hidden sheets, rsid session fingerprints. Detection is
+   free (see analyzeOoxml); removal is Pro and opt-in (rec.deepSelected),
+   because flattening revisions changes the visible document.
+   Namespace-agnostic: everything matches on localName so it survives
+   both transitional and strict OOXML. Every write is well-formedness
+   checked (partDoc returns null on a parse error) so a malformed part is
+   left untouched rather than re-zipped broken. */
+
+function allWithin(el, local){
+  const out = [], all = el.getElementsByTagName("*");
+  for(let i = 0; i < all.length; i++){
+    if(all[i].localName === local) out.push(all[i]);
+  }
+  return out;
+}
+function attrLocal(el, local){
+  const at = el.attributes;
+  for(let i = 0; i < at.length; i++){
+    if(at[i].localName === local) return (at[i].value || "").trim();
+  }
+  return "";
+}
+function serializeXml(doc){
+  // Serialize the root element (not the Document) so we control the XML
+  // declaration and never emit a duplicate one. Word tolerates a missing
+  // declaration on the parts we already rewrite, but document.xml is safest with it.
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n' +
+    new XMLSerializer().serializeToString(doc.documentElement);
+}
+async function partDoc(zip, path){
+  const f = zip.file(path);
+  if(!f) return null;
+  const doc = xmlDoc(await f.async("string"));
+  // DOMParser reports XML errors as a <parsererror> element in the tree.
+  if(doc.getElementsByTagName("parsererror").length) return null;
+  return doc;
+}
+function zipPaths(zip, rx){
+  const out = [];
+  zip.forEach(p => { if(rx.test(p)) out.push(p); });
+  return out;
+}
+function removeParts(zip, patterns){
+  const gone = zipPaths(zip, new RegExp(patterns.map(r => "(?:" + r.source + ")").join("|")));
+  for(const p of gone) zip.remove(p);
+  return gone;
+}
+async function removeRels(zip, relsPath, rx){
+  const doc = await partDoc(zip, relsPath);
+  if(!doc) return;
+  let changed = false;
+  for(const el of allLocal(doc, "Relationship")){
+    const t = el.getAttribute("Type") || "", tgt = el.getAttribute("Target") || "";
+    if(rx.test(t) || rx.test(tgt)){ el.parentNode.removeChild(el); changed = true; }
+  }
+  if(changed) zip.file(relsPath, serializeXml(doc));
+}
+async function removeContentTypeOverrides(zip, rx){
+  const doc = await partDoc(zip, "[Content_Types].xml");
+  if(!doc) return;
+  let changed = false;
+  for(const el of allLocal(doc, "Override")){
+    if(rx.test(el.getAttribute("PartName") || "")){ el.parentNode.removeChild(el); changed = true; }
+  }
+  if(changed) zip.file("[Content_Types].xml", serializeXml(doc));
+}
+
+// ---- DOCX content parts & revision handling ----
+const DOCX_CONTENT = /^word\/(document|header\d*|footer\d*|footnotes|endnotes)\.xml$|^word\/glossary\/document\.xml$/;
+// Revision element localNames that carry an author + (for ins/del/move) content.
+const REV_LOCALS = ["ins","del","moveFrom","moveTo","rPrChange","pPrChange","sectPrChange",
+  "tblPrChange","trPrChange","tcPrChange","tblGridChange","numberingChange","cellIns","cellDel","cellMerge"];
+// Empty markers / property snapshots to drop outright when accepting.
+const REV_MARKERS = ["moveFromRangeStart","moveFromRangeEnd","moveToRangeStart","moveToRangeEnd",
+  "customXmlInsRangeStart","customXmlInsRangeEnd","customXmlDelRangeStart","customXmlDelRangeEnd",
+  "rPrChange","pPrChange","sectPrChange","tblPrChange","trPrChange","tcPrChange","tblGridChange",
+  "numberingChange","cellIns","cellDel","cellMerge"];
+
+function unwrapEl(el){
+  const parent = el.parentNode;
+  if(!parent) return;
+  while(el.firstChild) parent.insertBefore(el.firstChild, el);
+  parent.removeChild(el);
+}
+function hasVisibleContent(p){
+  for(const t of allWithin(p, "t")) if(t.textContent && t.textContent.trim()) return true;
+  for(const k of ["drawing","pict","object"]) if(allWithin(p, k).length) return true;
+  return false;
+}
+// Accept-all flattening of one XML part. Returns {changed, unmerged}.
+function flattenRevisions(doc){
+  let changed = false, unmerged = 0;
+
+  // Row deletions (w:trPr/w:del) accept to a removed row — do this before the
+  // blanket w:del sweep, which would otherwise just unmark the row.
+  for(const del of allLocal(doc, "del")){
+    const par = del.parentNode;
+    if(par && par.localName === "trPr"){
+      const tr = par.parentNode;
+      if(tr && tr.localName === "tr" && tr.parentNode){ tr.parentNode.removeChild(tr); changed = true; }
+    }
+  }
+  // Remember paragraphs whose end-mark is deleted (w:pPr/w:rPr/w:del) so we can
+  // merge-by-removal after their content is gone.
+  const markDeletedParas = new Set();
+  for(const del of allLocal(doc, "del")){
+    const rpr = del.parentNode;
+    if(rpr && rpr.localName === "rPr" && rpr.parentNode && rpr.parentNode.localName === "pPr"){
+      const p = rpr.parentNode.parentNode;
+      if(p && p.localName === "p") markDeletedParas.add(p);
+    }
+  }
+  // Deletions (and the "from" side of moves) go away entirely.
+  for(const el of allLocal(doc, "del")) if(el.parentNode){ el.parentNode.removeChild(el); changed = true; }
+  for(const el of allLocal(doc, "moveFrom")) if(el.parentNode){ el.parentNode.removeChild(el); changed = true; }
+  // Insertions (and the "to" side of moves) are kept — unwrap the wrapper.
+  for(const el of allLocal(doc, "ins")) if(el.parentNode){ unwrapEl(el); changed = true; }
+  for(const el of allLocal(doc, "moveTo")) if(el.parentNode){ unwrapEl(el); changed = true; }
+  // Range markers and property-change snapshots: drop.
+  for(const local of REV_MARKERS)
+    for(const el of allLocal(doc, local)) if(el.parentNode){ el.parentNode.removeChild(el); changed = true; }
+  // Paragraph-mark deletions: if the paragraph is now empty and it is safe to
+  // drop (not the only paragraph in a table cell, no section properties), remove
+  // it — that matches Word's "merge into next". Otherwise leave it and count it.
+  for(const p of markDeletedParas){
+    if(!p.parentNode) continue;
+    if(allWithin(p, "sectPr").length){ unmerged++; continue; }
+    const parent = p.parentNode;
+    if(parent.localName === "tc"){
+      let pc = 0;
+      for(let c = parent.firstChild; c; c = c.nextSibling) if(c.nodeType === 1 && c.localName === "p") pc++;
+      if(pc <= 1){ unmerged++; continue; }
+    }
+    if(hasVisibleContent(p)){ unmerged++; continue; }
+    parent.removeChild(p); changed = true;
+  }
+  return { changed, unmerged };
+}
+function stripRsids(doc){
+  let changed = false;
+  const all = doc.getElementsByTagName("*");
+  for(let i = 0; i < all.length; i++){
+    const at = all[i].attributes;
+    for(let a = at.length - 1; a >= 0; a--){
+      if(at[a].localName.indexOf("rsid") === 0){ all[i].removeAttributeNode(at[a]); changed = true; }
+    }
+  }
+  return changed;
+}
+function stripCommentRefs(doc){
+  let changed = false;
+  for(const local of ["commentRangeStart","commentRangeEnd","commentReference"]){
+    for(const el of allLocal(doc, local)){
+      if(!el.parentNode) continue;
+      const parent = el.parentNode;
+      parent.removeChild(el); changed = true;
+      if(local === "commentReference" && parent.localName === "r"){
+        let keep = false;
+        for(let c = parent.firstChild; c; c = c.nextSibling)
+          if(c.nodeType === 1 && c.localName !== "rPr"){ keep = true; break; }
+        if(!keep && parent.parentNode) parent.parentNode.removeChild(parent);
+      }
+    }
+  }
+  return changed;
+}
+function authorList(set){
+  const a = [...set];
+  if(!a.length) return "";
+  const shown = a.slice(0, 3).join(", ");
+  return shown + (a.length > 3 ? " +" + (a.length - 3) + " more" : "");
+}
+
+async function deepScanDocx(zip, rec){
+  const parts = zipPaths(zip, DOCX_CONTENT);
+  let revCount = 0, rsidCount = 0;
+  const revAuthors = new Set();
+  for(const p of parts){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    const all = doc.getElementsByTagName("*");
+    for(let i = 0; i < all.length; i++){
+      const el = all[i];
+      if(REV_LOCALS.indexOf(el.localName) !== -1){
+        revCount++;
+        const a = attrLocal(el, "author");
+        if(a) revAuthors.add(a);
+      }
+      const at = el.attributes;
+      for(let a = 0; a < at.length; a++) if(at[a].localName.indexOf("rsid") === 0) rsidCount++;
+    }
+  }
+  if(revCount){
+    rec.fields.push({ label: "Tracked changes",
+      value: revCount + " revision" + (revCount > 1 ? "s" : "") +
+        (revAuthors.size ? " by " + revAuthors.size + " author" + (revAuthors.size > 1 ? "s" : "") +
+          " (" + authorList(revAuthors) + ")" : "") +
+        " — deleted text stays recoverable in the file",
+      leak: true, deep: "trackedChanges" });
+  }
+  if(rsidCount){
+    rec.fields.push({ label: "Revision IDs (rsid)",
+      value: rsidCount + " editing-session fingerprints — can link this file to others you edited",
+      leak: true, deep: "rsid" });
+  }
+  // Comments + reviewer identities (comments.xml and people.xml).
+  let cCount = 0;
+  const cAuthors = new Set();
+  const cDoc = await partDoc(zip, "word/comments.xml");
+  if(cDoc){
+    for(const el of allLocal(cDoc, "comment")){ cCount++; const a = attrLocal(el, "author"); if(a) cAuthors.add(a); }
+  }
+  const pDoc = await partDoc(zip, "word/people.xml");
+  if(pDoc){ for(const el of allLocal(pDoc, "person")){ const a = attrLocal(el, "author"); if(a) cAuthors.add(a); } }
+  if(cCount || cAuthors.size){
+    rec.fields.push({ label: "Comments",
+      value: (cCount ? cCount + " comment" + (cCount !== 1 ? "s" : "") : "reviewer identities") +
+        (cAuthors.size ? " by " + authorList(cAuthors) : "") +
+        " — internal notes visible to anyone who opens the file",
+      leak: true, deep: "comments" });
+  }
+}
+async function deepCleanDocx(zip, rec, info){
+  const sel = rec.deepSelected;
+  const parts = zipPaths(zip, DOCX_CONTENT);
+  if(sel.has("trackedChanges") || sel.has("rsid")){
+    let unmerged = 0;
+    for(const p of parts){
+      const doc = await partDoc(zip, p);
+      if(!doc) continue; // malformed part: leave as-is
+      let changed = false;
+      if(sel.has("trackedChanges")){ const r = flattenRevisions(doc); changed = r.changed || changed; unmerged += r.unmerged; }
+      if(sel.has("rsid")) changed = stripRsids(doc) || changed;
+      if(changed) zip.file(p, serializeXml(doc));
+    }
+    const setDoc = await partDoc(zip, "word/settings.xml");
+    if(setDoc){
+      let ch = false;
+      if(sel.has("rsid")) for(const el of allLocal(setDoc, "rsids")) if(el.parentNode){ el.parentNode.removeChild(el); ch = true; }
+      if(sel.has("trackedChanges")) for(const el of allLocal(setDoc, "trackChanges")) if(el.parentNode){ el.parentNode.removeChild(el); ch = true; }
+      if(ch) zip.file("word/settings.xml", serializeXml(setDoc));
+    }
+    if(sel.has("trackedChanges")) info.push(unmerged
+      ? "Accepted and removed all tracked changes (" + unmerged + " paragraph-mark deletion" + (unmerged > 1 ? "s were" : " was") + " unmarked, not merged — check layout in Word)"
+      : "Accepted and removed all tracked changes");
+    if(sel.has("rsid")) info.push("Stripped rsid editing-session fingerprints");
+  }
+  if(sel.has("comments")){
+    for(const p of parts){
+      const doc = await partDoc(zip, p);
+      if(!doc) continue;
+      if(stripCommentRefs(doc)) zip.file(p, serializeXml(doc));
+    }
+    removeParts(zip, [/^word\/comments.*\.xml$/, /^word\/people\.xml$/]);
+    await removeRels(zip, "word/_rels/document.xml.rels", /comments|people/i);
+    await removeContentTypeOverrides(zip, /comments|people/i);
+    info.push("Removed comments and reviewer identities");
+  }
+}
+
+// ---- PPTX: speaker notes + comments ----
+async function deepScanPptx(zip, rec){
+  const notePaths = zipPaths(zip, /^ppt\/notesSlides\/notesSlide\d+\.xml$/);
+  let noteSlides = 0, noteChars = 0;
+  for(const p of notePaths){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    let txt = "";
+    for(const t of allLocal(doc, "t")) txt += t.textContent || "";
+    txt = txt.trim();
+    if(txt.length){ noteSlides++; noteChars += txt.length; }
+  }
+  if(noteSlides){
+    rec.fields.push({ label: "Speaker notes",
+      value: "notes on " + noteSlides + " slide" + (noteSlides > 1 ? "s" : "") + " (~" + noteChars +
+        " characters) — visible to anyone who opens the file",
+      leak: true, deep: "notes" });
+  }
+  const cPaths = zipPaths(zip, /^ppt\/comments\/.*\.xml$/);
+  let cCount = 0;
+  const cAuthors = new Set();
+  for(const p of cPaths){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    for(const el of allLocal(doc, "cm")) cCount++;
+    for(const el of allLocal(doc, "comment")) cCount++;
+  }
+  for(const ap of ["ppt/commentAuthors.xml","ppt/authors.xml"]){
+    const doc = await partDoc(zip, ap);
+    if(!doc) continue;
+    for(const el of allLocal(doc, "cmAuthor")){ const n = attrLocal(el, "name"); if(n) cAuthors.add(n); }
+    for(const el of allLocal(doc, "author")){ const n = attrLocal(el, "name"); if(n) cAuthors.add(n); }
+  }
+  if(cCount || cAuthors.size){
+    rec.fields.push({ label: "Comments",
+      value: (cCount ? cCount + " comment" + (cCount !== 1 ? "s" : "") : "commenter identities") +
+        (cAuthors.size ? " by " + authorList(cAuthors) : "") + " — visible to anyone who opens the file",
+      leak: true, deep: "comments" });
+  }
+}
+async function deepCleanPptx(zip, rec, info){
+  const sel = rec.deepSelected;
+  if(sel.has("notes")){
+    removeParts(zip, [/^ppt\/notesSlides\/notesSlide\d+\.xml$/, /^ppt\/notesSlides\/_rels\/notesSlide\d+\.xml\.rels$/]);
+    for(const rp of zipPaths(zip, /^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/)) await removeRels(zip, rp, /notesSlide/i);
+    await removeContentTypeOverrides(zip, /notesSlide/i);
+    info.push("Removed speaker notes");
+  }
+  if(sel.has("comments")){
+    removeParts(zip, [/^ppt\/comments\//, /^ppt\/commentAuthors\.xml$/, /^ppt\/authors\.xml$/]);
+    for(const rp of zipPaths(zip, /\.rels$/)) await removeRels(zip, rp, /comment|authors/i);
+    await removeContentTypeOverrides(zip, /comment|authors/i);
+    info.push("Removed comments");
+  }
+}
+
+// ---- XLSX: comments (removal) + hidden sheets (detection only) ----
+async function deepScanXlsx(zip, rec){
+  let cCount = 0;
+  const cAuthors = new Set();
+  for(const p of zipPaths(zip, /^xl\/comments\d*\.xml$/)){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    for(const el of allLocal(doc, "comment")) cCount++;
+    for(const el of allLocal(doc, "author")){ const n = (el.textContent || "").trim(); if(n) cAuthors.add(n); }
+  }
+  for(const p of zipPaths(zip, /^xl\/threadedComments\/.*\.xml$/)){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    for(const el of allLocal(doc, "threadedComment")) cCount++;
+  }
+  for(const p of zipPaths(zip, /^xl\/persons\/.*\.xml$/)){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    for(const el of allLocal(doc, "person")){ const n = attrLocal(el, "displayName"); if(n) cAuthors.add(n); }
+  }
+  if(cCount || cAuthors.size){
+    rec.fields.push({ label: "Cell comments",
+      value: (cCount ? cCount + " comment" + (cCount !== 1 ? "s" : "") : "commenter identities") +
+        (cAuthors.size ? " by " + authorList(cAuthors) : "") + " — visible to recipients",
+      leak: true, deep: "comments" });
+  }
+  const wb = await partDoc(zip, "xl/workbook.xml");
+  if(wb){
+    const hidden = [];
+    for(const s of allLocal(wb, "sheet")){
+      const st = attrLocal(s, "state");
+      if(st === "hidden" || st === "veryHidden") hidden.push(attrLocal(s, "name") || "?");
+    }
+    if(hidden.length){
+      rec.fields.push({ label: "Hidden sheets",
+        value: hidden.length + " hidden (" + authorList(new Set(hidden)) + ") — recipients can unhide them; kept by design, review in Excel",
+        leak: true, deep: "hiddenSheets" });
+    }
+  }
+}
+async function deepCleanXlsx(zip, rec, info){
+  const sel = rec.deepSelected;
+  if(!sel.has("comments")) return;
+  // Modern comments + threaded comments + person parts.
+  const removed = removeParts(zip, [/^xl\/comments\d*\.xml$/, /^xl\/threadedComments\//, /^xl\/persons\//]);
+  // Legacy VML notes: drop only note shapes; delete the part if nothing else remains.
+  for(const vp of zipPaths(zip, /^xl\/drawings\/vmlDrawing\d*\.vml$/)){
+    const doc = await partDoc(zip, vp);
+    if(!doc) continue;
+    let ch = false, remaining = 0;
+    for(const shape of allLocal(doc, "shape")){
+      let isNote = false;
+      for(const cd of allWithin(shape, "ClientData")) if(attrLocal(cd, "ObjectType") === "Note") isNote = true;
+      if(isNote){ if(shape.parentNode){ shape.parentNode.removeChild(shape); ch = true; } }
+      else remaining++;
+    }
+    if(ch){
+      if(remaining === 0){ zip.remove(vp); removed.push(vp); }
+      else zip.file(vp, serializeXml(doc));
+    }
+  }
+  // Drop <legacyDrawing> refs from sheets and matching rels for any removed part.
+  const removedBase = new Set(removed.map(p => p.split("/").pop()));
+  for(const rp of zipPaths(zip, /^xl\/worksheets\/_rels\/sheet\d+\.xml\.rels$/)){
+    const doc = await partDoc(zip, rp);
+    if(!doc) continue;
+    let ch = false;
+    const deadIds = new Set();
+    for(const el of allLocal(doc, "Relationship")){
+      const tgt = (el.getAttribute("Target") || "").split("/").pop();
+      const type = el.getAttribute("Type") || "";
+      if(removedBase.has(tgt) || /comments|vmlDrawing/i.test(type)){
+        const id = el.getAttribute("Id"); if(id) deadIds.add(id);
+        el.parentNode.removeChild(el); ch = true;
+      }
+    }
+    if(ch) zip.file(rp, serializeXml(doc));
+    // Remove now-dangling legacyDrawing/reference elements in the matching sheet.
+    const sheet = rp.replace("_rels/", "").replace(/\.rels$/, "");
+    const sDoc = await partDoc(zip, sheet);
+    if(sDoc && deadIds.size){
+      let sch = false;
+      for(const el of allLocal(sDoc, "legacyDrawing")){
+        const rid = attrLocal(el, "id");
+        if(!rid || deadIds.has(rid)){ if(el.parentNode){ el.parentNode.removeChild(el); sch = true; } }
+      }
+      if(sch) zip.file(sheet, serializeXml(sDoc));
+    }
+  }
+  await removeContentTypeOverrides(zip, /comments|threadedComment|person/i);
+  info.push("Removed cell comments");
+}
+/* ==DEEP:END== */
 
 async function analyzeOoxml(rec, buf){
   let zip;
@@ -846,24 +1292,11 @@ async function analyzeOoxml(rec, buf){
     if(zip.file(p)){ rec.thumbPath = p; rec.fields.push({ label:"Preview thumbnail", value:"embedded image of page 1", leak:true }); break; }
   }
 
-  // content warnings (docx)
-  if(rec.ext === "docx"){
-    const docXmlFile = zip.file("word/document.xml");
-    if(docXmlFile){
-      const s = await docXmlFile.async("string");
-      if(s.indexOf("<w:ins ") !== -1 || s.indexOf("<w:del ") !== -1){
-        rec.warnings.push("Tracked changes found in the text. They contain editor names and deleted passages — accept or reject them in Word before sending. Metadata cleaning does not remove them.");
-      }
-    }
-    if(zip.file("word/comments.xml")){
-      rec.warnings.push("Comments found in the document. They include commenter names — delete them in Word before sending.");
-    }
-  }
-  if(rec.ext === "xlsx"){
-    let hasHidden = false;
-    zip.forEach(path => { if(/^xl\/comments\d*\.xml$/.test(path)) hasHidden = true; });
-    if(hasHidden) rec.warnings.push("Cell comments found — they may include reviewer names. Remove them in Excel before sending.");
-  }
+  // content-level ("deep") findings: tracked changes, comments, notes, hidden
+  // sheets, rsids. Detected here (free); removed only on opt-in (see cleanOoxml).
+  if(rec.ext === "docx") await deepScanDocx(zip, rec);
+  else if(rec.ext === "pptx") await deepScanPptx(zip, rec);
+  else if(rec.ext === "xlsx") await deepScanXlsx(zip, rec);
 }
 
 const CLEAN_CORE =
@@ -879,8 +1312,10 @@ const CLEAN_CUSTOM =
 '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/custom-properties" ' +
 'xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"></Properties>';
 
-async function cleanOoxml(rec){
-  const zip = rec.zip;
+const DEEP_FAIL_WARN = "Deep clean couldn't be applied to this file safely, so only standard metadata was removed. Tracked changes / comments / notes may remain — accept or delete them in the Office app before sending.";
+
+// Standard docProps cleaning (core/app/custom/thumbnail). Runs on any OOXML zip.
+async function cleanOoxmlMeta(zip, rec){
   if(zip.file("docProps/core.xml")) zip.file("docProps/core.xml", CLEAN_CORE);
   if(zip.file("docProps/custom.xml")) zip.file("docProps/custom.xml", CLEAN_CUSTOM);
 
@@ -907,6 +1342,35 @@ async function cleanOoxml(rec){
         }
       }
       zip.file("_rels/.rels", new XMLSerializer().serializeToString(rels));
+    }
+  }
+}
+
+async function deepCleanOoxml(zip, rec){
+  if(rec.ext === "docx") await deepCleanDocx(zip, rec, rec.deepApplied);
+  else if(rec.ext === "pptx") await deepCleanPptx(zip, rec, rec.deepApplied);
+  else if(rec.ext === "xlsx") await deepCleanXlsx(zip, rec, rec.deepApplied);
+}
+
+async function cleanOoxml(rec){
+  let zip = rec.zip;
+  await cleanOoxmlMeta(zip, rec);
+  rec.deepApplied = [];
+  rec.deepFailed = false;
+
+  // Deep (content-level) removal — opt-in and Pro. If anything throws, the file
+  // could be left with dangling references, so we rebuild a fresh metadata-only
+  // clean from the original bytes and warn — never hand over a broken document.
+  if(rec.deepSelected && rec.deepSelected.size){
+    try{
+      await deepCleanOoxml(zip, rec);
+    }catch(e){
+      zip = await JSZip.loadAsync(rec.buffer);
+      rec.zip = zip;
+      await cleanOoxmlMeta(zip, rec);
+      rec.deepApplied = [];
+      rec.deepFailed = true;
+      if(rec.warnings.indexOf(DEEP_FAIL_WARN) === -1) rec.warnings.push(DEEP_FAIL_WARN);
     }
   }
 
@@ -944,6 +1408,27 @@ async function analyzePdf(rec, buf){
       rec.fields.push({ label:"XMP metadata", value:"embedded XML block (often mirrors author & software)", leak:true });
     }
   }catch(e){}
+  // Per-page authoring residue (PieceInfo / LastModified) — editor-tool history
+  // that pdf-lib leaves untouched by default. Catalog-level PieceInfo too.
+  try{
+    let pieceInfoPages = 0, lastModPages = 0;
+    for(const page of doc.getPages()){
+      const n = page.node;
+      try{ if(n.get(PDFLib.PDFName.of("PieceInfo"))) pieceInfoPages++; }catch(e){}
+      try{ if(n.get(PDFLib.PDFName.of("LastModified"))) lastModPages++; }catch(e){}
+    }
+    let catalogPiece = false;
+    try{ catalogPiece = !!doc.catalog.get(PDFLib.PDFName.of("PieceInfo")); }catch(e){}
+    if(pieceInfoPages || catalogPiece){
+      rec.fields.push({ label:"Editor data (PieceInfo)",
+        value:(pieceInfoPages ? "on " + pieceInfoPages + " page" + (pieceInfoPages > 1 ? "s" : "") : "document-level") +
+          " — private authoring-tool data added by the editor", leak:true });
+    }
+    if(lastModPages){
+      rec.fields.push({ label:"Page last-modified",
+        value:"timestamps on " + lastModPages + " page" + (lastModPages > 1 ? "s" : ""), leak:false });
+    }
+  }catch(e){}
 }
 
 async function cleanPdf(rec){
@@ -953,6 +1438,14 @@ async function cleanPdf(rec){
   const epoch = new Date(0);
   try{ doc.setCreationDate(epoch); doc.setModificationDate(epoch); }catch(e){}
   try{ doc.catalog.delete(PDFLib.PDFName.of("Metadata")); }catch(e){}
+  try{ doc.catalog.delete(PDFLib.PDFName.of("PieceInfo")); }catch(e){}
+  try{
+    for(const page of doc.getPages()){
+      try{ page.node.delete(PDFLib.PDFName.of("PieceInfo")); }catch(e){}
+      try{ page.node.delete(PDFLib.PDFName.of("LastModified")); }catch(e){}
+      try{ page.node.delete(PDFLib.PDFName.of("Metadata")); }catch(e){}
+    }
+  }catch(e){}
   const bytes = await doc.save({ useObjectStreams:false });
   return new Blob([bytes], { type:"application/pdf" });
 }
@@ -996,6 +1489,25 @@ async function analyzeImage(rec, buf){
     }catch(e){}
     if(texts) rec.fields.push({ label:"Text chunks", value: texts + " embedded text block(s) — may include software or author", leak:true });
     if(hasExif) rec.fields.push({ label:"EXIF block", value:"embedded EXIF data", leak:true });
+  }
+  if(rec.ext === "webp"){
+    // Walk RIFF chunks (mirrors stripWebp) so the re-scan can actually verify
+    // WebP cleaning instead of reporting nothing.
+    try{
+      const v = new DataView(buf), u8 = new Uint8Array(buf);
+      if(v.byteLength >= 12 && asciiAt(u8, 0, 4) === "RIFF" && asciiAt(u8, 8, 4) === "WEBP"){
+        let off = 12, hasExif = false, hasXmp = false;
+        while(off + 8 <= v.byteLength){
+          const fourcc = asciiAt(u8, off, 4);
+          const size = v.getUint32(off + 4, true);
+          if(fourcc === "EXIF") hasExif = true;
+          if(fourcc === "XMP ") hasXmp = true;
+          off += 8 + size + (size & 1);
+        }
+        if(hasExif) rec.fields.push({ label:"EXIF block", value:"embedded EXIF data (camera, possibly GPS)", leak:true });
+        if(hasXmp) rec.fields.push({ label:"XMP metadata", value:"embedded XML block — may include author & software", leak:true });
+      }
+    }catch(e){}
   }
 }
 
@@ -1129,18 +1641,28 @@ async function ensureCleanedBlob(rec){
 // Re-open the CLEANED copy and run the same analyzer over it, so we can prove
 // (not just claim) that no identifying fields survived. Returns the list of
 // any leaks still present — empty means verified clean.
+// A field is "removed by this clean" if it's a standard leak (always removed)
+// or a deep item the user opted into. Deep items left in place on purpose
+// (unchecked, or detection-only like hidden sheets) are NOT failures.
+function wasRemoved(rec, f){
+  return f.leak && f.value && (!f.deep || (rec.deepSelected && rec.deepSelected.has(f.deep)));
+}
 async function reScanCleaned(rec){
   if(rec.verify) return rec.verify;
   const buf = await rec.cleanedBlob.arrayBuffer();
-  const probe = { ext: rec.ext, kind: rec.kind, fields: [], warnings: [], thumbPath: null };
+  const probe = { ext: rec.ext, kind: rec.kind, fields: [], warnings: [], thumbPath: null,
+                  deepSelected: rec.deepSelected };
   try{
     if(rec.kind === "ooxml") await analyzeOoxml(probe, buf);
     else if(rec.kind === "pdf") await analyzePdf(probe, buf);
     else await analyzeImage(probe, buf);
-    const remaining = probe.fields.filter(f => f.leak && f.value);
-    rec.verify = { ok: remaining.length === 0, remaining, error: null };
+    // Only fields we intended to remove count against verification; intentionally
+    // kept deep items (e.g. hidden sheets) are reported separately, not as leaks.
+    const remaining = probe.fields.filter(f => wasRemoved(rec, f));
+    const kept = probe.fields.filter(f => f.leak && f.value && f.deep && !(rec.deepSelected && rec.deepSelected.has(f.deep)));
+    rec.verify = { ok: remaining.length === 0, remaining, kept, error: null };
   }catch(e){
-    rec.verify = { ok: null, remaining: [], error: (e && e.message) || "re-scan failed" };
+    rec.verify = { ok: null, remaining: [], kept: [], error: (e && e.message) || "re-scan failed" };
   }
   return rec.verify;
 }
@@ -1177,6 +1699,40 @@ $cleanAll.addEventListener("click", async () => {
 });
 
 /* ---------------- render ---------------- */
+// Deep-clean options: which content-level removals to offer, in display order.
+// hiddenSheets is intentionally absent — it's detection-only (no safe remover).
+const DEEP_META = {
+  trackedChanges: { label: "Accept &amp; remove tracked changes", note: "Removes revision history. Changes the visible document, like Accept All in Word." },
+  comments:       { label: "Remove comments &amp; reviewer names", note: "" },
+  notes:          { label: "Remove speaker notes", note: "" },
+  rsid:           { label: "Strip revision IDs (rsid)", note: "Invisible editing-session fingerprints. Safe to remove.", def: true }
+};
+const DEEP_ORDER = ["trackedChanges","comments","notes","rsid"];
+
+function renderDeepBlock(rec){
+  const keys = DEEP_ORDER.filter(k => rec.fields.some(f => f.deep === k));
+  if(!keys.length || (rec.status !== "analyzed" && rec.status !== "cleaned")) return "";
+  const pro = isPro();
+  if(!rec.deepInit){
+    rec.deepInit = true;
+    if(pro) for(const k of keys) if(DEEP_META[k].def) rec.deepSelected.add(k);
+  }
+  let opts = "";
+  for(const k of keys){
+    const checked = rec.deepSelected.has(k) ? " checked" : "";
+    opts += '<label class="deep-opt">' +
+      '<input type="checkbox" data-deep="' + k + '" data-id="' + rec.id + '"' + checked + '>' +
+      '<span class="deep-t">' + DEEP_META[k].label +
+      (DEEP_META[k].note ? '<span class="deep-note">' + DEEP_META[k].note + '</span>' : '') +
+      '</span></label>';
+  }
+  return '<div class="deep-block' + (pro ? "" : " locked") + '">' +
+    '<div class="deep-head">Deep clean' + (pro ? '' : ' <span class="deep-pro">Pro</span>') + '</div>' +
+    opts +
+    (pro ? '' : '<div class="deep-locked-msg">One-click removal of the above is a Pro feature. Detection is always free.</div>') +
+  '</div>';
+}
+
 function renderCard(rec){
   let card = document.getElementById("card-" + rec.id);
   if(!card){
@@ -1191,9 +1747,10 @@ function renderCard(rec){
     : rec.kind === "pdf" ? "PDF"
     : rec.kind === "image" ? rec.ext.toUpperCase() : "FILE";
 
+  const keptAfter = rec.verify && rec.verify.kept ? rec.verify.kept.length : 0;
   let stamp;
   if(rec.status === "working") stamp = '<span class="stamp working">Analyzing…</span>';
-  else if(rec.status === "cleaned") stamp = (rec.verify && rec.verify.ok === true)
+  else if(rec.status === "cleaned") stamp = (rec.verify && rec.verify.ok === true && !keptAfter)
     ? '<span class="stamp cleaned">Verified clean ✓</span>'
     : '<span class="stamp cleaned">Cleaned ✓</span>';
   else if(rec.status === "failed") stamp = '<span class="stamp failed">Skipped</span>';
@@ -1209,14 +1766,22 @@ function renderCard(rec){
   } else {
     let rows = "";
     rec.fields.forEach((f, i) => {
-      rows += '<div class="row' + (f.leak ? ' leak' : '') + '" style="animation-delay:' + Math.min(i * 45, 400) + 'ms">' +
+      const removed = rec.status === "cleaned" && wasRemoved(rec, f);
+      const kept = rec.status === "cleaned" && f.leak && f.value && !!f.deep &&
+        !(rec.deepSelected && rec.deepSelected.has(f.deep));
+      rows += '<div class="row' + (f.leak ? ' leak' : '') + (removed ? ' removed' : '') + (kept ? ' kept' : '') +
+        '" style="animation-delay:' + Math.min(i * 45, 400) + 'ms">' +
         '<span class="k">' + esc(f.label) + '</span>' +
         '<span class="v">' + esc(f.value) + '</span></div>';
     });
+    const deepBlock = renderDeepBlock(rec);
     let verifyLine = "";
     if(rec.status === "cleaned" && rec.verify){
-      if(rec.verify.ok === true)
+      if(rec.verify.ok === true && !keptAfter)
         verifyLine = '<div class="verified-badge"><span class="tick">✓</span> Re-scanned after cleaning: 0 identifying fields remain.</div>';
+      else if(rec.verify.ok === true && keptAfter)
+        verifyLine = '<div class="verified-badge partial"><span class="tick">✓</span> Standard metadata removed &amp; re-scanned. Still in the file: ' +
+          esc(rec.verify.kept.map(f => f.label).join(", ")) + '. Use Deep clean above to remove ' + (keptAfter > 1 ? 'them' : 'it') + '.</div>';
       else if(rec.verify.ok === false)
         verifyLine = '<div class="verified-badge fail"><span class="tick">!</span> Re-scan still found: ' + esc(rec.verify.remaining.map(f => f.label).join(", ")) + '. Please report this file.</div>';
       else
@@ -1232,7 +1797,7 @@ function renderCard(rec){
     body =
       '<div class="card-body">' +
         (rec.fields.length ? '<div class="report-label">What this file reveals</div><div class="rows">' + rows + '</div>' : '') +
-        summary + warns +
+        summary + deepBlock + warns +
       '</div>' +
       '<div class="card-foot">' +
         (rec.status === "cleaned"
@@ -1250,6 +1815,23 @@ function renderCard(rec){
 
   const btn = card.querySelector("[data-clean]");
   if(btn) btn.addEventListener("click", () => cleanFile(rec));
+
+  card.querySelectorAll("input[data-deep]").forEach(cb => {
+    cb.addEventListener("change", () => {
+      if(!isPro()){
+        cb.checked = false;
+        nudgePro("One-click deep clean (tracked changes, comments, notes) is a Pro feature. Detection is free.");
+        return;
+      }
+      const k = cb.getAttribute("data-deep");
+      if(cb.checked) rec.deepSelected.add(k); else rec.deepSelected.delete(k);
+      // Selection changed — invalidate the cached clean + its verification so the
+      // next download reflects the new choice.
+      rec.cleanedBlob = null; rec.verify = null; rec.deepApplied = [];
+      if(rec.status === "cleaned") rec.status = "analyzed";
+      renderCard(rec);
+    });
+  });
 }
 
 function refreshBar(){
@@ -1286,6 +1868,13 @@ function setPro(on, key){
   if(on) store("bc_last_ok", String(Date.now()));
   else store("bc_last_ok", null);
   refreshBar();
+  // Re-render analyzed cards so the deep-clean block reflects the new Pro state
+  // (and picks up safe defaults like rsid on upgrade).
+  try{
+    for(const rec of files.values()){
+      if(rec.status === "analyzed" || rec.status === "cleaned"){ rec.deepInit = false; renderCard(rec); }
+    }
+  }catch(e){}
 }
 
 // Pure policy helpers (unit-tested)
@@ -1387,7 +1976,9 @@ async function buildReportData(list){
       sizeAfter: rec.cleanedBlob.size,
       hashBefore: await sha256hex(origBlob),
       hashAfter: await sha256hex(rec.cleanedBlob),
-      removed: rec.fields.filter(f => f.leak && f.value).map(f => ({ label: f.label, value: f.value })),
+      removed: rec.fields.filter(f => wasRemoved(rec, f)).map(f => ({ label: f.label, value: f.value })),
+      deepActions: rec.deepApplied ? rec.deepApplied.slice() : [],
+      kept: v && v.kept ? v.kept.map(f => f.label) : [],
       warnings: rec.warnings.slice(),
       verify: v ? (v.ok === true ? "verified" : v.ok === false ? "failed" : "manual") : "manual",
       verifyRemaining: v && v.remaining ? v.remaining.map(f => f.label) : []
@@ -1412,6 +2003,8 @@ function reportToText(data){
       L.push("   Removed:");
       for(const f of it.removed) L.push("     - " + f.label + ": " + f.value);
     } else L.push("   Removed: no identifying fields were present.");
+    for(const a of it.deepActions) L.push("   Deep clean: " + a);
+    if(it.kept.length) L.push("   Kept by choice: " + it.kept.join(", "));
     for(const w of it.warnings) L.push("   Warning: " + w);
     L.push("   Re-scan: " + (it.verify === "verified" ? "0 identifying fields remain (verified)"
       : it.verify === "failed" ? "STILL FOUND: " + it.verifyRemaining.join(", ")
@@ -1423,6 +2016,18 @@ function reportToText(data){
 
 // Professional PDF report via pdf-lib (already loaded). Letter-style, on-brand,
 // with before/after hashes as a chain-of-custody record.
+// pdf-lib's standard fonts only encode WinAnsi; drawing other codepoints throws.
+// Normalize common typography to ASCII and replace anything else with '?', so a
+// non-Latin author/commenter name in the report never aborts PDF generation.
+function winAnsiSafe(s){
+  return String(s == null ? "" : s)
+    .replace(/[‘’‚′]/g, "'")
+    .replace(/[“”„″]/g, '"')
+    .replace(/[–—−]/g, "-")
+    .replace(/…/g, "...")
+    .replace(/[   ]/g, " ")
+    .replace(/[^\x20-\x7E\xA1-\xFF]/g, "?");
+}
 async function buildReportPDF(data){
   const { PDFDocument, StandardFonts, rgb } = PDFLib;
   const doc = await PDFDocument.create();
@@ -1441,8 +2046,9 @@ async function buildReportPDF(data){
 
   const nl = (n=1) => { y -= 14*n; };
   const ensure = h => { if(y - h < M){ page = doc.addPage([W,H]); y = H - M; } };
-  const text = (s, x, size, f, color) => page.drawText(s, { x, y, size, font: f, color });
+  const text = (s, x, size, f, color) => page.drawText(winAnsiSafe(s), { x, y, size, font: f, color });
   const wrapMono = (s, x, size, color, maxChars) => {
+    s = winAnsiSafe(s);
     for(let i=0;i<s.length;i+=maxChars){ ensure(12); text(s.slice(i,i+maxChars), x, size, mono, color); nl(1); }
   };
 
@@ -1482,6 +2088,13 @@ async function buildReportPDF(data){
         text(val, M+22+lw, 9, font, red); nl(1);
       }
     } else { ensure(12); text("No identifying fields were present.", M+14, 9, font, soft); nl(1); }
+
+    for(const a of it.deepActions){
+      ensure(12); text("+ " + a, M+14, 9, bold, green); nl(1);
+    }
+    if(it.kept.length){
+      ensure(12); text("Kept by choice: " + it.kept.join(", "), M+14, 9, font, rgb(0.54,0.35,0)); nl(1);
+    }
 
     for(const w of it.warnings){
       ensure(24);
@@ -1546,6 +2159,16 @@ if($zip) $zip.addEventListener("click", async () => {
   $zip.textContent = "ZIP + report";
   refreshBar();
 });
+
+// Test hook: no-op in production. A harness sets window.__BC_ALLOW_TEST before
+// loading the page to exercise the pure cleaning functions directly.
+try{
+  if(typeof window !== "undefined" && window.__BC_ALLOW_TEST){
+    window.__BC = { analyzeOoxml, cleanOoxml, deepScanDocx, deepCleanDocx,
+      deepScanPptx, deepCleanPptx, deepScanXlsx, deepCleanXlsx,
+      flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved };
+  }
+}catch(e){}
 
 })();
 </script>
