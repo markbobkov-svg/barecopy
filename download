@@ -1,0 +1,4 @@
+# nothing to build; keep the repo clean
+.DS_Store
+node_modules/
+*.log
