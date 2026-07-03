@@ -37,11 +37,13 @@
    **Checkout Links** → **Create Checkout Link** → выбери `Barecopy Pro` →
    Create → скопируй сгенерированную ссылку (вида `buy.polar.sh/...`).
 4. Скопируй **Organization ID** (Settings организации).
-5. GitHub → открой `index.html` → карандаш (Edit) → замени:
-   - `TODO_POLAR_ORG_ID` → твой Organization ID
-   - `TODO_POLAR_CHECKOUT_URL` → Checkout Link
-   (домен barecopy.com уже вшит во все файлы)
+5. GitHub → открой **config.js** (единственный файл, который ты правишь руками)
+   → карандаш (Edit) → впиши между кавычками:
+   - `window.BARECOPY_ORG_ID`   = твой Organization ID
+   - `window.BARECOPY_CHECKOUT` = твоя buy.polar.sh/... ссылка
    Commit → Vercel передеплоит сам (~1 мин).
+   ⚠ Это делается ОДИН раз. Дальше при любом обновлении кода config.js
+   остаётся нетронутым — просто качаешь новый билд и коммитишь, правок нет.
 6. Для выплат Polar попросит онбординг Stripe: паспорт + IBAN.
    Финляндия поддерживается. Цепочка денег: покупатель → Polar (merchant of
    record, EU VAT — их проблема) → выплата на твой счёт.

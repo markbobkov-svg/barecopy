@@ -3,4 +3,8 @@
   <url><loc>https://barecopy.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
   <url><loc>https://barecopy.com/privacy.html</loc><priority>0.2</priority></url>
   <url><loc>https://barecopy.com/terms.html</loc><priority>0.2</priority></url>
+  <url><loc>https://barecopy.com/remove-author-name-word-document.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://barecopy.com/word-to-pdf-metadata.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://barecopy.com/remove-exif-gps-from-photos.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://barecopy.com/security.html</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
 </urlset>
