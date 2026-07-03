@@ -1,6 +1,6 @@
 /* Barecopy service worker — precache all app assets so the tool works fully
    offline after the first visit. Cache-first; the app is static so this is safe. */
-const CACHE = "barecopy-v1.3.0";
+const CACHE = "barecopy-v1.3.1";
 const ASSETS = [
   "/",
   "/index.html",

@@ -65,7 +65,7 @@
   }
   .head-in{
     display:flex;align-items:center;justify-content:space-between;
-    padding:18px 0;gap:12px;flex-wrap:wrap;
+    padding-top:18px;padding-bottom:18px;gap:12px;flex-wrap:wrap;
   }
   .wordmark{
     font-family:var(--cond);font-weight:700;font-size:20px;
@@ -315,7 +315,7 @@
     margin-top:56px;border-top:1px solid var(--line);
   }
   .foot-in{
-    padding:22px 0 40px;display:flex;justify-content:space-between;gap:14px;
+    padding-top:22px;padding-bottom:40px;display:flex;justify-content:space-between;gap:14px;
     flex-wrap:wrap;font-size:13px;color:var(--ink-faint);
   }
   .foot-in a{color:var(--ink-soft)}
@@ -516,7 +516,7 @@
 
 <footer>
   <div class="wrap foot-in">
-    <span>Barecopy v1.1 — clean documents before you send them.</span>
+    <span>Barecopy v1.3.1 — clean documents before you send them.</span>
     <span><a href="/remove-author-name-word-document.html">Guides</a> · <a href="/verify.html">Verify</a> · <a href="/security.html">Security</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="#pro">Pro</a></span>
   </div>
 </footer>
@@ -534,7 +534,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.3.0",
+  version: "1.3.1",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
@@ -923,7 +923,11 @@ async function analyzePdf(rec, buf){
   try{
     doc = await PDFLib.PDFDocument.load(buf, { updateMetadata:false, ignoreEncryption:true });
   }catch(e){
-    throw new Error("This PDF couldn't be opened. If it's password-protected, remove the password first.");
+    const raw = (e && e.message) ? e.message : String(e);
+    if(/encrypt/i.test(raw)){
+      throw new Error("This PDF is encrypted and couldn't be opened. Open it with the password, save an unlocked copy (Print → Save as PDF works), then drop that copy here.");
+    }
+    throw new Error("This PDF couldn't be opened — it may use a structure this parser doesn't support (common with some scanners or export tools). Parser said: \"" + raw.slice(0,160) + "\". Try opening it in a PDF reader and doing Print → Save as PDF to get a clean copy, then drop that here.");
   }
   if(doc.isEncrypted){
     throw new Error("This PDF is password-protected — cleaning it would corrupt the file. Open it with the password, save an unlocked copy (Print → Save as PDF works), then drop that copy here.");
@@ -976,8 +980,13 @@ async function analyzeImage(rec, buf){
     if(tags.Software) rec.fields.push({ label:"Software", value: String(tags.Software), leak:true });
     if(tags.Artist) rec.fields.push({ label:"Artist", value: String(tags.Artist), leak:true });
     if(tags.Copyright) rec.fields.push({ label:"Copyright", value: String(tags.Copyright), leak:false });
-    if(!rec.fields.length && Object.keys(tags).length > 2){
-      rec.fields.push({ label:"EXIF block", value: Object.keys(tags).length + " technical fields", leak:false });
+    if(!rec.fields.length){
+      const tagCount = Object.keys(tags).length;
+      if(tagCount > 2){
+        rec.fields.push({ label:"EXIF block", value: tagCount + " technical fields", leak:false });
+      } else {
+        rec.warnings.push("No EXIF data was found in this file at all. If you expected GPS or camera info here, it was likely already stripped before this copy reached you — common when a photo is shared via a messaging app, cloud service, or social platform first.");
+      }
     }
   }
   if(rec.ext === "png"){
