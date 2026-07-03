@@ -20,9 +20,9 @@
 "offers":[{"@type":"Offer","price":"0","priceCurrency":"EUR","name":"Free"},
 {"@type":"Offer","price":"4","priceCurrency":"EUR","name":"Pro — monthly subscription"}]}
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+<!-- Fonts self-hosted from same origin (see fonts.css + /fonts/). No external
+     requests: corporate networks that block CDNs must still render correctly. -->
+<link href="/fonts.css" rel="stylesheet">
 <style>
   :root{
     --paper:#F6F5F0;
@@ -520,9 +520,11 @@
   </div>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+<!-- Libraries self-hosted from same origin (/vendor/). Loading these from a CDN
+     silently broke PDF processing on networks that block external hosts. -->
+<script src="/vendor/jszip.min.js"></script>
+<script src="/vendor/pdf-lib.min.js"></script>
+<script src="/vendor/exif.min.js"></script>
 <script src="/config.js"></script>
 <script>
 (function(){
