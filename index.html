@@ -315,6 +315,7 @@
   .license-row{margin-top:14px;display:flex;gap:8px}
   .license-row input{flex:1;min-width:0;font-family:var(--mono);font-size:13px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
   .license-row input:focus{outline:2px solid var(--ink);outline-offset:1px}
+  .license-row .btn{width:auto;margin-top:0;flex:0 0 auto}
   .license-msg{margin-top:8px;font-size:12.5px;color:var(--ink-soft);min-height:1em}
   .license-msg.ok{color:var(--clean)} .license-msg.err{color:var(--leak)}
   .pro-chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--clean);color:var(--clean);border-radius:3px;padding:3px 7px}
@@ -527,6 +528,17 @@ function extOf(name){
 function cleanName(name){
   const i = name.lastIndexOf(".");
   return i > 0 ? name.slice(0,i) + "_clean" + name.slice(i) : name + "_clean";
+}
+function uniqueName(name, used){
+  if(!used.has(name)){ used.add(name); return name; }
+  const i = name.lastIndexOf(".");
+  const base = i > 0 ? name.slice(0, i) : name;
+  const ext = i > 0 ? name.slice(i) : "";
+  let n = 2;
+  while(used.has(base + " (" + n + ")" + ext)) n++;
+  const out = base + " (" + n + ")" + ext;
+  used.add(out);
+  return out;
 }
 function download(blob, name){
   const url = URL.createObjectURL(blob);
@@ -1241,9 +1253,10 @@ if($zip) $zip.addEventListener("click", async () => {
   $zip.textContent = "Packing…";
   try{
     const zip = new JSZip();
+    const used = new Set();
     for(const rec of list){
       await ensureCleanedBlob(rec);
-      zip.file(cleanName(rec.file.name), rec.cleanedBlob);
+      zip.file(uniqueName(cleanName(rec.file.name), used), rec.cleanedBlob);
       rec.status = "cleaned";
       renderCard(rec);
     }
