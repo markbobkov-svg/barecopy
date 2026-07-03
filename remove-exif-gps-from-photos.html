@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Remove EXIF and GPS Data From Photos — Without Uploading Them | Barecopy</title>
-<meta name="description" content="Your photos can carry the GPS coordinates of where they were taken, the camera model and the exact time. Here's how to see that data and strip it losslessly — in your browser, with the file never leaving your device.">
-<link rel="canonical" href="https://barecopy.com/remove-exif-gps-from-photos.html">
+<title>How to Remove the Author Name from a Word Document (2026) | Barecopy</title>
+<meta name="description" content="A Word file stores the author, your name, company and edit history in hidden metadata — and Word's own inspector misses some of it. Here's how to check and remove it, including a way that never uploads your file.">
+<link rel="canonical" href="https://barecopy.com/remove-author-name-word-document.html">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link href="/fonts.css" rel="stylesheet">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Remove EXIF and GPS data from photos — locally">
-<meta property="og:description" content="See the location, camera and timestamp hidden in a photo, then strip it byte-level with zero quality loss. Nothing is uploaded.">
-<meta property="og:url" content="https://barecopy.com/remove-exif-gps-from-photos.html">
+<meta property="og:title" content="How to remove the author name from a Word document">
+<meta property="og:description" content="Check what your .docx reveals and strip the author, company and edit history — locally, without uploading the file.">
+<meta property="og:url" content="https://barecopy.com/remove-author-name-word-document.html">
 <meta property="og:image" content="https://barecopy.com/og.png">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"How do I remove GPS location data from a photo?","acceptedAnswer":{"@type":"Answer","text":"Drop the photo on Barecopy. It reads the EXIF block locally, shows the decoded GPS coordinates, camera model, timestamp and editing software, and produces a copy with the metadata segments removed. The image itself is copied byte-for-byte, so there is no recompression and no quality loss, and the file is never uploaded."}},
-{"@type":"Question","name":"Does removing EXIF data reduce photo quality?","acceptedAnswer":{"@type":"Answer","text":"Not if it's done at byte level. Barecopy deletes the metadata segments from the file and copies the image data untouched, so the clean copy is pixel-identical to the original. Tools that re-encode the image instead can lose quality with each pass."}},
-{"@type":"Question","name":"Do social networks remove EXIF data automatically?","acceptedAnswer":{"@type":"Answer","text":"Major social platforms generally strip metadata from photos on upload, but files you send as email attachments, messenger documents, cloud links or marketplace listings typically keep it. If the photo leaves your device as a file, assume the metadata travels with it unless you removed it yourself."}}]}
+{"@type":"Question","name":"How do I remove the author name from a Word document?","acceptedAnswer":{"@type":"Answer","text":"Open File then Info, select Check for Issues, run the Document Inspector, and remove Document Properties and Personal Information. This clears the author and last-modified-by fields. On Mac the built-in inspector is more limited, and it can miss custom properties and the embedded preview thumbnail, so verify the result or use a tool that strips every field."}},
+{"@type":"Question","name":"Does the author name stay in a PDF exported from Word?","acceptedAnswer":{"@type":"Answer","text":"Yes. When you export a Word document to PDF, the author name, the creating application and the creation and modification dates are copied into the PDF's metadata. Removing them from the Word file first, or cleaning the PDF afterwards, is the only way to stop them travelling."}},
+{"@type":"Question","name":"Can I remove metadata without uploading the file anywhere?","acceptedAnswer":{"@type":"Answer","text":"Yes. Barecopy processes the file entirely inside your browser using JavaScript, so the document is never uploaded to a server. You can disconnect from the internet after loading the page and it still works."}}]}
 </script>
 <style>
   :root{
@@ -45,18 +45,15 @@
   h1 .strike{position:relative;white-space:nowrap}
   h1 .strike::after{content:"";position:absolute;left:-2%;right:-2%;top:54%;height:.13em;background:var(--leak);border-radius:1px;transform:rotate(-1.2deg)}
   .lead{margin-top:18px;font-size:18px;color:var(--ink-soft)}
-  .exhibit{margin-top:22px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:16px 18px;font-family:var(--mono);font-size:13.5px;line-height:1.8}
-  .exhibit .lbl{color:var(--ink-soft)}
-  .exhibit .val{color:var(--ink)}
-  .exhibit .red{color:var(--leak);background:var(--leak-bg);border:1px solid var(--leak-line);border-radius:3px;padding:0 5px}
   h2{font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h3{font-size:17px;font-weight:650;margin:22px 0 4px}
   p{margin-top:12px}
   ol,ul{margin:14px 0 0 0;padding-left:22px}
   li{margin-top:7px}
   code{font-family:var(--mono);font-size:.9em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
   .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
   .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--leak)}
-  .callout h3{margin-top:6px;font-size:17px;font-weight:650}
+  .callout h3{margin-top:6px}
   .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
   .warnbox{margin-top:18px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;padding:14px 16px;font-size:15px;color:var(--warn)}
   .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
@@ -65,10 +62,6 @@
   .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
   .faq details[open] summary::before{content:"–"}
   .faq p{font-size:15.5px;color:var(--ink-soft)}
-  .more{margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px}
-  .more .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
-  .more a{display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none;border-bottom:1px solid transparent}
-  .more a:hover{border-bottom-color:var(--ink)}
   footer{border-top:1px solid var(--line);margin-top:50px}
   .foot-in{padding-top:22px;padding-bottom:44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
   .foot-in a{color:var(--ink-soft)}
@@ -86,58 +79,58 @@
 <main class="wrap">
 <article>
   <div class="eyebrow">Guide · updated 2026</div>
-  <h1>Remove EXIF and <span class="strike">GPS data</span> from photos</h1>
-  <p class="lead">A photo taken on a phone usually carries an EXIF block: the exact coordinates of where you stood, the camera model, the second the shutter fired, and the software that touched the file. Send the photo as a file, and all of it goes along.</p>
+  <h1>How to remove the <span class="strike">author name</span> from a Word document</h1>
+  <p class="lead">Every <code>.docx</code> quietly stores who made it — your name, your company, how long you spent editing, and sometimes a preview image of the first page. Here's how to see all of it and take it out, including the fields Word's own tool leaves behind.</p>
 
-  <div class="exhibit" aria-label="Example of what a photo reveals">
-    <div><span class="lbl">GPS location&nbsp;&nbsp;</span><span class="red">60.320000, 24.958333</span> <span class="lbl">← where this photo was taken</span></div>
-    <div><span class="lbl">Camera&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="val">Apple iPhone 15 Pro</span></div>
-    <div><span class="lbl">Taken&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="val">2026:07:01 14:37:00</span></div>
-    <div><span class="lbl">Software&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="val">Adobe Lightroom</span></div>
-  </div>
+  <h2>What Word actually stores</h2>
+  <p>A Word file is a package of XML. Inside it, a properties record keeps the author and "last modified by" names, the company and manager, the total editing time, the created and last-printed dates, any custom properties your organisation added, and an embedded thumbnail of page one. Most of it is written automatically from your Office account — you never typed it, but it ships with every copy you send.</p>
+  <p>This is not theoretical. Author names in document metadata have surfaced in court filings and news leaks, and freelancers have shown clients how many draft revisions a file went through without meaning to. If you're sending a document to someone outside your organisation, this is the information you probably want gone.</p>
 
-  <h2>When this actually matters</h2>
-  <p>Selling something online with photos taken at home. Sending a property or damage photo to a stranger. Sharing images of children. Publishing photos from a location you don't want tied to you. In each case the pixels are the point — the coordinates are a stowaway.</p>
-  <p>Major social platforms generally strip metadata on upload, so a feed post is usually safe. But a photo sent as an <strong>email attachment, messenger document, cloud link or marketplace listing</strong> typically keeps its EXIF block intact. If it leaves your device as a file, assume the data travels unless you removed it.</p>
-
-  <h2>How to see and remove it — without uploading the photo</h2>
-  <p>The paradox of most "remove EXIF online" tools: they ask you to upload the photo to their server to remove the data you consider sensitive. Barecopy inverts that — the photo is read by JavaScript in your own browser tab:</p>
+  <h2>Method 1 — Word's built-in inspector</h2>
+  <p>Word ships with a Document Inspector that removes the most common fields:</p>
   <ol>
-    <li>Open Barecopy and drop the photo (JPG, PNG or WebP).</li>
-    <li>It decodes the EXIF block locally and shows what's inside — GPS as real coordinates, camera, timestamp, software.</li>
-    <li>Select <strong>Clean &amp; download</strong>. The metadata segments are cut out of the file at byte level; the image data is copied untouched.</li>
+    <li>Open the document and go to <code>File → Info</code>.</li>
+    <li>Select <code>Check for Issues → Inspect Document</code>.</li>
+    <li>Run it, then choose <strong>Remove All</strong> next to "Document Properties and Personal Information".</li>
+    <li>Save the file.</li>
   </ol>
+  <div class="warnbox">On macOS the inspector is more limited than on Windows, and in both versions it can leave custom properties and the embedded preview thumbnail in place. If the document is sensitive, verify the result rather than assuming it's clean — reopen <code>File → Info</code> and check the fields are empty.</div>
+
+  <h2>Method 2 — check and strip every field, without uploading</h2>
+  <p>The reason people reach for an online tool is precisely that the file is sensitive — which makes uploading it to someone's server the wrong move. Barecopy solves that by running entirely in your browser: you drop the file on the page, it shows you every field the document reveals, and it hands back a clean copy. The file is never transmitted. You can switch off your internet after the page loads and it still works.</p>
   <div class="callout">
     <div class="k">Do it now</div>
-    <h3>Check a photo you're about to send</h3>
-    <p>Drop it on Barecopy. If there are GPS coordinates inside, you'll see them in red — then download a copy without them. The photo never leaves your device; airplane mode works.</p>
+    <h3>See what your document reveals</h3>
+    <p>Drop your <code>.docx</code> on Barecopy. It lists the author, company, edit time, custom properties and thumbnail, then removes them — locally, on your device.</p>
     <a class="btn" href="/">Open Barecopy →</a>
   </div>
 
-  <h2>Why byte-level removal beats re-encoding</h2>
-  <p>Many tools "remove" EXIF by decoding the image and saving a new one. That recompresses the pixels — quality drops a little with every pass, and large phone photos can fail outright in the browser. Barecopy instead walks the file's structure and deletes only the metadata segments (EXIF, XMP, IPTC, comments), copying the image data byte-for-byte. The result is <strong>pixel-identical</strong> to the original, with the color profile preserved, and it works on full-size 48-megapixel photos instantly.</p>
-  <div class="warnbox">HEIC isn't supported yet — but when you pick a HEIC photo through the browser on an iPhone, iOS converts it to JPEG automatically, which Barecopy handles.</div>
+  <h2>What removing metadata does not cover</h2>
+  <p>Two things are content, not metadata, and no metadata cleaner should silently touch them: <strong>tracked changes</strong> and <strong>comments</strong>. They contain editor names and deleted text, so accept or reject changes and delete comments inside Word before sending. Barecopy detects both and warns you rather than removing them behind your back.</p>
 
   <h2>Frequently asked</h2>
   <div class="faq">
     <details open>
-      <summary>Does removing EXIF reduce the photo's quality?</summary>
-      <p>Not here. The image data is copied without re-encoding, so the clean copy is pixel-identical. You can verify: file size drops by roughly the size of the metadata, nothing else changes.</p>
+      <summary>Does the author name stay in a PDF exported from Word?</summary>
+      <p>Yes — the author, the creating application and the timestamps are carried into the PDF's metadata. Clean the Word file before exporting, or clean the PDF afterwards. Barecopy handles PDFs too.</p>
     </details>
     <details>
-      <summary>Can I clean many photos at once?</summary>
-      <p>Yes — Barecopy Pro cleans a whole folder in one go and returns everything as a ZIP with a report listing what was removed from each file.</p>
+      <summary>Will removing metadata change how my document looks?</summary>
+      <p>No. Only the hidden properties are removed; the text, formatting and layout are untouched.</p>
     </details>
     <details>
-      <summary>What about screenshots?</summary>
-      <p>Screenshots usually carry little or no EXIF, but PNG files can contain text chunks naming the software or author. Barecopy detects and removes those too.</p>
+      <summary>Can I clean several documents at once?</summary>
+      <p>Yes. Barecopy's Pro tier cleans a whole folder in one go and gives you the files back as a ZIP with a verification report listing exactly what was removed from each one.</p>
+    </details>
+    <details>
+      <summary>Is it really private?</summary>
+      <p>The file is processed by JavaScript in your own browser tab and never sent anywhere. Open your browser's developer tools, watch the network while you clean a file: nothing leaves.</p>
     </details>
   </div>
-
-  <div class="more">
-    <div class="k">More guides</div>
-    <a href="/remove-author-name-word-document.html">How to remove the author name from a Word document →</a>
-    <a href="/word-to-pdf-metadata.html">Does converting Word to PDF remove metadata? →</a>
+  <div class="more" style="margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px">
+    <div style="font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)">More guides</div>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/word-to-pdf-metadata.html">Does converting Word to PDF remove metadata? &rarr;</a>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/remove-exif-gps-from-photos.html">How to remove EXIF and GPS data from photos &rarr;</a>
   </div>
 </article>
 </main>
