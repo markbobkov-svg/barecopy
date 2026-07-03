@@ -139,6 +139,17 @@
   .dz-note{
     margin-top:14px;font-size:13px;color:var(--ink-faint);
   }
+  .dz-pick{
+    margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+  }
+  .dz-pick-btn{
+    font-family:var(--sans);font-weight:600;font-size:13.5px;
+    border:1px solid var(--line);border-radius:6px;background:var(--paper);
+    color:var(--ink);padding:8px 16px;cursor:pointer;
+    transition:border-color .12s ease, background .12s ease;
+  }
+  .dz-pick-btn:hover{border-color:var(--ink);background:#FDFDFB}
+  .dz-pick-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   input[type=file]{display:none}
 
   /* ---------- actions bar ---------- */
@@ -354,11 +365,16 @@
 
   <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose files to inspect">
     <span class="dz-glyph">[ ▒▒▒▒▒▒▒▒▒▒ ]</span>
-    <div class="dz-title">Drop files here or tap to choose</div>
+    <div class="dz-title">Drop files or a folder here, or tap to choose</div>
     <div class="dz-formats">DOCX · XLSX · PPTX · PDF · JPG · PNG · WEBP</div>
-    <div class="dz-note">Files are read by this page only. Airplane mode works too.</div>
+    <div class="dz-note" id="dropNote">Files are read by this page only. Airplane mode works too.</div>
+    <div class="dz-pick">
+      <button type="button" class="dz-pick-btn" id="pickFilesBtn">Choose files</button>
+      <button type="button" class="dz-pick-btn" id="pickFolderBtn">Choose folder</button>
+    </div>
     <input type="file" id="fileInput" multiple
       accept=".docx,.xlsx,.pptx,.pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp">
+    <input type="file" id="folderInput" webkitdirectory directory multiple>
   </div>
 
   <div class="actions" id="actionsBar">
@@ -485,8 +501,8 @@ const BC_CONFIG = {
   version: "1.2.0",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
-  polarOrgId: "d52362db-885a-4302-9bd4-353f229d3c9d",
-  checkoutUrl: "https://buy.polar.sh/polar_cl_1F7NnzQQhJocQnEyhZ6VM6ikF7UGdepS0SnfQ15JMad",
+  polarOrgId: "TODO_POLAR_ORG_ID",
+  checkoutUrl: "TODO_POLAR_CHECKOUT_URL",
   revalidateHours: 24, // how often an active subscription is re-checked
   graceDays: 7         // offline grace before Pro pauses
 };
@@ -562,7 +578,22 @@ function readBuffer(file){
 const OOXML = { docx:"Word document", xlsx:"Excel workbook", pptx:"PowerPoint presentation" };
 const IMG = { jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", webp:"image/webp" };
 
-$drop.addEventListener("click", () => $input.click());
+const $folderInput = document.getElementById("folderInput");
+$drop.addEventListener("click", e => {
+  if(e.target.closest(".dz-pick")) return; // buttons handle themselves
+  $input.click();
+});
+document.getElementById("pickFilesBtn").addEventListener("click", e => { e.stopPropagation(); $input.click(); });
+document.getElementById("pickFolderBtn").addEventListener("click", e => { e.stopPropagation(); $folderInput.click(); });
+$folderInput.addEventListener("change", () => {
+  const all = [...$folderInput.files];
+  const ok = all.filter(f => SUPPORTED[extOf(f.name)]);
+  const skipped = all.length - ok.length;
+  handleFiles(ok);
+  if(skipped) flashNote(skipped + " unsupported file" + (skipped>1?"s":"") + " in the folder " + (skipped>1?"were":"was") + " skipped.");
+  else if(!ok.length) flashNote("That folder had no supported files.");
+  $folderInput.value = "";
+});
 $drop.addEventListener("keydown", e => {
   if(e.key === "Enter" || e.key === " "){ e.preventDefault(); $input.click(); }
 });
@@ -572,8 +603,66 @@ $drop.addEventListener("keydown", e => {
 ["dragleave","drop"].forEach(ev =>
   $drop.addEventListener(ev, e => { e.preventDefault(); $drop.classList.remove("dragover"); })
 );
-$drop.addEventListener("drop", e => handleFiles(e.dataTransfer.files));
+$drop.addEventListener("drop", onDrop);
 $input.addEventListener("change", () => { handleFiles($input.files); $input.value = ""; });
+
+const SUPPORTED = { docx:1, xlsx:1, pptx:1, pdf:1, jpg:1, jpeg:1, png:1, webp:1 };
+
+// Drop can contain folders. The DataTransferItem entry API lets us walk the
+// tree; we read files eagerly, then hand the flat list to the normal intake.
+async function onDrop(e){
+  e.preventDefault();
+  $drop.classList.remove("dragover");
+  const items = e.dataTransfer && e.dataTransfer.items;
+  const canWalk = items && items.length && typeof items[0].webkitGetAsEntry === "function";
+  if(!canWalk){ handleFiles(e.dataTransfer.files); return; } // older browsers: flat files only
+
+  const entries = [];
+  for(const it of items){
+    const entry = it.webkitGetAsEntry && it.webkitGetAsEntry();
+    if(entry) entries.push(entry);
+  }
+  const collected = [];
+  let skipped = 0;
+  const walk = entry => new Promise(resolve => {
+    if(entry.isFile){
+      entry.file(f => {
+        if(SUPPORTED[extOf(f.name)]) collected.push(f);
+        else skipped++;               // unsupported files inside a folder are skipped quietly
+        resolve();
+      }, () => resolve());
+    } else if(entry.isDirectory){
+      const reader = entry.createReader();
+      const readBatch = () => reader.readEntries(async batch => {
+        if(!batch.length){ resolve(); return; }
+        for(const child of batch) await walk(child);
+        readBatch();                  // readEntries returns in chunks; keep going until empty
+      }, () => resolve());
+      readBatch();
+    } else resolve();
+  });
+
+  for(const entry of entries) await walk(entry);
+
+  if(!collected.length){
+    const id = nextId++;
+    const rec = { id, file:{ name: skipped ? "Folder had no supported files" : "Nothing to clean", size:0 },
+      ext:"", kind:"unsupported", fields:[], warnings:[], error:null, leaks:0, status:"failed",
+      error: skipped
+        ? "That folder had no supported files. Supported: DOCX, XLSX, PPTX, PDF, JPG, PNG, WEBP."
+        : "Nothing was dropped." };
+    files.set(id, rec);
+    renderCard(rec);
+    return;
+  }
+  handleFiles(collected);
+  if(skipped) flashNote(skipped + " unsupported file" + (skipped>1?"s":"") + " in the folder " + (skipped>1?"were":"was") + " skipped.");
+}
+
+function flashNote(msg){
+  const el = document.getElementById("dropNote");
+  if(el){ el.textContent = msg; }
+}
 
 function handleFiles(list){
   for(const f of list) addFile(f);

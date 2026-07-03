@@ -33,7 +33,9 @@
    - Benefits → добавь **License Keys** (activations: unlimited) → Save.
      Ключ привязан к подписке: при отмене Polar отзывает его в конце
      оплаченного периода — сайт это увидит при суточной проверке и выключит Pro.
-3. Скопируй **Checkout Link** продукта.
+3. Checkout Link не появляется сам — создай его: на странице продукта раздел
+   **Checkout Links** → **Create Checkout Link** → выбери `Barecopy Pro` →
+   Create → скопируй сгенерированную ссылку (вида `buy.polar.sh/...`).
 4. Скопируй **Organization ID** (Settings организации).
 5. GitHub → открой `index.html` → карандаш (Edit) → замени:
    - `TODO_POLAR_ORG_ID` → твой Organization ID
