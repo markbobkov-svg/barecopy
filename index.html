@@ -32,15 +32,15 @@
     --ink-faint:#8A8F98;
     --line:#DCD9CF;
     --line-soft:#E8E6DE;
-    --leak:#C2273A;
-    --leak-bg:#FBEEEF;
-    --leak-line:#EFCBD0;
-    --clean:#1E7F4F;
-    --clean-bg:#E9F4EE;
-    --clean-line:#C4E0D0;
+    --leak:#A2394A;
+    --leak-bg:#F8F2F2;
+    --leak-line:#E5D6D8;
+    --clean:#2A7350;
+    --clean-bg:#EEF3EF;
+    --clean-line:#D3E0D6;
     --warn:#8A5A00;
-    --warn-bg:#FBF3E2;
-    --warn-line:#EBD9AE;
+    --warn-bg:#F6F1E7;
+    --warn-line:#E6DABC;
     --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;
     --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
     --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
@@ -206,20 +206,20 @@
   }
   .stamp{
     flex:0 0 auto;
-    font-family:var(--cond);font-weight:700;font-size:12px;
-    letter-spacing:.14em;text-transform:uppercase;
-    border:1.5px solid currentColor;border-radius:3px;
-    padding:4px 9px;transform:rotate(2deg);
+    font-family:var(--cond);font-weight:600;font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;
+    border:1px solid var(--line);border-radius:4px;
+    padding:3px 8px;background:var(--paper);color:var(--ink-soft);
     user-select:none;
   }
-  .stamp.analyzed{color:var(--leak)}
-  .stamp.cleanfile{color:var(--clean)}
-  .stamp.cleaned{color:var(--clean);animation:stampIn .3s cubic-bezier(.2,1.4,.4,1) both}
-  .stamp.working{color:var(--ink-faint);transform:none;border-style:dashed}
-  .stamp.failed{color:var(--warn)}
+  .stamp.analyzed{color:var(--leak);border-color:var(--leak-line)}
+  .stamp.cleanfile{color:var(--clean);border-color:var(--clean-line)}
+  .stamp.cleaned{color:var(--clean);border-color:var(--clean-line);animation:stampIn .25s ease both}
+  .stamp.working{color:var(--ink-faint);border-style:dashed}
+  .stamp.failed{color:var(--warn);border-color:var(--warn-line)}
   @keyframes stampIn{
-    from{opacity:0;transform:rotate(2deg) scale(1.6)}
-    to{opacity:1;transform:rotate(2deg) scale(1)}
+    from{opacity:0;transform:translateY(-2px)}
+    to{opacity:1;transform:none}
   }
 
   .card-body{padding:6px 18px 16px}
@@ -244,23 +244,16 @@
   .row .v{
     font-family:var(--mono);font-size:13px;word-break:break-word;min-width:0;
   }
-  .row.leak .v{
-    color:var(--leak);font-weight:500;
-    background:var(--leak-bg);border:1px solid var(--leak-line);
-    border-radius:3px;padding:1px 6px;
-  }
-  .row.removed .v{
-    color:var(--ink-faint);background:transparent;border-color:transparent;
-    text-decoration:line-through;padding:1px 0;
-  }
+  /* leaks read as muted colored text, not filled pills — calmer, columns stay aligned */
+  .row.leak .k{color:var(--leak)}
+  .row.leak .v{color:var(--leak);font-weight:500}
+  .row.removed .k{color:var(--ink-faint)}
+  .row.removed .v{color:var(--ink-faint);text-decoration:line-through}
   /* a leak deliberately left in the file (deep item not selected) stays flagged */
-  .row.leak.kept .v{
-    color:var(--leak);background:var(--leak-bg);border:1px solid var(--leak-line);
-    text-decoration:none;
-  }
+  .row.leak.kept .v{color:var(--leak);text-decoration:none}
   .deep-block{
     margin-top:14px;border:1px solid var(--line);border-radius:8px;
-    padding:11px 13px;background:var(--card);
+    padding:11px 13px;background:var(--paper);
   }
   .deep-head{
     font-family:var(--cond);font-weight:700;font-size:11.5px;
@@ -268,8 +261,8 @@
     margin-bottom:8px;display:flex;align-items:center;gap:7px;
   }
   .deep-pro{
-    font-size:10px;letter-spacing:.08em;color:var(--accent,#b45309);
-    border:1px solid currentColor;border-radius:3px;padding:1px 5px;
+    font-size:10px;letter-spacing:.08em;color:var(--ink-soft);
+    border:1px solid var(--line);border-radius:3px;padding:1px 5px;
   }
   .deep-opt{
     display:flex;gap:9px;align-items:flex-start;
@@ -282,31 +275,34 @@
   .deep-locked-msg{
     margin-top:6px;font-size:12px;color:var(--ink-faint);
   }
-  .verified-badge.partial{
-    color:var(--warn);background:var(--warn-bg);border-color:var(--warn-line);
-  }
   .leak-summary{
-    margin-top:12px;font-size:13.5px;font-weight:600;color:var(--leak);
+    margin-top:12px;font-size:13.5px;font-weight:600;color:var(--ink-soft);
   }
-  .leak-summary.none{color:var(--clean)}
+  .leak-summary.none{color:var(--ink-soft)}
   .card.is-clean .leak-summary{color:var(--clean)}
+  /* status strips: neutral card, single colored left rule — not a saturated fill */
   .verified-badge{
     margin-top:10px;display:flex;gap:8px;align-items:baseline;
-    font-size:13px;font-weight:600;color:var(--clean);
-    background:var(--clean-bg);border:1px solid var(--clean-line);
+    font-size:13px;font-weight:500;color:var(--ink);
+    background:var(--paper);border:1px solid var(--line);
+    border-left:3px solid var(--clean);
     border-radius:6px;padding:9px 12px;
   }
-  .verified-badge .tick{font-family:var(--mono);font-weight:700}
-  .verified-badge.fail{color:var(--leak);background:var(--leak-bg);border-color:var(--leak-line)}
-  .verified-badge.unknown{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-line)}
+  .verified-badge .tick{font-family:var(--mono);font-weight:700;color:var(--clean)}
+  .verified-badge.fail{border-left-color:var(--leak)}
+  .verified-badge.fail .tick{color:var(--leak)}
+  .verified-badge.unknown,.verified-badge.partial{border-left-color:var(--warn)}
+  .verified-badge.unknown .tick,.verified-badge.partial .tick{color:var(--warn)}
   .warnbox{
-    margin-top:12px;background:var(--warn-bg);border:1px solid var(--warn-line);
-    border-radius:6px;padding:10px 12px;font-size:13px;color:var(--warn);
+    margin-top:12px;background:var(--paper);border:1px solid var(--line);
+    border-left:3px solid var(--warn);
+    border-radius:6px;padding:10px 12px;font-size:13px;color:var(--ink-soft);
     line-height:1.5;
   }
   .errbox{
-    margin-top:12px;background:var(--leak-bg);border:1px solid var(--leak-line);
-    border-radius:6px;padding:10px 12px;font-size:13px;color:var(--leak);
+    margin-top:12px;background:var(--paper);border:1px solid var(--line);
+    border-left:3px solid var(--leak);
+    border-radius:6px;padding:10px 12px;font-size:13px;color:var(--ink);
     line-height:1.5;
   }
   .card-foot{
@@ -2170,7 +2166,8 @@ try{
   if(typeof window !== "undefined" && window.__BC_ALLOW_TEST){
     window.__BC = { analyzeOoxml, cleanOoxml, deepScanDocx, deepCleanDocx,
       deepScanPptx, deepCleanPptx, deepScanXlsx, deepCleanXlsx,
-      flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved };
+      flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
+      renderCard, refreshBar, setPro, isPro, files };
   }
 }catch(e){}
 
