@@ -431,14 +431,14 @@
   <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose files to inspect">
     <span class="dz-glyph">[ ▒▒▒▒▒▒▒▒▒▒ ]</span>
     <div class="dz-title">Drop files or a folder here, or tap to choose</div>
-    <div class="dz-formats">DOCX · XLSX · PPTX · ODT · ODS · ODP · PDF · JPG · PNG · WEBP · GIF</div>
+    <div class="dz-formats">DOCX · XLSX · PPTX · ODT · ODS · ODP · PDF · JPG · PNG · WEBP · GIF · MP4 · MOV</div>
     <div class="dz-note" id="dropNote">Files are read by this page only. Airplane mode works too.</div>
     <div class="dz-pick">
       <button type="button" class="dz-pick-btn" id="pickFilesBtn">Choose files</button>
       <button type="button" class="dz-pick-btn" id="pickFolderBtn">Choose folder</button>
     </div>
     <input type="file" id="fileInput" multiple
-      accept=".docx,.xlsx,.pptx,.odt,.ods,.odp,.pdf,.jpg,.jpeg,.png,.webp,.gif,application/pdf,image/jpeg,image/png,image/webp,image/gif">
+      accept=".docx,.xlsx,.pptx,.odt,.ods,.odp,.pdf,.jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.m4v,application/pdf,image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime">
     <input type="file" id="folderInput" webkitdirectory directory multiple>
   </div>
 
@@ -581,7 +581,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.6.0",
+  version: "1.6.1",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
@@ -685,6 +685,7 @@ const ODF = { odt:"application/vnd.oasis.opendocument.text",
               ods:"application/vnd.oasis.opendocument.spreadsheet",
               odp:"application/vnd.oasis.opendocument.presentation" };
 const IMG = { jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", webp:"image/webp", gif:"image/gif" };
+const VID = { mp4:"video/mp4", mov:"video/quicktime", m4v:"video/x-m4v" };
 
 const $folderInput = document.getElementById("folderInput");
 $drop.addEventListener("click", e => {
@@ -714,7 +715,7 @@ $drop.addEventListener("keydown", e => {
 $drop.addEventListener("drop", onDrop);
 $input.addEventListener("change", () => { handleFiles($input.files); $input.value = ""; });
 
-const SUPPORTED = { docx:1, xlsx:1, pptx:1, odt:1, ods:1, odp:1, pdf:1, jpg:1, jpeg:1, png:1, webp:1, gif:1 };
+const SUPPORTED = { docx:1, xlsx:1, pptx:1, odt:1, ods:1, odp:1, pdf:1, jpg:1, jpeg:1, png:1, webp:1, gif:1, mp4:1, mov:1, m4v:1 };
 
 // Drop can contain folders. The DataTransferItem entry API lets us walk the
 // tree; we read files eagerly, then hand the flat list to the normal intake.
@@ -782,7 +783,7 @@ function addFile(file){
   const ext = extOf(file.name);
   const rec = {
     id, file, ext,
-    kind: OOXML[ext] ? "ooxml" : (ODF[ext] ? "odf" : (ext === "pdf" ? "pdf" : (IMG[ext] ? "image" : "unsupported"))),
+    kind: OOXML[ext] ? "ooxml" : (ODF[ext] ? "odf" : (ext === "pdf" ? "pdf" : (IMG[ext] ? "image" : (VID[ext] ? "video" : "unsupported")))),
     fields: [], warnings: [], error: null,
     leaks: 0, status: "working", cleanedBlob: null,
     deepSelected: new Set(), deepApplied: [], deepInit: false
@@ -794,7 +795,7 @@ function addFile(file){
     rec.status = "failed";
     rec.error = ext === "doc" || ext === "xls" || ext === "ppt"
       ? "Legacy ." + ext + " format isn't supported. Open it in Office and save as ." + ext + "x, then drop it here."
-      : "This file type isn't supported yet. Supported: DOCX, XLSX, PPTX, ODT, ODS, ODP, PDF, JPG, PNG, WEBP, GIF.";
+      : "This file type isn't supported yet. Supported: DOCX, XLSX, PPTX, ODT, ODS, ODP, PDF, JPG, PNG, WEBP, GIF, MP4, MOV.";
     renderCard(rec);
     return;
   }
@@ -817,6 +818,7 @@ async function analyze(rec){
   if(rec.kind === "ooxml") await analyzeOoxml(rec, buf);
   else if(rec.kind === "odf") await analyzeOdf(rec, buf);
   else if(rec.kind === "pdf") await analyzePdf(rec, buf);
+  else if(rec.kind === "video") analyzeVideo(rec, buf);
   else await analyzeImage(rec, buf);
   rec.leaks = rec.fields.filter(f => f.leak && f.value).length;
   rec.status = "analyzed";
@@ -1821,12 +1823,109 @@ async function reencodeFallback(rec){
   });
 }
 
+/* ---------------- Video (mp4 / mov / m4v) ---------------- */
+// ISO-BMFF is a tree of [size][type][payload] boxes. Metadata (device, GPS,
+// tags, XMP) lives in moov/udta, moov/meta, per-track udta, and top-level uuid
+// (XMP). We neuter those boxes IN PLACE — rename the type to 'free' and zero the
+// payload — so nothing shifts and the mdat chunk-offset tables (stco/co64) stay
+// valid. Removing boxes would break those offsets; this avoids all offset math.
+function readU32(u8, o){ return (u8[o] * 16777216) + (u8[o+1] << 16) + (u8[o+2] << 8) + u8[o+3]; }
+function readU64(u8, o){ return readU32(u8, o) * 4294967296 + readU32(u8, o+4); }
+function mp4Boxes(u8, start, end){
+  const out = [];
+  let p = start;
+  while(p + 8 <= end){
+    let size = readU32(u8, p);
+    const type = asciiAt(u8, p+4, 4);
+    let headerSize = 8;
+    if(size === 1){ size = readU64(u8, p+8); headerSize = 16; }
+    else if(size === 0){ size = end - p; }
+    if(size < headerSize || p + size > end) break; // malformed — stop, don't guess
+    out.push({ type, start:p, headerSize, contentStart:p + headerSize, end:p + size });
+    p += size;
+  }
+  return out;
+}
+function neuterMp4Box(u8, box){
+  u8[box.start+4] = 0x66; u8[box.start+5] = 0x72; u8[box.start+6] = 0x65; u8[box.start+7] = 0x65; // 'free'
+  for(let i = box.contentStart; i < box.end; i++) u8[i] = 0; // physically erase the data
+}
+function isXmpUuid(u8, box){
+  const s = asciiAt(u8, box.contentStart, Math.min(400, box.end - box.contentStart));
+  return /ns\.adobe\.com\/xap|<\?xpacket|<x:xmpmeta/.test(s);
+}
+function analyzeVideo(rec, buf){
+  const u8 = new Uint8Array(buf);
+  const top = mp4Boxes(u8, 0, u8.length);
+  if(!top.length || !top.some(b => b.type === "ftyp" || b.type === "moov" || b.type === "mdat"))
+    throw new Error("This doesn't look like a valid MP4 or MOV video.");
+  let hasMeta = false, hasLoc = false, locStr = "", hasXmp = false, created = null;
+  const scan = boxes => {
+    for(const c of boxes){
+      if(c.type === "udta" || c.type === "meta"){
+        hasMeta = true;
+        const region = asciiAt(u8, c.contentStart, Math.min(4000, c.end - c.contentStart));
+        if(/ISO6709|com\.apple\.quicktime\.location|©xyz/.test(region)) hasLoc = true;
+        for(const cc of mp4Boxes(u8, c.contentStart, c.end)){
+          if(cc.type === "©xyz"){
+            const len = (u8[cc.contentStart] << 8) | u8[cc.contentStart+1];
+            locStr = asciiAt(u8, cc.contentStart+4, Math.min(len, cc.end - cc.contentStart - 4));
+            hasLoc = true;
+          }
+        }
+      }
+    }
+  };
+  for(const b of top){
+    if(b.type === "moov"){
+      const kids = mp4Boxes(u8, b.contentStart, b.end);
+      scan(kids);
+      for(const k of kids){
+        if(k.type === "trak") scan(mp4Boxes(u8, k.contentStart, k.end));
+        if(k.type === "mvhd"){
+          const ver = u8[k.contentStart];
+          const ct = ver === 1 ? readU64(u8, k.contentStart+4) : readU32(u8, k.contentStart+4);
+          if(ct) created = new Date((ct - 2082844800) * 1000); // 1904 epoch → unix
+        }
+      }
+    }
+    if(b.type === "uuid" && isXmpUuid(u8, b)) hasXmp = true;
+  }
+  if(hasLoc) rec.fields.push({ label:"Location (GPS)", value:(locStr ? locStr.trim() + "  ← where this was filmed" : "embedded location — where this was filmed"), leak:true });
+  if(hasMeta) rec.fields.push({ label:"Metadata", value:"device, software and tags in the file's user-data", leak:true });
+  if(hasXmp) rec.fields.push({ label:"XMP metadata", value:"embedded XML block — may include author & software", leak:true });
+  if(created && !isNaN(created)) rec.fields.push({ label:"Created", value: fmtDate(created), leak:false });
+}
+function stripVideo(rec){
+  const src = new Uint8Array(rec.buffer);
+  const u8 = new Uint8Array(src.length);
+  u8.set(src); // work on a copy — the original buffer feeds the report hash
+  const top = mp4Boxes(u8, 0, u8.length);
+  if(!top.some(b => b.type === "ftyp" || b.type === "moov"))
+    throw new Error("This doesn't look like a valid MP4 or MOV video.");
+  for(const b of top){
+    if(b.type === "moov"){
+      for(const c of mp4Boxes(u8, b.contentStart, b.end)){
+        if(c.type === "udta" || c.type === "meta") neuterMp4Box(u8, c);
+        else if(c.type === "trak"){
+          for(const t of mp4Boxes(u8, c.contentStart, c.end))
+            if(t.type === "udta" || t.type === "meta") neuterMp4Box(u8, t);
+        }
+      }
+    } else if(b.type === "uuid" && isXmpUuid(u8, b)){
+      neuterMp4Box(u8, b);
+    }
+  }
+  return new Blob([u8], { type: VID[rec.ext] });
+}
+
 /* ---------------- clean action ---------------- */
 async function ensureCleanedBlob(rec){
   if(!rec.cleanedBlob){
     if(rec.kind === "ooxml") rec.cleanedBlob = await cleanOoxml(rec);
     else if(rec.kind === "odf") rec.cleanedBlob = await cleanOdf(rec);
     else if(rec.kind === "pdf") rec.cleanedBlob = await cleanPdf(rec);
+    else if(rec.kind === "video") rec.cleanedBlob = await stripVideo(rec);
     else rec.cleanedBlob = await cleanImage(rec);
   }
   return rec.cleanedBlob;
@@ -1850,6 +1949,7 @@ async function reScanCleaned(rec){
     if(rec.kind === "ooxml") await analyzeOoxml(probe, buf);
     else if(rec.kind === "odf") await analyzeOdf(probe, buf);
     else if(rec.kind === "pdf") await analyzePdf(probe, buf);
+    else if(rec.kind === "video") analyzeVideo(probe, buf);
     else await analyzeImage(probe, buf);
     // Only fields we intended to remove count against verification; intentionally
     // kept deep items (e.g. hidden sheets) are reported separately, not as leaks.
@@ -1938,7 +2038,7 @@ function renderCard(rec){
   }
   card.classList.toggle("is-clean", rec.status === "cleaned");
 
-  const typeLabel = (rec.kind === "ooxml" || rec.kind === "odf" || rec.kind === "image") ? rec.ext.toUpperCase()
+  const typeLabel = (rec.kind === "ooxml" || rec.kind === "odf" || rec.kind === "image" || rec.kind === "video") ? rec.ext.toUpperCase()
     : rec.kind === "pdf" ? "PDF" : "FILE";
 
   const keptAfter = rec.verify && rec.verify.kept ? rec.verify.kept.length : 0;
@@ -2368,7 +2468,8 @@ try{
       deepScanPptx, deepCleanPptx, deepScanXlsx, deepCleanXlsx,
       flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
       renderCard, refreshBar, setPro, isPro, files,
-      analyzeOdf, cleanOdf, analyzeImage, stripGif, gifBlocks };
+      analyzeOdf, cleanOdf, analyzeImage, stripGif, gifBlocks,
+      analyzeVideo, stripVideo, mp4Boxes };
   }
 }catch(e){}
 
