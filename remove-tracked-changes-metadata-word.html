@@ -21,6 +21,7 @@
 {"@type":"Question","name":"Can deleted text be recovered after accepting tracked changes?","acceptedAnswer":{"@type":"Answer","text":"Yes, if the changes were not properly flattened. Text you deleted is stored in the file as revision elements, and simply accepting the changes can leave that content and the associated author names behind in word/document.xml, from where it can be recovered. Real leaks have happened this way."}},
 {"@type":"Question","name":"Can I remove tracked changes without uploading the file anywhere?","acceptedAnswer":{"@type":"Answer","text":"Yes. Barecopy processes the file entirely inside your browser using JavaScript, so the document is never uploaded to a server. It detects tracked changes, flattens them locally and re-scans the output to confirm the history is gone. You can disconnect from the internet after loading the page and it still works."}}]}
 </script>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <style>
   @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
   :root{

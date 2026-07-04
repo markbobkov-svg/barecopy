@@ -21,6 +21,7 @@
 {"@type":"Question","name":"Can recipients see the data in my hidden sheet?","acceptedAnswer":{"@type":"Answer","text":"Yes. Hiding a sheet is only a display flag; the full data still lives in xl/worksheets inside the file. Anyone who receives the workbook can right-click a tab and choose Unhide to reveal an ordinary hidden sheet, and a very hidden sheet can be exposed with a few lines of VBA. Hiding a sheet protects nothing — the content travels with the file."}},
 {"@type":"Question","name":"Does Barecopy delete hidden sheets?","acceptedAnswer":{"@type":"Answer","text":"No. Barecopy detects hidden and very hidden sheets and lists them by name so you know they are there, but it deliberately does not delete them. Removing a sheet can break formulas and references elsewhere in the workbook, so the safe action is to review each one in Excel and decide. Barecopy still strips the standard author and company metadata and comment authors for free."}}]}
 </script>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <style>
   @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
   :root{

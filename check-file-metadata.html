@@ -24,6 +24,7 @@
 {"@type":"Question","name":"Is it safe to check a sensitive file's metadata online?","acceptedAnswer":{"@type":"Answer","text":"With Barecopy, yes, because the file never leaves your device. All inspection happens in JavaScript inside your browser tab. You can open Developer Tools, watch the Network panel while you drop a file, and confirm that no request carrying file data is made. A Content-Security-Policy on the site blocks the page from sending file contents anywhere but the browser."}},
 {"@type":"Question","name":"Does checking metadata change my file?","acceptedAnswer":{"@type":"Answer","text":"No. Inspecting only reads the file and shows what it contains. Your original is never modified. If you decide to remove the metadata, Barecopy produces a separate clean copy and leaves the original untouched."}}]}
 </script>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <style>
   @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
   :root{

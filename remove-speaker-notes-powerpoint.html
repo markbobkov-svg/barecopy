@@ -21,6 +21,7 @@
 {"@type":"Question","name":"Does deleting a slide also delete its speaker notes?","acceptedAnswer":{"@type":"Answer","text":"Not on its own. Speaker notes live in separate notesSlides parts inside the package, linked to the slide by a relationship. To remove notes cleanly you have to delete the notesSlides parts, their slide relationships and the content-type overrides together, otherwise PowerPoint may show a repair prompt when the file is opened."}},
 {"@type":"Question","name":"Can I strip speaker notes without uploading the file anywhere?","acceptedAnswer":{"@type":"Answer","text":"Yes. Barecopy processes the .pptx entirely inside your browser using JavaScript, so the presentation is never uploaded to a server. You can disconnect from the internet after loading the page and it still works."}}]}
 </script>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <style>
   @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
   :root{

@@ -21,6 +21,7 @@
 {"@type":"Question","name":"Does deleting a comment remove the author record?","acceptedAnswer":{"@type":"Answer","text":"Not always. Deleting the visible comments in the application removes the comment bubbles, but the associated author or person records — Word's people.xml, Excel's xl/persons, PowerPoint's authors.xml — can be left behind. The safe path is to strip the comment parts and the identity records at the file level, then re-scan to confirm nothing remains."}},
 {"@type":"Question","name":"Can I do this without uploading the file?","acceptedAnswer":{"@type":"Answer","text":"Yes. Barecopy processes the file entirely inside your browser using JavaScript, so the document is never uploaded to a server. You can disconnect from the internet after loading the page and it still works."}}]}
 </script>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <style>
   @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
   :root{

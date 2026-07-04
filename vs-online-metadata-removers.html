@@ -21,6 +21,7 @@
 {"@type":"Question","name":"How do I know a metadata tool is really private?","acceptedAnswer":{"@type":"Answer","text":"Do not take the claim on faith — verify it. Open Developer Tools, go to the Network tab, and process a file while watching. If the file is uploaded you will see a large request carrying it. Barecopy makes no such request; it processes files in JavaScript in your tab, and a Content-Security-Policy blocks the page from sending file contents anywhere. You can also disconnect from the internet after the page loads and confirm it still works."}},
 {"@type":"Question","name":"Is a browser-based cleaner as thorough as a server one?","acceptedAnswer":{"@type":"Answer","text":"It can be more thorough. Running in the browser is a privacy choice, not a capability limit. Barecopy strips standard metadata from documents, PDFs and photos, and additionally cleans content-level leaks in Office files — tracked changes, comments, reviewer identities and speaker notes — then re-scans to confirm the result, all without the file leaving your device."}}]}
 </script>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <style>
   @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
   :root{

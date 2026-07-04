@@ -24,6 +24,7 @@
 {"@type":"Question","name":"Ist es sicher, die Metadaten einer sensiblen Datei online zu prüfen?","acceptedAnswer":{"@type":"Answer","text":"Mit Barecopy ja, denn die Datei verlässt nie Ihr Gerät. Die gesamte Untersuchung geschieht in JavaScript innerhalb Ihres Browser-Tabs. Sie können die Entwicklertools öffnen, im Netzwerk-Panel beobachten, während Sie eine Datei ablegen, und bestätigen, dass keine Anfrage mit Dateidaten gesendet wird. Eine Content-Security-Policy auf der Website verhindert, dass die Seite Dateiinhalte an einen anderen Ort als den Browser sendet."}},
 {"@type":"Question","name":"Verändert das Prüfen der Metadaten meine Datei?","acceptedAnswer":{"@type":"Answer","text":"Nein. Beim Untersuchen wird die Datei nur gelesen und angezeigt, was sie enthält. Ihr Original wird nie verändert. Wenn Sie sich entscheiden, die Metadaten zu entfernen, erstellt Barecopy eine separate saubere Kopie und lässt das Original unangetastet."}}]}
 </script>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <style>
   @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
   :root{
