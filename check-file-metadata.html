@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check File Metadata Online — See What Your File Reveals (No Upload) | Barecopy</title>
+<meta name="description" content="Check what hidden metadata a document or photo reveals about you — author, company, GPS, edit history, tracked changes and comments — entirely in your browser. The file is never uploaded. Free.">
+<link rel="canonical" href="https://barecopy.com/check-file-metadata.html">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Check what your file reveals about you — without uploading it">
+<meta property="og:description" content="Drop a DOCX, PDF, XLSX, PPTX or photo and see every hidden field it carries — author, GPS, edit history, tracked changes. Runs in your browser; the file never leaves your device.">
+<meta property="og:url" content="https://barecopy.com/check-file-metadata.html">
+<meta property="og:image" content="https://barecopy.com/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"How do I check what metadata a file contains?","acceptedAnswer":{"@type":"Answer","text":"Drop the file onto Barecopy in your browser. It reads the file locally and lists every identifying field it finds — author, company, GPS coordinates, camera model, creation and edit dates, and for Office files also tracked changes, comments, speaker notes and hidden sheets. Nothing is uploaded, so you can inspect a sensitive file safely."}},
+{"@type":"Question","name":"Is it safe to check a sensitive file's metadata online?","acceptedAnswer":{"@type":"Answer","text":"With Barecopy, yes, because the file never leaves your device. All inspection happens in JavaScript inside your browser tab. You can open Developer Tools, watch the Network panel while you drop a file, and confirm that no request carrying file data is made. A Content-Security-Policy on the site blocks the page from sending file contents anywhere but the browser."}},
+{"@type":"Question","name":"Does checking metadata change my file?","acceptedAnswer":{"@type":"Answer","text":"No. Inspecting only reads the file and shows what it contains. Your original is never modified. If you decide to remove the metadata, Barecopy produces a separate clean copy and leaves the original untouched."}}]}
+</script>
+<style>
+  :root{
+    --paper:#F6F5F0; --card:#FFFFFF; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE;
+    --leak:#A2394A; --clean:#2A7350; --warn:#8A5A00;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+  .wordmark{font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:9px;color:var(--ink);text-decoration:none}
+  .wordmark .dot{width:10px;height:10px;border-radius:50%;background:var(--ink);position:relative}
+  .wordmark .dot::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--paper)}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  article{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-weight:650;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:20ch}
+  h1 .accent{color:var(--leak)}
+  .lead{margin-top:18px;font-size:18px;color:var(--ink-soft)}
+  h2{font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h3{font-size:17px;font-weight:650;margin:22px 0 4px}
+  p{margin-top:12px}
+  ol,ul{margin:14px 0 0 0;padding-left:22px}
+  li{margin-top:7px}
+  code{font-family:var(--mono);font-size:.9em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
+  .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
+  .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+  .callout h3{margin-top:6px}
+  .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
+  .grid{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .tile{border:1px solid var(--line);border-radius:9px;background:var(--card);padding:14px 15px}
+  .tile .t{font-weight:650;font-size:15px}
+  .tile .d{margin-top:5px;font-size:14px;color:var(--ink-soft);line-height:1.5}
+  .verify{font-family:var(--mono);font-size:14px;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--clean);border-radius:8px;padding:14px 16px;margin-top:16px;line-height:1.75}
+  .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
+  .faq summary{font-weight:600;cursor:pointer;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq details[open] summary::before{content:"–"}
+  .faq p{font-size:15.5px;color:var(--ink-soft)}
+  footer{border-top:1px solid var(--line);margin-top:50px}
+  .foot-in{padding:22px 0 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><span class="dot" aria-hidden="true"></span>Barecopy</a>
+    <a class="head-cta" href="/#inspect">Check a file</a>
+  </div>
+</header>
+
+<main class="wrap">
+<article>
+  <div class="eyebrow">Free tool · updated 2026</div>
+  <h1>Check what a file <span class="accent">reveals about you</span> — without uploading it</h1>
+  <p class="lead">Every document and photo carries hidden metadata: who made it, which company, how long it was edited, where a photo was taken. Drop a file below and see all of it in seconds — read locally, in your browser, with nothing sent anywhere.</p>
+
+  <div class="callout">
+    <div class="k">Inspect only</div>
+    <h3>See your file's hidden data</h3>
+    <p>DOCX, XLSX, PPTX, PDF, JPG, PNG and WebP. The file is read on your device and never transmitted; your original is never changed.</p>
+    <a class="btn" href="/#inspect">Check a file now →</a>
+  </div>
+
+  <h2>What Barecopy surfaces</h2>
+  <div class="grid">
+    <div class="tile"><div class="t">Author &amp; company</div><div class="d">The name and organisation baked into Office and PDF files — often from your account, not typed by you.</div></div>
+    <div class="tile"><div class="t">GPS &amp; camera</div><div class="d">For photos: the exact coordinates a shot was taken, plus camera make, model and software.</div></div>
+    <div class="tile"><div class="t">Edit history &amp; dates</div><div class="d">Creation, modification and last-printed timestamps, total editing time, and revision fingerprints.</div></div>
+    <div class="tile"><div class="t">Tracked changes &amp; comments</div><div class="d">The deleted text and internal notes that survive "Accept All" — recoverable from the file long after you think they're gone.</div></div>
+    <div class="tile"><div class="t">Speaker notes &amp; hidden sheets</div><div class="d">PowerPoint notes and Excel sheets set to hidden that ship inside the file, visible to any recipient who looks.</div></div>
+    <div class="tile"><div class="t">Embedded previews</div><div class="d">The page-one thumbnail Office and other apps embed — a picture of your content inside the metadata.</div></div>
+  </div>
+  <p>That last group is what most tools miss. Microsoft's own Document Inspector, and many online cleaners, don't look at the deeper XML where tracked-change history and reviewer identities live. Barecopy reads it and shows you exactly who and what is in there.</p>
+
+  <h2>How to check a file's metadata</h2>
+  <ol>
+    <li>Open <a href="/#inspect">Barecopy</a> — no sign-up, nothing to install.</li>
+    <li>Drop your file on the page, or choose it from disk.</li>
+    <li>Read the list of everything the file reveals, field by field.</li>
+    <li>If you want it gone, download a clean copy — your original stays untouched.</li>
+  </ol>
+
+  <h2>Why "no upload" matters here</h2>
+  <p>The whole reason to check a file's metadata is that it might be sensitive — a contract, a medical scan, a photo of your home. Uploading it to an online checker to find that out is self-defeating. Barecopy runs entirely in your browser, so the file is read where it already sits and never travels.</p>
+  <p>You don't have to take that on faith. Open your browser's Developer Tools, switch to the Network panel, and drop a file:</p>
+  <div class="verify">
+    1. DevTools → Network<br>
+    2. Drop a file onto Barecopy<br>
+    3. Watch: zero requests carrying your file<br>
+    4. Turn off Wi-Fi and try again — it still works
+  </div>
+  <p>The site also ships a Content-Security-Policy that only permits the page to reach its own origin (and the payment provider, for licence checks) — so exfiltrating file contents to a third party is blocked by your browser, not merely promised. <a href="/security.html">See the security overview →</a></p>
+
+  <h2>Frequently asked</h2>
+  <div class="faq">
+    <details open>
+      <summary>Is it safe to check a sensitive file online?</summary>
+      <p>Yes, because the file never leaves your device — it's read by JavaScript in your own tab. You can verify this in the Network panel, and the site's Content-Security-Policy stops the page from sending file data anywhere.</p>
+    </details>
+    <details>
+      <summary>Does checking change my file?</summary>
+      <p>No. Inspecting only reads and displays. If you choose to remove metadata, Barecopy makes a separate clean copy and leaves the original as-is.</p>
+    </details>
+    <details>
+      <summary>Which files can I check?</summary>
+      <p>Word, Excel and PowerPoint (DOCX/XLSX/PPTX), PDF, and JPG, PNG and WebP images.</p>
+    </details>
+    <details>
+      <summary>Can it also remove what it finds?</summary>
+      <p>Yes. After inspecting, one click produces a cleaned copy and re-scans it to confirm the fields are gone. Removing tracked changes, comments and notes is an opt-in Pro step, so nothing that alters your document happens without you asking.</p>
+    </details>
+  </div>
+
+  <div class="more" style="margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px">
+    <div style="font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)">More guides</div>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/remove-author-name-word-document.html">Remove the author name from a Word document &rarr;</a>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/remove-exif-gps-from-photos.html">Remove EXIF and GPS data from photos &rarr;</a>
+  </div>
+</article>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — clean documents before you send them.</span>
+    <span><a href="/">Home</a> · <a href="/security.html">Security</a> · <a href="/privacy.html">Privacy</a></span>
+  </div>
+</footer>
+</body>
+</html>

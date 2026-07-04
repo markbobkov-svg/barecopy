@@ -57,6 +57,12 @@
   <p>Barecopy is a static web page containing JavaScript. When a user selects a file, the file is read into the browser's memory and processed on the device using in-page code. The cleaned copy is generated locally and offered as a download. At no point is the file, or any part of its contents, sent over the network.</p>
   <p>Because processing is entirely client-side, the application continues to function with no network connection after the page has loaded — a property that can be verified by disconnecting from the internet and cleaning a file.</p>
 
+  <h2>Enforced by the browser, not just promised</h2>
+  <p>The claim above does not rest on trust. Barecopy is served with a strict <strong>Content-Security-Policy</strong> that instructs the browser to allow outbound connections only to Barecopy's own origin and to the payment provider (for licence validation). Under this policy, any attempt by the page to transmit file contents to a third party is blocked by the browser itself — before it leaves the machine.</p>
+  <p>The relevant directive is:</p>
+  <div class="verify">connect-src 'self' https://api.polar.sh</div>
+  <p>You can read the full policy for yourself in Developer Tools &rarr; Network &rarr; select the document request &rarr; Response Headers &rarr; <code>Content-Security-Policy</code>. The scripts and fonts the page uses are all served from the same origin (there are no third-party CDNs), which is what makes such a tight policy possible.</p>
+
   <h2>What data leaves the device</h2>
   <table>
     <tr><th>Data</th><th>Leaves the device?</th></tr>
@@ -65,6 +71,7 @@
     <tr><td>Verification report (Pro)</td><td><strong>No.</strong> Generated in-browser; downloaded directly by the user.</td></tr>
     <tr><td>Pro licence key</td><td>Yes — sent only to the payment provider (Polar) to confirm subscription status. No file data accompanies it.</td></tr>
   </table>
+  <p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">The single permitted external connection — the licence check to the payment provider — is the only exception to "nothing leaves the device", and it carries a key, never file data. Everything else is blocked at the browser by the Content-Security-Policy above.</p>
 
   <h2>Storage &amp; retention</h2>
   <ul>
@@ -76,17 +83,19 @@
   <h2>Tracking &amp; third parties</h2>
   <p>Barecopy sets no advertising or analytics cookies and runs no user-tracking scripts. Payment and subscription management are handled by Polar Software Inc. as merchant of record; card details are provided to Polar, never to Barecopy.</p>
 
-  <h2>Independent verification</h2>
-  <p>These claims are directly testable by your own technical staff:</p>
+  <h2>Don't trust us — verify it</h2>
+  <p>Every claim on this page is directly testable by your own technical staff in about a minute, with no special tools:</p>
   <div class="verify">
-    1. Open the browser Developer Tools &rarr; Network tab.<br>
-    2. Load barecopy.com and clean a test file.<br>
+    1. Open Developer Tools &rarr; Network tab.<br>
+    2. Load barecopy.com and inspect or clean a test file.<br>
     3. Observe that no request carrying file data is sent.<br>
-    4. Optionally, disconnect from the network and confirm the tool still works.
+    4. Check the document's Response Headers for the Content-Security-Policy.<br>
+    5. Disconnect from the network and confirm the tool still works.
   </div>
+  <p>Steps 3 and 4 are the important ones: step 3 shows nothing leaves in practice, and step 4 shows the browser would refuse to let it, even if the code tried.</p>
 
   <h2>Scope &amp; limitations</h2>
-  <p>Barecopy removes file <em>metadata</em>. It deliberately does not alter document <em>content</em> such as tracked changes or comments; it detects and warns about these instead, leaving the decision to the user. Password-protected PDFs are refused rather than risk corruption. Users are advised to review cleaned files before distribution.</p>
+  <p>Barecopy removes file <em>metadata</em>. Some identifying data is document <em>content</em> rather than metadata — tracked-change history, comments, PowerPoint speaker notes, hidden Excel sheets. Barecopy detects all of these and shows them to you for free; because removing them alters the visible document, removal is an explicit, opt-in step (part of Pro) and is never applied silently. Hidden sheets are flagged but left in place, since deleting them can break formulas. Password-protected PDFs are refused rather than risk corruption. Users are advised to review cleaned files before distribution.</p>
 
   <p style="margin-top:28px;color:var(--ink-faint);font-size:13px">For questions from a security or compliance team, contact <a href="mailto:support@barecopy.com" style="color:var(--ink-soft)">support@barecopy.com</a>.</p>
 </main>

@@ -104,8 +104,9 @@
     <a class="btn" href="/">Open Barecopy →</a>
   </div>
 
-  <h2>What removing metadata does not cover</h2>
-  <p>Two things are content, not metadata, and no metadata cleaner should silently touch them: <strong>tracked changes</strong> and <strong>comments</strong>. They contain editor names and deleted text, so accept or reject changes and delete comments inside Word before sending. Barecopy detects both and warns you rather than removing them behind your back.</p>
+  <h2>Tracked changes and comments — the part most tools miss</h2>
+  <p>Two of the biggest leaks are content, not metadata: <strong>tracked changes</strong> and <strong>comments</strong>. They carry editor names and deleted text, and — crucially — accepting all changes in Word does not erase that history from the file; it stays recoverable in the underlying XML. Word's own Document Inspector and most online cleaners don't touch it.</p>
+  <p>Barecopy detects both and shows you who and what is in there. Because removing them changes the visible document, it's an explicit, opt-in step rather than something done behind your back — you decide, and the result is re-scanned to confirm the history is actually gone.</p>
 
   <h2>Frequently asked</h2>
   <div class="faq">
