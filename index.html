@@ -205,52 +205,49 @@
     letter-spacing:.05em;color:var(--ink-soft);text-transform:uppercase;
   }
   .stamp{
-    flex:0 0 auto;
-    font-family:var(--cond);font-weight:600;font-size:11px;
-    letter-spacing:.1em;text-transform:uppercase;
-    border:1px solid var(--line);border-radius:4px;
-    padding:3px 8px;background:var(--paper);color:var(--ink-soft);
+    flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--cond);font-weight:600;font-size:10.5px;
+    letter-spacing:.08em;text-transform:uppercase;
+    border:1px solid var(--line);border-radius:100px;
+    padding:3px 10px 3px 9px;background:var(--card);color:var(--ink-soft);
     user-select:none;
   }
-  .stamp.analyzed{color:var(--leak);border-color:var(--leak-line)}
-  .stamp.cleanfile{color:var(--clean);border-color:var(--clean-line)}
-  .stamp.cleaned{color:var(--clean);border-color:var(--clean-line);animation:stampIn .25s ease both}
-  .stamp.working{color:var(--ink-faint);border-style:dashed}
-  .stamp.failed{color:var(--warn);border-color:var(--warn-line)}
-  @keyframes stampIn{
-    from{opacity:0;transform:translateY(-2px)}
-    to{opacity:1;transform:none}
-  }
+  .stamp::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .stamp.analyzed{color:var(--leak)}
+  .stamp.cleanfile{color:var(--ink-soft)}
+  .stamp.cleaned{color:var(--clean)}
+  .stamp.working{color:var(--ink-faint)}
+  .stamp.failed{color:var(--warn)}
 
   .card-body{padding:6px 18px 16px}
   .report-label{
-    font-family:var(--cond);font-weight:600;font-size:11.5px;
-    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);
-    margin:12px 0 6px;
+    font-family:var(--cond);font-weight:600;font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);
+    margin:14px 0 6px;
   }
   .rows{border-top:1px solid var(--line-soft)}
   .row{
     display:flex;gap:14px;align-items:baseline;
     padding:8px 0;border-bottom:1px solid var(--line-soft);
-    animation:rowIn .25s ease both;
-  }
-  @keyframes rowIn{
-    from{opacity:0;transform:translateX(-4px)}
-    to{opacity:1;transform:none}
   }
   .row .k{
-    flex:0 0 148px;font-size:13px;color:var(--ink-soft);
+    flex:0 0 158px;font-size:13px;color:var(--ink-soft);
+    position:relative;padding-left:15px;
   }
   .row .v{
-    font-family:var(--mono);font-size:13px;word-break:break-word;min-width:0;
+    font-family:var(--mono);font-size:13px;color:var(--ink);
+    word-break:break-word;min-width:0;
   }
-  /* leaks read as muted colored text, not filled pills — calmer, columns stay aligned */
-  .row.leak .k{color:var(--leak)}
-  .row.leak .v{color:var(--leak);font-weight:500}
+  /* sensitive fields carry one small severity dot — no colored fills, no red text */
+  .row.leak .k::before{
+    content:"";position:absolute;left:0;top:.45em;
+    width:6px;height:6px;border-radius:50%;background:var(--leak);
+  }
   .row.removed .k{color:var(--ink-faint)}
+  .row.removed .k::before{background:var(--ink-faint)}
   .row.removed .v{color:var(--ink-faint);text-decoration:line-through}
   /* a leak deliberately left in the file (deep item not selected) stays flagged */
-  .row.leak.kept .v{color:var(--leak);text-decoration:none}
+  .row.leak.kept .v{text-decoration:none}
   .deep-block{
     margin-top:14px;border:1px solid var(--line);border-radius:8px;
     padding:11px 13px;background:var(--paper);
@@ -1751,12 +1748,12 @@ function renderCard(rec){
   let stamp;
   if(rec.status === "working") stamp = '<span class="stamp working">Analyzing…</span>';
   else if(rec.status === "cleaned") stamp = (rec.verify && rec.verify.ok === true && !keptAfter)
-    ? '<span class="stamp cleaned">Verified clean ✓</span>'
-    : '<span class="stamp cleaned">Cleaned ✓</span>';
+    ? '<span class="stamp cleaned">Verified clean</span>'
+    : '<span class="stamp cleaned">Cleaned</span>';
   else if(rec.status === "failed") stamp = '<span class="stamp failed">Skipped</span>';
   else stamp = rec.leaks
-    ? '<span class="stamp analyzed">' + rec.leaks + ' leak' + (rec.leaks > 1 ? 's' : '') + '</span>'
-    : '<span class="stamp cleanfile">No leaks</span>';
+    ? '<span class="stamp analyzed">' + rec.leaks + ' finding' + (rec.leaks > 1 ? 's' : '') + '</span>'
+    : '<span class="stamp cleanfile">No findings</span>';
 
   let body = "";
   if(rec.status === "working"){
