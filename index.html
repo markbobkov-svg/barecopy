@@ -581,7 +581,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.6.2",
+  version: "1.6.3",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
@@ -2000,16 +2000,37 @@ function heifExtentHasData(u8, extents){
   }
   return false;
 }
-function heifIsMeta(it){ return it.type === "Exif" || (it.type === "mime" && /rdf\+xml/i.test(it.contentType)); }
+function heifItemHead(u8, extents, n){
+  let s = "";
+  for(const ex of extents){
+    const end = Math.min(ex.abs + n, ex.abs + ex.length, u8.length);
+    for(let i = ex.abs; i < end && s.length < n; i++) s += String.fromCharCode(u8[i]);
+    if(s.length >= n) break;
+  }
+  return s;
+}
+// Which metadata kind an item is, if any. XMP is matched on the DATA, not the
+// declared content_type — real encoders (ExifTool-written AVIF) often leave the
+// mime item's content_type empty, so trusting it silently missed the XMP.
+function heifMetaKind(u8, it){
+  if(it.type === "Exif") return "exif";
+  if(it.type === "mime"){
+    if(/rdf\+xml|xml/i.test(it.contentType)) return "xmp";
+    const head = heifItemHead(u8, it.extents, 96);
+    if(/<\?xpacket|<x:xmpmeta|adobe:ns|<rdf:/i.test(head)) return "xmp";
+  }
+  return null;
+}
 function analyzeHeif(rec, buf){
   const u8 = new Uint8Array(buf);
   const info = heifItems(u8);
   if(!info) throw new Error("This doesn't look like a valid HEIC/HEIF/AVIF image. If it opens only on an iPhone, export a copy first.");
   for(const it of info.items){
     if(!heifExtentHasData(u8, it.extents)) continue;
-    if(it.type === "Exif")
+    const kind = heifMetaKind(u8, it);
+    if(kind === "exif")
       rec.fields.push({ label:"EXIF (camera, GPS)", value:"embedded EXIF — camera, settings and often GPS location", leak:true });
-    else if(it.type === "mime" && /rdf\+xml/i.test(it.contentType))
+    else if(kind === "xmp")
       rec.fields.push({ label:"XMP metadata", value:"embedded XML block — may include author & software", leak:true });
   }
 }
@@ -2019,7 +2040,7 @@ function stripHeif(rec){
   const info = heifItems(u8);
   if(!info) throw new Error("This doesn't look like a valid HEIC/HEIF/AVIF image.");
   for(const it of info.items){
-    if(!heifIsMeta(it)) continue;
+    if(!heifMetaKind(u8, it)) continue;
     for(const ex of it.extents){
       const end = Math.min(ex.abs + ex.length, u8.length);
       for(let i = ex.abs; i < end; i++) u8[i] = 0;
