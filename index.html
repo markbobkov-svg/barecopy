@@ -652,7 +652,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.7.1",
+  version: "1.7.2",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
@@ -776,6 +776,10 @@ $folderInput.addEventListener("change", () => {
   $folderInput.value = "";
 });
 $drop.addEventListener("keydown", e => {
+  // Only the dropzone itself opens the file picker on Enter/Space. Without this
+  // guard, activating the "Choose folder" button by keyboard bubbles up here and
+  // opens the file dialog first, then the button opens the folder dialog.
+  if(e.target !== $drop) return;
   if(e.key === "Enter" || e.key === " "){ e.preventDefault(); $input.click(); }
 });
 ["dragenter","dragover"].forEach(ev =>
