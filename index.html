@@ -171,10 +171,10 @@
     border-color:var(--ink);background:var(--drag-bg);transform:scale(1.006);
   }
   .dz-glyph{
-    font-family:var(--mono);font-size:13px;letter-spacing:.06em;
     color:var(--ink-faint);display:block;margin-bottom:14px;
     user-select:none;
   }
+  .dz-glyph svg{display:block;margin:0 auto}
   .dz-title{font-family:var(--brand);font-weight:600;font-size:17px}
   .dz-formats{
     margin-top:10px;font-family:var(--mono);font-size:12px;
@@ -476,7 +476,7 @@
   </section>
 
   <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose files to inspect">
-    <span class="dz-glyph">[ ▒▒▒▒▒▒▒▒▒▒ ]</span>
+    <span class="dz-glyph" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 48 44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6.8H26.5L33.2 13.5V36.5A1.7 1.7 0 0 1 31.5 38.2H15A1.7 1.7 0 0 1 13.3 36.5V8.5A1.7 1.7 0 0 1 15 6.8Z"/><path d="M26.3 7V12A1.6 1.6 0 0 0 27.9 13.6H33"/><path d="M17.5 20H29"/><path d="M17.5 30.5H24.5"/><rect x="17.5" y="23" width="11.5" height="2.6" rx="0.6" fill="currentColor" stroke="none"/></svg></span>
     <div class="dz-title">Drop files or a folder here, or tap to choose</div>
     <div class="dz-formats">DOCX · XLSX · PPTX · ODT · ODS · ODP · PDF · JPG · PNG · WEBP · GIF · HEIC · AVIF · SVG · MP4 · MOV</div>
     <div class="dz-note" id="dropNote">Files are read by this page only. Airplane mode works too.</div>
@@ -628,7 +628,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.7.3",
+  version: "1.7.4",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
