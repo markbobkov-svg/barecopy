@@ -431,14 +431,14 @@
   <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose files to inspect">
     <span class="dz-glyph">[ ▒▒▒▒▒▒▒▒▒▒ ]</span>
     <div class="dz-title">Drop files or a folder here, or tap to choose</div>
-    <div class="dz-formats">DOCX · XLSX · PPTX · ODT · ODS · ODP · PDF · JPG · PNG · WEBP · GIF · MP4 · MOV</div>
+    <div class="dz-formats">DOCX · XLSX · PPTX · ODT · ODS · ODP · PDF · JPG · PNG · WEBP · GIF · HEIC · AVIF · SVG · MP4 · MOV</div>
     <div class="dz-note" id="dropNote">Files are read by this page only. Airplane mode works too.</div>
     <div class="dz-pick">
       <button type="button" class="dz-pick-btn" id="pickFilesBtn">Choose files</button>
       <button type="button" class="dz-pick-btn" id="pickFolderBtn">Choose folder</button>
     </div>
     <input type="file" id="fileInput" multiple
-      accept=".docx,.xlsx,.pptx,.odt,.ods,.odp,.pdf,.jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.m4v,application/pdf,image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime">
+      accept=".docx,.xlsx,.pptx,.odt,.ods,.odp,.pdf,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif,.avif,.svg,.mp4,.mov,.m4v,application/pdf,image/jpeg,image/png,image/webp,image/gif,image/heic,image/avif,image/svg+xml,video/mp4,video/quicktime">
     <input type="file" id="folderInput" webkitdirectory directory multiple>
   </div>
 
@@ -581,7 +581,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.6.1",
+  version: "1.6.2",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
@@ -686,6 +686,7 @@ const ODF = { odt:"application/vnd.oasis.opendocument.text",
               odp:"application/vnd.oasis.opendocument.presentation" };
 const IMG = { jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", webp:"image/webp", gif:"image/gif" };
 const VID = { mp4:"video/mp4", mov:"video/quicktime", m4v:"video/x-m4v" };
+const HEIF = { heic:"image/heic", heif:"image/heif", avif:"image/avif" };
 
 const $folderInput = document.getElementById("folderInput");
 $drop.addEventListener("click", e => {
@@ -715,7 +716,7 @@ $drop.addEventListener("keydown", e => {
 $drop.addEventListener("drop", onDrop);
 $input.addEventListener("change", () => { handleFiles($input.files); $input.value = ""; });
 
-const SUPPORTED = { docx:1, xlsx:1, pptx:1, odt:1, ods:1, odp:1, pdf:1, jpg:1, jpeg:1, png:1, webp:1, gif:1, mp4:1, mov:1, m4v:1 };
+const SUPPORTED = { docx:1, xlsx:1, pptx:1, odt:1, ods:1, odp:1, pdf:1, jpg:1, jpeg:1, png:1, webp:1, gif:1, heic:1, heif:1, avif:1, svg:1, mp4:1, mov:1, m4v:1 };
 
 // Drop can contain folders. The DataTransferItem entry API lets us walk the
 // tree; we read files eagerly, then hand the flat list to the normal intake.
@@ -783,7 +784,8 @@ function addFile(file){
   const ext = extOf(file.name);
   const rec = {
     id, file, ext,
-    kind: OOXML[ext] ? "ooxml" : (ODF[ext] ? "odf" : (ext === "pdf" ? "pdf" : (IMG[ext] ? "image" : (VID[ext] ? "video" : "unsupported")))),
+    kind: OOXML[ext] ? "ooxml" : (ODF[ext] ? "odf" : (ext === "pdf" ? "pdf" : (IMG[ext] ? "image"
+      : (VID[ext] ? "video" : (HEIF[ext] ? "heif" : (ext === "svg" ? "svg" : "unsupported")))))),
     fields: [], warnings: [], error: null,
     leaks: 0, status: "working", cleanedBlob: null,
     deepSelected: new Set(), deepApplied: [], deepInit: false
@@ -795,7 +797,7 @@ function addFile(file){
     rec.status = "failed";
     rec.error = ext === "doc" || ext === "xls" || ext === "ppt"
       ? "Legacy ." + ext + " format isn't supported. Open it in Office and save as ." + ext + "x, then drop it here."
-      : "This file type isn't supported yet. Supported: DOCX, XLSX, PPTX, ODT, ODS, ODP, PDF, JPG, PNG, WEBP, GIF, MP4, MOV.";
+      : "This file type isn't supported yet. Supported: DOCX, XLSX, PPTX, ODT, ODS, ODP, PDF, JPG, PNG, WEBP, GIF, HEIC, AVIF, SVG, MP4, MOV.";
     renderCard(rec);
     return;
   }
@@ -819,6 +821,8 @@ async function analyze(rec){
   else if(rec.kind === "odf") await analyzeOdf(rec, buf);
   else if(rec.kind === "pdf") await analyzePdf(rec, buf);
   else if(rec.kind === "video") analyzeVideo(rec, buf);
+  else if(rec.kind === "heif") analyzeHeif(rec, buf);
+  else if(rec.kind === "svg") analyzeSvg(rec, buf);
   else await analyzeImage(rec, buf);
   rec.leaks = rec.fields.filter(f => f.leak && f.value).length;
   rec.status = "analyzed";
@@ -1919,6 +1923,161 @@ function stripVideo(rec){
   return new Blob([u8], { type: VID[rec.ext] });
 }
 
+/* ---------------- HEIC / HEIF / AVIF ---------------- */
+// Also ISO-BMFF. Metadata items (Exif, XMP) are declared in meta/iinf and their
+// bytes located via meta/iloc (usually inside mdat). We reuse the box walker to
+// find those items and ZERO their data extents in place — no decoder needed, no
+// iloc rewriting, image items untouched. Invalid/empty EXIF is ignored by viewers.
+function metaChildren(u8, meta){ return mp4Boxes(u8, meta.contentStart + 4, meta.end); } // meta is a FullBox
+function parseIinf(u8, iinf){
+  const map = {};
+  let p = iinf.contentStart;
+  const version = u8[p]; p += 4;              // version + flags
+  p += version === 0 ? 2 : 4;                 // entry_count
+  for(const b of mp4Boxes(u8, p, iinf.end)){
+    if(b.type !== "infe") continue;
+    let q = b.contentStart;
+    const ver = u8[q]; q += 4;
+    if(ver < 2) continue;
+    let id;
+    if(ver === 2){ id = (u8[q] << 8) | u8[q+1]; q += 2; } else { id = readU32(u8, q); q += 4; }
+    q += 2;                                    // protection index
+    const type = asciiAt(u8, q, 4); q += 4;
+    let contentType = "";
+    if(type === "mime"){ let e = q; while(e < b.end && u8[e] !== 0) e++; contentType = asciiAt(u8, q, e - q); }
+    map[id] = { type, contentType };
+  }
+  return map;
+}
+function parseIloc(u8, iloc){
+  const loc = {};
+  let p = iloc.contentStart;
+  const version = u8[p]; p += 4;
+  const b0 = u8[p++], b1 = u8[p++];
+  const offsetSize = b0 >> 4, lengthSize = b0 & 0xF, baseOffsetSize = b1 >> 4, indexSize = b1 & 0xF;
+  let count;
+  if(version < 2){ count = (u8[p] << 8) | u8[p+1]; p += 2; } else { count = readU32(u8, p); p += 4; }
+  const readN = n => { let v = 0; for(let i = 0; i < n; i++) v = v * 256 + u8[p++]; return v; };
+  for(let i = 0; i < count; i++){
+    let id;
+    if(version < 2){ id = (u8[p] << 8) | u8[p+1]; p += 2; } else { id = readU32(u8, p); p += 4; }
+    let method = 0;
+    if(version === 1 || version === 2){ method = ((u8[p] << 8) | u8[p+1]) & 0xF; p += 2; }
+    p += 2;                                    // data_reference_index
+    const baseOffset = readN(baseOffsetSize);
+    const extentCount = (u8[p] << 8) | u8[p+1]; p += 2;
+    const extents = [];
+    for(let e = 0; e < extentCount; e++){
+      if((version === 1 || version === 2) && indexSize > 0) readN(indexSize);
+      const off = readN(offsetSize), len = readN(lengthSize);
+      extents.push({ offset: baseOffset + off, length: len, method });
+    }
+    loc[id] = extents;
+  }
+  return loc;
+}
+function heifItems(u8){
+  const top = mp4Boxes(u8, 0, u8.length);
+  const meta = top.find(b => b.type === "meta");
+  if(!meta) return null;
+  const kids = metaChildren(u8, meta);
+  const iinf = kids.find(b => b.type === "iinf"), iloc = kids.find(b => b.type === "iloc"), idat = kids.find(b => b.type === "idat");
+  if(!iinf || !iloc) return { items: [] };
+  const info = parseIinf(u8, iinf), locs = parseIloc(u8, iloc), items = [];
+  for(const id in info){
+    const extents = (locs[id] || []).map(ex => ({
+      abs: ex.method === 1 && idat ? idat.contentStart + ex.offset : ex.offset,
+      length: ex.length
+    }));
+    items.push({ id: +id, type: info[id].type, contentType: info[id].contentType, extents });
+  }
+  return { items };
+}
+function heifExtentHasData(u8, extents){
+  for(const ex of extents){
+    const end = Math.min(ex.abs + ex.length, u8.length);
+    for(let i = ex.abs; i < end; i++) if(u8[i] !== 0) return true;
+  }
+  return false;
+}
+function heifIsMeta(it){ return it.type === "Exif" || (it.type === "mime" && /rdf\+xml/i.test(it.contentType)); }
+function analyzeHeif(rec, buf){
+  const u8 = new Uint8Array(buf);
+  const info = heifItems(u8);
+  if(!info) throw new Error("This doesn't look like a valid HEIC/HEIF/AVIF image. If it opens only on an iPhone, export a copy first.");
+  for(const it of info.items){
+    if(!heifExtentHasData(u8, it.extents)) continue;
+    if(it.type === "Exif")
+      rec.fields.push({ label:"EXIF (camera, GPS)", value:"embedded EXIF — camera, settings and often GPS location", leak:true });
+    else if(it.type === "mime" && /rdf\+xml/i.test(it.contentType))
+      rec.fields.push({ label:"XMP metadata", value:"embedded XML block — may include author & software", leak:true });
+  }
+}
+function stripHeif(rec){
+  const src = new Uint8Array(rec.buffer);
+  const u8 = new Uint8Array(src.length); u8.set(src);
+  const info = heifItems(u8);
+  if(!info) throw new Error("This doesn't look like a valid HEIC/HEIF/AVIF image.");
+  for(const it of info.items){
+    if(!heifIsMeta(it)) continue;
+    for(const ex of it.extents){
+      const end = Math.min(ex.abs + ex.length, u8.length);
+      for(let i = ex.abs; i < end; i++) u8[i] = 0;
+    }
+  }
+  return new Blob([u8], { type: HEIF[rec.ext] });
+}
+
+/* ---------------- SVG ---------------- */
+// SVG is XML. Strip editor cruft and metadata: <metadata>, comments, and the
+// inkscape:/sodipodi: editor namespaces + attributes. Pixels/paths untouched.
+const SVG_EDITOR_NS = /^(inkscape|sodipodi|dc|cc|rdf)$/;
+function analyzeSvg(rec, buf){
+  const text = new TextDecoder().decode(new Uint8Array(buf));
+  const doc = xmlDoc(text);
+  if(doc.getElementsByTagName("parsererror").length) throw new Error("This SVG couldn't be parsed as XML.");
+  rec.svgText = text;
+  if(allLocal(doc, "metadata").length)
+    rec.fields.push({ label:"Metadata block", value:"embedded <metadata> — often author, licence, editor", leak:true });
+  let editorAttrs = 0;
+  const all = doc.getElementsByTagName("*");
+  for(let i = 0; i < all.length; i++){
+    const at = all[i].attributes;
+    for(let a = 0; a < at.length; a++){
+      const pfx = at[a].name.split(":")[0];
+      if(at[a].name.indexOf(":") !== -1 && SVG_EDITOR_NS.test(pfx)) editorAttrs++;
+    }
+  }
+  if(editorAttrs) rec.fields.push({ label:"Editor attributes", value: editorAttrs + " Inkscape/editor attribute" + (editorAttrs > 1 ? "s" : "") + " — reveal the tool used", leak:true });
+  if(/<!--/.test(text)) rec.fields.push({ label:"Comments", value:"XML comments in the file — may include notes or a generator line", leak:true });
+}
+function stripSvg(rec){
+  const doc = xmlDoc(rec.svgText || new TextDecoder().decode(new Uint8Array(rec.buffer)));
+  for(const el of allLocal(doc, "metadata")) if(el.parentNode) el.parentNode.removeChild(el);
+  // strip editor-namespace attributes
+  const all = doc.getElementsByTagName("*");
+  for(let i = 0; i < all.length; i++){
+    const el = all[i], at = el.attributes;
+    for(let a = at.length - 1; a >= 0; a--){
+      const nm = at[a].name;
+      if(nm.indexOf(":") !== -1 && SVG_EDITOR_NS.test(nm.split(":")[0])) el.removeAttributeNode(at[a]);
+      else if(nm === "xmlns:inkscape" || nm === "xmlns:sodipodi" || nm === "xmlns:dc" || nm === "xmlns:cc" || nm === "xmlns:rdf") el.removeAttributeNode(at[a]);
+    }
+  }
+  // drop comment nodes
+  const strip = node => {
+    for(let c = node.firstChild; c;){
+      const next = c.nextSibling;
+      if(c.nodeType === 8) node.removeChild(c);          // comment
+      else if(c.nodeType === 1) strip(c);
+      c = next;
+    }
+  };
+  strip(doc);
+  const out = new XMLSerializer().serializeToString(doc.documentElement);
+  return new Blob([out], { type:"image/svg+xml" });
+}
+
 /* ---------------- clean action ---------------- */
 async function ensureCleanedBlob(rec){
   if(!rec.cleanedBlob){
@@ -1926,6 +2085,8 @@ async function ensureCleanedBlob(rec){
     else if(rec.kind === "odf") rec.cleanedBlob = await cleanOdf(rec);
     else if(rec.kind === "pdf") rec.cleanedBlob = await cleanPdf(rec);
     else if(rec.kind === "video") rec.cleanedBlob = await stripVideo(rec);
+    else if(rec.kind === "heif") rec.cleanedBlob = await stripHeif(rec);
+    else if(rec.kind === "svg") rec.cleanedBlob = await stripSvg(rec);
     else rec.cleanedBlob = await cleanImage(rec);
   }
   return rec.cleanedBlob;
@@ -1950,6 +2111,8 @@ async function reScanCleaned(rec){
     else if(rec.kind === "odf") await analyzeOdf(probe, buf);
     else if(rec.kind === "pdf") await analyzePdf(probe, buf);
     else if(rec.kind === "video") analyzeVideo(probe, buf);
+    else if(rec.kind === "heif") analyzeHeif(probe, buf);
+    else if(rec.kind === "svg") analyzeSvg(probe, buf);
     else await analyzeImage(probe, buf);
     // Only fields we intended to remove count against verification; intentionally
     // kept deep items (e.g. hidden sheets) are reported separately, not as leaks.
@@ -2038,7 +2201,7 @@ function renderCard(rec){
   }
   card.classList.toggle("is-clean", rec.status === "cleaned");
 
-  const typeLabel = (rec.kind === "ooxml" || rec.kind === "odf" || rec.kind === "image" || rec.kind === "video") ? rec.ext.toUpperCase()
+  const typeLabel = (rec.kind === "ooxml" || rec.kind === "odf" || rec.kind === "image" || rec.kind === "video" || rec.kind === "heif" || rec.kind === "svg") ? rec.ext.toUpperCase()
     : rec.kind === "pdf" ? "PDF" : "FILE";
 
   const keptAfter = rec.verify && rec.verify.kept ? rec.verify.kept.length : 0;
@@ -2469,7 +2632,8 @@ try{
       flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
       renderCard, refreshBar, setPro, isPro, files,
       analyzeOdf, cleanOdf, analyzeImage, stripGif, gifBlocks,
-      analyzeVideo, stripVideo, mp4Boxes };
+      analyzeVideo, stripVideo, mp4Boxes,
+      analyzeHeif, stripHeif, heifItems, analyzeSvg, stripSvg };
   }
 }catch(e){}
 
