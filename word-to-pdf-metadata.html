@@ -6,7 +6,10 @@
 <title>Does Converting Word to PDF Remove Metadata? No — Here's What Transfers | Barecopy</title>
 <meta name="description" content="Exporting a Word document to PDF copies the author name, creating application and timestamps into the PDF's metadata. Here's what transfers, how to check it, and how to remove it without uploading the file.">
 <link rel="canonical" href="https://barecopy.com/word-to-pdf-metadata.html">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Does converting Word to PDF remove metadata? No.">
 <meta property="og:description" content="The author name and edit history travel into the exported PDF. See what transfers and strip it — locally, in your browser.">
@@ -19,12 +22,13 @@
 {"@type":"Question","name":"How do I remove metadata from a PDF without uploading it?","acceptedAnswer":{"@type":"Answer","text":"Barecopy clears the PDF's info dictionary fields and removes the embedded XMP metadata entirely in your browser. The file is never sent to a server; you can disconnect from the internet after the page loads and it still works."}}]}
 </script>
 <style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
   :root{
     --paper:#F6F5F0; --card:#FFFFFF; --ink:#1C2430; --ink-soft:#5B6472;
     --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE;
     --leak:#C2273A; --leak-bg:#FBEEEF; --leak-line:#EFCBD0;
     --clean:#1E7F4F; --warn-bg:#FBF3E2; --warn-line:#EBD9AE; --warn:#8A5A00;
-    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
     --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
     --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
   }
@@ -34,17 +38,17 @@
   .wrap{max-width:720px;margin:0 auto;padding:0 20px}
   header{border-bottom:1px solid var(--line)}
   .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
-  .wordmark{font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:9px;color:var(--ink);text-decoration:none}
-  .wordmark .dot{width:10px;height:10px;border-radius:50%;background:var(--ink);position:relative}
-  .wordmark .dot::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--paper)}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .wordmark .wm-div{width:1px;height:21px;background:rgba(28,36,48,.22);flex:0 0 auto}
   .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
   article{padding:44px 0 20px}
   .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
-  h1{font-weight:650;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:22ch}
+  h1{font-family:var(--brand);font-weight:600;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:22ch}
   .answer{margin-top:18px;font-size:19px;font-weight:600}
   .answer .no{color:var(--leak)}
   .lead{margin-top:10px;font-size:18px;color:var(--ink-soft)}
-  h2{font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h2{font-family:var(--brand);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
   p{margin-top:12px}
   ol,ul{margin:14px 0 0 0;padding-left:22px}
   li{margin-top:7px}
@@ -56,7 +60,7 @@
   td.leak{color:var(--leak)}
   .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
   .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--leak)}
-  .callout h3{margin-top:6px;font-size:17px;font-weight:650}
+  .callout h3{margin-top:6px;font-family:var(--brand);font-size:17px;font-weight:600}
   .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
   .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
   .faq summary{font-weight:600;cursor:pointer;list-style:none}
@@ -77,7 +81,7 @@
 <body>
 <header>
   <div class="wrap head-in">
-    <a class="wordmark" href="/"><span class="dot" aria-hidden="true"></span>Barecopy</a>
+    <a class="wordmark" href="/"><svg width="18" height="22" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
     <a class="head-cta" href="/">Open the tool</a>
   </div>
 </header>

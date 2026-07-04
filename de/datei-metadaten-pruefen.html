@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datei-Metadaten online prüfen — Sehen Sie, was Ihre Datei verrät (kein Upload) | Barecopy</title>
+<meta name="description" content="Prüfen Sie, welche versteckten Metadaten ein Dokument oder Foto über Sie verrät — Autor, Firma, GPS, Bearbeitungsverlauf, Änderungsverfolgung und Kommentare — vollständig in Ihrem Browser. Die Datei wird nie hochgeladen. Kostenlos.">
+<link rel="canonical" href="https://barecopy.com/de/datei-metadaten-pruefen.html">
+<link rel="alternate" hreflang="en" href="https://barecopy.com/check-file-metadata.html">
+<link rel="alternate" hreflang="de" href="https://barecopy.com/de/datei-metadaten-pruefen.html">
+<link rel="alternate" hreflang="x-default" href="https://barecopy.com/check-file-metadata.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Sehen Sie, was Ihre Datei über Sie verrät — ohne sie hochzuladen">
+<meta property="og:description" content="Legen Sie ein DOCX, PDF, XLSX, PPTX oder Foto ab und sehen Sie jedes versteckte Feld, das es enthält — Autor, GPS, Bearbeitungsverlauf, Änderungsverfolgung. Läuft in Ihrem Browser; die Datei verlässt nie Ihr Gerät.">
+<meta property="og:url" content="https://barecopy.com/de/datei-metadaten-pruefen.html">
+<meta property="og:image" content="https://barecopy.com/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Wie prüfe ich, welche Metadaten eine Datei enthält?","acceptedAnswer":{"@type":"Answer","text":"Legen Sie die Datei in Ihrem Browser auf Barecopy ab. Sie liest die Datei lokal und listet jedes identifizierende Feld auf, das sie findet — Autor, Firma, GPS-Koordinaten, Kameramodell, Erstellungs- und Bearbeitungsdaten sowie bei Office-Dateien zusätzlich Änderungsverfolgung, Kommentare, Sprechernotizen und ausgeblendete Tabellenblätter. Nichts wird hochgeladen, sodass Sie eine sensible Datei sicher untersuchen können."}},
+{"@type":"Question","name":"Ist es sicher, die Metadaten einer sensiblen Datei online zu prüfen?","acceptedAnswer":{"@type":"Answer","text":"Mit Barecopy ja, denn die Datei verlässt nie Ihr Gerät. Die gesamte Untersuchung geschieht in JavaScript innerhalb Ihres Browser-Tabs. Sie können die Entwicklertools öffnen, im Netzwerk-Panel beobachten, während Sie eine Datei ablegen, und bestätigen, dass keine Anfrage mit Dateidaten gesendet wird. Eine Content-Security-Policy auf der Website verhindert, dass die Seite Dateiinhalte an einen anderen Ort als den Browser sendet."}},
+{"@type":"Question","name":"Verändert das Prüfen der Metadaten meine Datei?","acceptedAnswer":{"@type":"Answer","text":"Nein. Beim Untersuchen wird die Datei nur gelesen und angezeigt, was sie enthält. Ihr Original wird nie verändert. Wenn Sie sich entscheiden, die Metadaten zu entfernen, erstellt Barecopy eine separate saubere Kopie und lässt das Original unangetastet."}}]}
+</script>
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{
+    --paper:#F6F5F0; --card:#FFFFFF; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE;
+    --leak:#A2394A; --clean:#2A7350; --warn:#8A5A00;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .wordmark .wm-div{width:1px;height:21px;background:rgba(28,36,48,.22);flex:0 0 auto}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  article{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--brand);font-weight:600;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:20ch}
+  h1 .accent{color:var(--leak)}
+  .lead{margin-top:18px;font-size:18px;color:var(--ink-soft)}
+  h2{font-family:var(--brand);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h3{font-family:var(--brand);font-size:17px;font-weight:600;margin:22px 0 4px}
+  p{margin-top:12px}
+  ol,ul{margin:14px 0 0 0;padding-left:22px}
+  li{margin-top:7px}
+  code{font-family:var(--mono);font-size:.9em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
+  .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
+  .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+  .callout h3{margin-top:6px}
+  .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
+  .grid{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .tile{border:1px solid var(--line);border-radius:9px;background:var(--card);padding:14px 15px}
+  .tile .t{font-weight:650;font-size:15px}
+  .tile .d{margin-top:5px;font-size:14px;color:var(--ink-soft);line-height:1.5}
+  .verify{font-family:var(--mono);font-size:14px;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--clean);border-radius:8px;padding:14px 16px;margin-top:16px;line-height:1.75}
+  .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
+  .faq summary{font-weight:600;cursor:pointer;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq details[open] summary::before{content:"–"}
+  .faq p{font-size:15.5px;color:var(--ink-soft)}
+  footer{border-top:1px solid var(--line);margin-top:50px}
+  .foot-in{padding:22px 0 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="18" height="22" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <a class="head-cta" href="/#inspect">Tool öffnen</a>
+  </div>
+</header>
+
+<main class="wrap">
+<article>
+  <div class="eyebrow">Kostenloses Tool · aktualisiert 2026</div>
+  <h1>Sehen Sie, was eine Datei <span class="accent">über Sie verrät</span> — ohne sie hochzuladen</h1>
+  <p class="lead">Jedes Dokument und jedes Foto trägt versteckte Metadaten: wer es erstellt hat, welche Firma, wie lange daran gearbeitet wurde, wo ein Foto aufgenommen wurde. Legen Sie unten eine Datei ab und sehen Sie alles in Sekunden — lokal in Ihrem Browser gelesen, ohne dass etwas irgendwohin gesendet wird.</p>
+
+  <div class="callout">
+    <div class="k">Nur prüfen</div>
+    <h3>Sehen Sie die versteckten Daten Ihrer Datei</h3>
+    <p>DOCX, XLSX, PPTX, PDF, JPG, PNG und WebP. Die Datei wird auf Ihrem Gerät gelesen und nie übertragen; Ihr Original wird nie verändert.</p>
+    <a class="btn" href="/#inspect">Jetzt eine Datei prüfen →</a>
+  </div>
+
+  <h2>Was Barecopy sichtbar macht</h2>
+  <div class="grid">
+    <div class="tile"><div class="t">Autor &amp; Firma</div><div class="d">Der Name und die Organisation, die in Office- und PDF-Dateien eingebettet sind — oft aus Ihrem Konto, nicht von Ihnen eingegeben.</div></div>
+    <div class="tile"><div class="t">GPS &amp; Kamera</div><div class="d">Bei Fotos: die exakten Koordinaten, an denen eine Aufnahme entstand, sowie Kamerahersteller, Modell und Software.</div></div>
+    <div class="tile"><div class="t">Bearbeitungsverlauf &amp; Daten</div><div class="d">Zeitstempel für Erstellung, Änderung und letzten Druck, gesamte Bearbeitungszeit und Revisions-Fingerabdrücke.</div></div>
+    <div class="tile"><div class="t">Änderungsverfolgung &amp; Kommentare</div><div class="d">Der gelöschte Text und die internen Notizen, die „Alle annehmen“ überstehen — noch lange aus der Datei wiederherstellbar, wenn Sie sie längst für verschwunden halten.</div></div>
+    <div class="tile"><div class="t">Sprechernotizen &amp; ausgeblendete Blätter</div><div class="d">PowerPoint-Notizen und auf ausgeblendet gesetzte Excel-Tabellenblätter, die in der Datei mitgeliefert werden und für jeden Empfänger sichtbar sind, der nachschaut.</div></div>
+    <div class="tile"><div class="t">Eingebettete Vorschauen</div><div class="d">Das Vorschaubild der ersten Seite, das Office und andere Apps einbetten — ein Bild Ihres Inhalts innerhalb der Metadaten.</div></div>
+  </div>
+  <p>Diese letzte Gruppe ist das, was die meisten Tools übersehen. Microsofts eigener Dokumentprüfer und viele Online-Reiniger schauen nicht in das tiefere XML, in dem der Verlauf der Änderungsverfolgung und die Identitäten der Prüfer stecken. Barecopy liest es und zeigt Ihnen genau, wer und was darin enthalten ist.</p>
+
+  <h2>So prüfen Sie die Metadaten einer Datei</h2>
+  <ol>
+    <li>Öffnen Sie <a href="/#inspect">Barecopy</a> — keine Anmeldung, nichts zu installieren.</li>
+    <li>Legen Sie Ihre Datei auf der Seite ab oder wählen Sie sie von der Festplatte.</li>
+    <li>Lesen Sie die Liste all dessen, was die Datei verrät, Feld für Feld.</li>
+    <li>Wenn Sie es entfernen möchten, laden Sie eine saubere Kopie herunter — Ihr Original bleibt unangetastet.</li>
+  </ol>
+
+  <h2>Warum „kein Upload“ hier wichtig ist</h2>
+  <p>Der ganze Grund, die Metadaten einer Datei zu prüfen, ist, dass sie sensibel sein könnte — ein Vertrag, ein medizinischer Scan, ein Foto Ihres Zuhauses. Sie zu einem Online-Prüfer hochzuladen, um das herauszufinden, führt sich selbst ad absurdum. Barecopy läuft vollständig in Ihrem Browser, sodass die Datei dort gelesen wird, wo sie bereits liegt, und nie unterwegs ist.</p>
+  <p>Sie müssen das nicht einfach glauben. Öffnen Sie die Entwicklertools Ihres Browsers, wechseln Sie zum Netzwerk-Panel und legen Sie eine Datei ab:</p>
+  <div class="verify">
+    1. Entwicklertools → Netzwerk<br>
+    2. Legen Sie eine Datei auf Barecopy ab<br>
+    3. Beobachten Sie: null Anfragen mit Ihrer Datei<br>
+    4. Schalten Sie WLAN aus und versuchen Sie es erneut — es funktioniert weiterhin
+  </div>
+  <p>Die Website liefert außerdem eine Content-Security-Policy aus, die der Seite nur erlaubt, ihren eigenen Ursprung zu erreichen (und den Zahlungsanbieter für Lizenzprüfungen) — sodass das Abfließen von Dateiinhalten an Dritte von Ihrem Browser blockiert wird, nicht bloß versprochen. <a href="/security.html">Zur Sicherheitsübersicht →</a></p>
+
+  <h2>Häufig gefragt</h2>
+  <div class="faq">
+    <details open>
+      <summary>Ist es sicher, eine sensible Datei online zu prüfen?</summary>
+      <p>Ja, denn die Datei verlässt nie Ihr Gerät — sie wird von JavaScript in Ihrem eigenen Tab gelesen. Sie können dies im Netzwerk-Panel überprüfen, und die Content-Security-Policy der Website verhindert, dass die Seite Dateidaten irgendwohin sendet.</p>
+    </details>
+    <details>
+      <summary>Verändert das Prüfen meine Datei?</summary>
+      <p>Nein. Beim Untersuchen wird nur gelesen und angezeigt. Wenn Sie sich entscheiden, Metadaten zu entfernen, erstellt Barecopy eine separate saubere Kopie und lässt das Original unverändert.</p>
+    </details>
+    <details>
+      <summary>Welche Dateien kann ich prüfen?</summary>
+      <p>Word, Excel und PowerPoint (DOCX/XLSX/PPTX), PDF sowie JPG-, PNG- und WebP-Bilder.</p>
+    </details>
+    <details>
+      <summary>Kann es auch entfernen, was es findet?</summary>
+      <p>Ja. Nach dem Prüfen erzeugt ein Klick eine bereinigte Kopie und scannt sie erneut, um zu bestätigen, dass die Felder verschwunden sind. Das Entfernen von Änderungsverfolgung, Kommentaren und Notizen ist ein optionaler Pro-Schritt, sodass nichts, was Ihr Dokument verändert, ohne Ihr Zutun geschieht.</p>
+    </details>
+  </div>
+
+  <div class="more" style="margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px">
+    <div style="font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)">Weitere Anleitungen</div>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/remove-author-name-word-document.html">Autorennamen aus einem Word-Dokument entfernen &rarr;</a>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/remove-exif-gps-from-photos.html">EXIF- und GPS-Daten aus Fotos entfernen &rarr;</a>
+  </div>
+</article>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — bereinigen Sie Dokumente, bevor Sie sie versenden.</span>
+    <span><a href="/">Startseite</a> · <a href="/security.html">Sicherheit</a> · <a href="/privacy.html">Datenschutz</a></span>
+  </div>
+</footer>
+</body>
+</html>

@@ -6,7 +6,10 @@
 <title>Remove Metadata from Word, PDF &amp; Photos — Online, 100% Local | Barecopy</title>
 <meta name="description" content="See the hidden author, company, edit history and GPS location inside your files — then remove it. Works with DOCX, XLSX, PPTX, PDF, JPG, PNG, WebP. Runs entirely in your browser: nothing is uploaded.">
 <link rel="canonical" href="https://barecopy.com/">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Your files carry your name. Remove it — locally.">
 <meta property="og:description" content="Barecopy shows the hidden metadata in Word, PDF and photos, then strips it in your browser. Nothing is uploaded, ever.">
@@ -20,9 +23,14 @@
 "offers":[{"@type":"Offer","price":"0","priceCurrency":"EUR","name":"Free"},
 {"@type":"Offer","price":"4","priceCurrency":"EUR","name":"Pro — monthly subscription"}]}
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+<!-- Fonts self-hosted from same origin (see fonts.css + /fonts/). No external
+     requests: corporate networks that block CDNs must still render correctly. -->
+<link href="/fonts.css" rel="stylesheet">
+<script>
+/* Apply a saved light/dark choice before first paint to avoid a flash.
+   No preference = follow the OS via the CSS prefers-color-scheme rules. */
+(function(){try{var t=localStorage.getItem("bc_theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();
+</script>
 <style>
   :root{
     --paper:#F6F5F0;
@@ -32,18 +40,46 @@
     --ink-faint:#8A8F98;
     --line:#DCD9CF;
     --line-soft:#E8E6DE;
-    --leak:#C2273A;
-    --leak-bg:#FBEEEF;
-    --leak-line:#EFCBD0;
-    --clean:#1E7F4F;
-    --clean-bg:#E9F4EE;
-    --clean-line:#C4E0D0;
+    --leak:#A2394A;
+    --leak-bg:#F8F2F2;
+    --leak-line:#E5D6D8;
+    --clean:#2A7350;
+    --clean-bg:#EEF3EF;
+    --clean-line:#D3E0D6;
     --warn:#8A5A00;
-    --warn-bg:#FBF3E2;
-    --warn-line:#EBD9AE;
-    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;
+    --warn-bg:#F6F1E7;
+    --warn-line:#E6DABC;
+    --divider:rgba(28,36,48,.22);
+    --focus-ring:rgba(28,36,48,.18);
+    --drag-bg:#FDFDFB;
+    --shadow-sm:rgba(28,36,48,.06);
+    --shadow-md:rgba(28,36,48,.12);
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
     --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
     --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  /* Dark palette — applied by the OS preference, and overridden by the
+     in-page toggle (data-theme) below so the toggle wins both directions.
+     Only tokens change; every component is styled through the tokens. */
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#14181D; --card:#1B2128; --ink:#E7E9EC; --ink-soft:#A3ABB5;
+      --ink-faint:#6E7681; --line:#2C333B; --line-soft:#232A31;
+      --leak:#E8677A; --leak-bg:#2A1C20; --leak-line:#3E2A2F;
+      --clean:#54B383; --clean-bg:#16241C; --clean-line:#26382C;
+      --warn:#D6A34A; --warn-bg:#26200F; --warn-line:#3A3018;
+      --divider:rgba(231,233,236,.20); --focus-ring:rgba(231,233,236,.24);
+      --drag-bg:#232B34; --shadow-sm:rgba(0,0,0,.40); --shadow-md:rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181D; --card:#1B2128; --ink:#E7E9EC; --ink-soft:#A3ABB5;
+    --ink-faint:#6E7681; --line:#2C333B; --line-soft:#232A31;
+    --leak:#E8677A; --leak-bg:#2A1C20; --leak-line:#3E2A2F;
+    --clean:#54B383; --clean-bg:#16241C; --clean-line:#26382C;
+    --warn:#D6A34A; --warn-bg:#26200F; --warn-line:#3A3018;
+    --divider:rgba(231,233,236,.20); --focus-ring:rgba(231,233,236,.24);
+    --drag-bg:#232B34; --shadow-sm:rgba(0,0,0,.40); --shadow-md:rgba(0,0,0,.55);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%}
@@ -67,17 +103,11 @@
     padding:18px 0;gap:12px;flex-wrap:wrap;
   }
   .wordmark{
-    font-family:var(--cond);font-weight:700;font-size:20px;
-    letter-spacing:.04em;text-transform:uppercase;
-    display:flex;align-items:center;gap:9px;
+    font-family:var(--brand);font-weight:600;font-size:21px;
+    display:flex;align-items:center;gap:11px;
   }
-  .wordmark .dot{
-    width:10px;height:10px;border-radius:50%;
-    background:var(--ink);position:relative;flex:0 0 auto;
-  }
-  .wordmark .dot::after{
-    content:"";position:absolute;inset:3px;border-radius:50%;background:var(--paper);
-  }
+  .wordmark .wm-div{width:1px;height:22px;background:var(--divider);flex:0 0 auto}
+  .wordmark svg{flex:0 0 auto;display:block}
   .local-badge{
     font-family:var(--mono);font-size:11px;font-weight:500;
     letter-spacing:.08em;text-transform:uppercase;
@@ -89,11 +119,25 @@
     width:7px;height:7px;border-radius:50%;background:var(--clean);
     flex:0 0 auto;
   }
+  .head-right{display:flex;align-items:center;gap:12px}
+  .theme-toggle{
+    width:34px;height:34px;flex:0 0 auto;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);border-radius:6px;
+    background:var(--card);color:var(--ink-soft);
+    transition:border-color .12s ease, color .12s ease;
+  }
+  .theme-toggle:hover{border-color:var(--ink);color:var(--ink)}
+  .theme-toggle:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .theme-toggle svg{width:16px;height:16px;display:block}
+  .theme-toggle .i-sun{display:none}
+  .theme-toggle.is-dark .i-sun{display:block}
+  .theme-toggle.is-dark .i-moon{display:none}
 
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px}
   h1{
-    font-weight:650;font-size:clamp(28px,5.4vw,40px);
+    font-family:var(--brand);font-weight:600;font-size:clamp(28px,5.4vw,40px);
     line-height:1.14;letter-spacing:-.015em;max-width:15ch;
   }
   h1 .strike{
@@ -122,16 +166,16 @@
     outline:none;
   }
   .dropzone:hover,.dropzone:focus-visible{border-color:var(--ink)}
-  .dropzone:focus-visible{box-shadow:0 0 0 3px rgba(28,36,48,.18)}
+  .dropzone:focus-visible{box-shadow:0 0 0 3px var(--focus-ring)}
   .dropzone.dragover{
-    border-color:var(--ink);background:#FDFDFB;transform:scale(1.006);
+    border-color:var(--ink);background:var(--drag-bg);transform:scale(1.006);
   }
   .dz-glyph{
     font-family:var(--mono);font-size:13px;letter-spacing:.06em;
     color:var(--ink-faint);display:block;margin-bottom:14px;
     user-select:none;
   }
-  .dz-title{font-weight:600;font-size:17px}
+  .dz-title{font-family:var(--brand);font-weight:600;font-size:17px}
   .dz-formats{
     margin-top:10px;font-family:var(--mono);font-size:12px;
     color:var(--ink-soft);letter-spacing:.03em;
@@ -148,9 +192,28 @@
     color:var(--ink);padding:8px 16px;cursor:pointer;
     transition:border-color .12s ease, background .12s ease;
   }
-  .dz-pick-btn:hover{border-color:var(--ink);background:#FDFDFB}
+  .dz-pick-btn:hover{border-color:var(--ink);background:var(--drag-bg)}
   .dz-pick-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   input[type=file]{display:none}
+
+  /* ---------- inspect-only mode ---------- */
+  .inspect-banner{
+    display:flex;gap:11px;align-items:flex-start;margin-top:24px;
+    background:var(--card);border:1px solid var(--line);
+    border-left:3px solid var(--ink-soft);border-radius:8px;
+    padding:12px 15px;font-size:14px;color:var(--ink-soft);line-height:1.5;
+  }
+  .inspect-banner strong{color:var(--ink);font-weight:600}
+  .inspect-banner a{color:var(--ink);text-decoration:underline;white-space:nowrap}
+  .inspect-banner .ib-dot{
+    width:8px;height:8px;border-radius:50%;background:var(--ink-soft);
+    margin-top:6px;flex:0 0 auto;
+  }
+  /* de-emphasize the clean action so inspecting doesn't feel like a funnel */
+  body.inspect .card-foot .btn:not(.done),
+  body.inspect #cleanAllBtn{
+    background:transparent;color:var(--ink);border-color:var(--line);font-weight:600;
+  }
 
   /* ---------- actions bar ---------- */
   .actions{
@@ -198,83 +261,108 @@
   }
   .fmeta{min-width:0}
   .fname{
-    font-weight:600;font-size:15.5px;word-break:break-all;line-height:1.35;
+    font-family:var(--brand);font-weight:600;font-size:15.5px;word-break:break-all;line-height:1.35;
   }
   .finfo{
     margin-top:3px;font-family:var(--mono);font-size:11.5px;
     letter-spacing:.05em;color:var(--ink-soft);text-transform:uppercase;
   }
   .stamp{
-    flex:0 0 auto;
-    font-family:var(--cond);font-weight:700;font-size:12px;
-    letter-spacing:.14em;text-transform:uppercase;
-    border:1.5px solid currentColor;border-radius:3px;
-    padding:4px 9px;transform:rotate(2deg);
+    flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--cond);font-weight:600;font-size:10.5px;
+    letter-spacing:.08em;text-transform:uppercase;
+    border:1px solid var(--line);border-radius:100px;
+    padding:3px 10px 3px 9px;background:var(--card);color:var(--ink-soft);
     user-select:none;
   }
+  .stamp::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
   .stamp.analyzed{color:var(--leak)}
-  .stamp.cleanfile{color:var(--clean)}
-  .stamp.cleaned{color:var(--clean);animation:stampIn .3s cubic-bezier(.2,1.4,.4,1) both}
-  .stamp.working{color:var(--ink-faint);transform:none;border-style:dashed}
+  .stamp.cleanfile{color:var(--ink-soft)}
+  .stamp.cleaned{color:var(--clean)}
+  .stamp.working{color:var(--ink-faint)}
   .stamp.failed{color:var(--warn)}
-  @keyframes stampIn{
-    from{opacity:0;transform:rotate(2deg) scale(1.6)}
-    to{opacity:1;transform:rotate(2deg) scale(1)}
-  }
 
   .card-body{padding:6px 18px 16px}
   .report-label{
-    font-family:var(--cond);font-weight:600;font-size:11.5px;
-    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);
-    margin:12px 0 6px;
+    font-family:var(--cond);font-weight:600;font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);
+    margin:14px 0 6px;
   }
   .rows{border-top:1px solid var(--line-soft)}
   .row{
     display:flex;gap:14px;align-items:baseline;
     padding:8px 0;border-bottom:1px solid var(--line-soft);
-    animation:rowIn .25s ease both;
-  }
-  @keyframes rowIn{
-    from{opacity:0;transform:translateX(-4px)}
-    to{opacity:1;transform:none}
   }
   .row .k{
-    flex:0 0 148px;font-size:13px;color:var(--ink-soft);
+    flex:0 0 158px;font-size:13px;color:var(--ink-soft);
+    position:relative;padding-left:15px;
   }
   .row .v{
-    font-family:var(--mono);font-size:13px;word-break:break-word;min-width:0;
+    font-family:var(--mono);font-size:13px;color:var(--ink);
+    word-break:break-word;min-width:0;
   }
-  .row.leak .v{
-    color:var(--leak);font-weight:500;
-    background:var(--leak-bg);border:1px solid var(--leak-line);
-    border-radius:3px;padding:1px 6px;
+  /* sensitive fields carry one small severity dot — no colored fills, no red text */
+  .row.leak .k::before{
+    content:"";position:absolute;left:0;top:.45em;
+    width:6px;height:6px;border-radius:50%;background:var(--leak);
   }
-  .card.is-clean .row.leak .v{
-    color:var(--ink-faint);background:transparent;border-color:transparent;
-    text-decoration:line-through;padding:1px 0;
+  .row.removed .k{color:var(--ink-faint)}
+  .row.removed .k::before{background:var(--ink-faint)}
+  .row.removed .v{color:var(--ink-faint);text-decoration:line-through}
+  /* a leak deliberately left in the file (deep item not selected) stays flagged */
+  .row.leak.kept .v{text-decoration:none}
+  .deep-block{
+    margin-top:14px;border:1px solid var(--line);border-radius:8px;
+    padding:11px 13px;background:var(--paper);
+  }
+  .deep-head{
+    font-family:var(--cond);font-weight:700;font-size:11.5px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);
+    margin-bottom:8px;display:flex;align-items:center;gap:7px;
+  }
+  .deep-pro{
+    font-size:10px;letter-spacing:.08em;color:var(--ink-soft);
+    border:1px solid var(--line);border-radius:3px;padding:1px 5px;
+  }
+  .deep-opt{
+    display:flex;gap:9px;align-items:flex-start;
+    padding:6px 0;cursor:pointer;font-size:13px;
+  }
+  .deep-opt input{margin-top:2px;flex:0 0 auto;cursor:pointer}
+  .deep-t{display:flex;flex-direction:column;gap:2px;line-height:1.35}
+  .deep-note{font-size:11.5px;color:var(--ink-faint)}
+  .deep-block.locked .deep-opt{opacity:.72}
+  .deep-locked-msg{
+    margin-top:6px;font-size:12px;color:var(--ink-faint);
   }
   .leak-summary{
-    margin-top:12px;font-size:13.5px;font-weight:600;color:var(--leak);
+    margin-top:12px;font-size:13.5px;font-weight:600;color:var(--ink-soft);
   }
-  .leak-summary.none{color:var(--clean)}
+  .leak-summary.none{color:var(--ink-soft)}
   .card.is-clean .leak-summary{color:var(--clean)}
+  /* status strips: neutral card, single colored left rule — not a saturated fill */
   .verified-badge{
     margin-top:10px;display:flex;gap:8px;align-items:baseline;
-    font-size:13px;font-weight:600;color:var(--clean);
-    background:var(--clean-bg);border:1px solid var(--clean-line);
+    font-size:13px;font-weight:500;color:var(--ink);
+    background:var(--paper);border:1px solid var(--line);
+    border-left:3px solid var(--clean);
     border-radius:6px;padding:9px 12px;
   }
-  .verified-badge .tick{font-family:var(--mono);font-weight:700}
-  .verified-badge.fail{color:var(--leak);background:var(--leak-bg);border-color:var(--leak-line)}
-  .verified-badge.unknown{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-line)}
+  .verified-badge .tick{font-family:var(--mono);font-weight:700;color:var(--clean)}
+  .verified-badge.fail{border-left-color:var(--leak)}
+  .verified-badge.fail .tick{color:var(--leak)}
+  .verified-badge.unknown,.verified-badge.partial{border-left-color:var(--warn)}
+  .verified-badge.unknown .tick,.verified-badge.partial .tick{color:var(--warn)}
   .warnbox{
-    margin-top:12px;background:var(--warn-bg);border:1px solid var(--warn-line);
-    border-radius:6px;padding:10px 12px;font-size:13px;color:var(--warn);
+    margin-top:12px;background:var(--paper);border:1px solid var(--line);
+    border-left:3px solid var(--warn);
+    border-radius:6px;padding:10px 12px;font-size:13px;color:var(--ink-soft);
     line-height:1.5;
   }
   .errbox{
-    margin-top:12px;background:var(--leak-bg);border:1px solid var(--leak-line);
-    border-radius:6px;padding:10px 12px;font-size:13px;color:var(--leak);
+    margin-top:12px;background:var(--paper);border:1px solid var(--line);
+    border-left:3px solid var(--leak);
+    border-radius:6px;padding:10px 12px;font-size:13px;color:var(--ink);
     line-height:1.5;
   }
   .card-foot{
@@ -296,13 +384,13 @@
     margin-top:64px;border-top:1px solid var(--line);padding-top:36px;
   }
   .how h2{
-    font-family:var(--cond);font-weight:700;font-size:14px;
+    font-family:var(--brand);font-weight:600;font-size:14px;
     letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);
   }
   .how-grid{
     margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:26px;
   }
-  .how-item h3{font-size:15px;font-weight:600;margin-bottom:6px}
+  .how-item h3{font-family:var(--brand);font-size:15px;font-weight:600;margin-bottom:6px}
   .how-item p{font-size:13.5px;color:var(--ink-soft);line-height:1.55}
   .how-item .k-mono{font-family:var(--mono);font-size:12px}
   @media (max-width:640px){
@@ -326,16 +414,16 @@
   .sample-copy strong,.sample-copy em{color:var(--ink)}
   .btn-sample{display:inline-block;margin-top:16px;font-weight:600;font-size:14.5px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
   .btn-sample:hover{opacity:.88}
-  .sample-shot{display:block;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card);box-shadow:0 1px 3px rgba(28,36,48,.06);transition:box-shadow .15s ease}
-  .sample-shot:hover{box-shadow:0 6px 20px rgba(28,36,48,.12)}
+  .sample-shot{display:block;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card);box-shadow:0 1px 3px var(--shadow-sm);transition:box-shadow .15s ease}
+  .sample-shot:hover{box-shadow:0 6px 20px var(--shadow-md)}
   .sample-shot img{display:block;width:100%;height:auto}
   @media (max-width:640px){.sample-grid{grid-template-columns:1fr}}
   .pro{margin-top:64px;border-top:1px solid var(--line);padding-top:36px}
-  .pro h2{font-family:var(--cond);font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .pro h2{font-family:var(--brand);font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
   .tiers{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .tier{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
   .tier.highlight{border-color:var(--ink);border-width:1.5px}
-  .tier h3{font-size:16px;font-weight:650}
+  .tier h3{font-family:var(--brand);font-size:16px;font-weight:600}
   .tier .price{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:6px}
   .tier .price small{font-size:12px;color:var(--ink-soft);font-weight:400}
   .tier ul{margin:14px 0 0 0;padding:0;list-style:none}
@@ -351,7 +439,7 @@
   .pro-chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--clean);color:var(--clean);border-radius:3px;padding:3px 7px}
   /* ---------- faq ---------- */
   .faq{margin-top:64px;border-top:1px solid var(--line);padding-top:36px}
-  .faq h2{font-family:var(--cond);font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .faq h2{font-family:var(--brand);font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
   .faq details{border-bottom:1px solid var(--line-soft);padding:14px 0}
   .faq summary{font-weight:600;font-size:15px;cursor:pointer;list-style:none}
   .faq summary::-webkit-details-marker{display:none}
@@ -369,12 +457,36 @@
 
 <header>
   <div class="wrap head-in">
-    <div class="wordmark"><span class="dot" aria-hidden="true"></span>Barecopy</div>
-    <div class="local-badge" title="All processing happens in this browser tab. You can disconnect from the internet and it still works.">
-      <span class="pulse" aria-hidden="true"></span>Runs locally · nothing uploaded
+    <div class="wordmark"><svg width="18" height="22" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</div>
+    <div class="head-right">
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch between light and dark" title="Switch light / dark" aria-pressed="false">
+        <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg>
+      </button>
+      <div class="local-badge" title="All processing happens in this browser tab. You can disconnect from the internet and it still works.">
+        <span class="pulse" aria-hidden="true"></span>Runs locally · nothing uploaded
+      </div>
     </div>
   </div>
 </header>
+<script>
+/* Theme toggle. Early-applied in <head> to avoid a flash; this wires the button. */
+(function(){
+  var root=document.documentElement, btn=document.getElementById("themeToggle");
+  if(!btn) return;
+  var mq=window.matchMedia("(prefers-color-scheme: dark)");
+  function effective(){ var s=root.getAttribute("data-theme"); return s||(mq.matches?"dark":"light"); }
+  function sync(){ var d=effective()==="dark"; btn.classList.toggle("is-dark",d); btn.setAttribute("aria-pressed",String(d)); }
+  sync();
+  btn.addEventListener("click",function(){
+    var next=effective()==="dark"?"light":"dark";
+    root.setAttribute("data-theme",next);
+    try{ localStorage.setItem("bc_theme",next); }catch(e){}
+    sync();
+  });
+  if(mq.addEventListener) mq.addEventListener("change",function(){ if(!root.getAttribute("data-theme")) sync(); });
+})();
+</script>
 
 <main class="wrap">
   <section class="hero">
@@ -382,17 +494,22 @@
     <p class="sub">Documents and photos hide the author, company, edit history and even GPS location in metadata. Drop a file to see what it reveals, then download a clean copy. <strong>Everything runs in your browser — the file never leaves this device.</strong></p>
   </section>
 
+  <div class="inspect-banner" id="inspectBanner" hidden>
+    <span class="ib-dot" aria-hidden="true"></span>
+    <div><strong>Inspect-only.</strong> See exactly what a file reveals about you — nothing is changed, and nothing is uploaded. You can still download a cleaned copy whenever you want. <a href="#" id="inspectExit">Switch to clean mode</a></div>
+  </div>
+
   <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose files to inspect">
     <span class="dz-glyph">[ ▒▒▒▒▒▒▒▒▒▒ ]</span>
     <div class="dz-title">Drop files or a folder here, or tap to choose</div>
-    <div class="dz-formats">DOCX · XLSX · PPTX · PDF · JPG · PNG · WEBP</div>
+    <div class="dz-formats">DOCX · XLSX · PPTX · ODT · ODS · ODP · PDF · JPG · PNG · WEBP · GIF · HEIC · AVIF · SVG · MP4 · MOV</div>
     <div class="dz-note" id="dropNote">Files are read by this page only. Airplane mode works too.</div>
     <div class="dz-pick">
       <button type="button" class="dz-pick-btn" id="pickFilesBtn">Choose files</button>
       <button type="button" class="dz-pick-btn" id="pickFolderBtn">Choose folder</button>
     </div>
     <input type="file" id="fileInput" multiple
-      accept=".docx,.xlsx,.pptx,.pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp">
+      accept=".docx,.xlsx,.pptx,.odt,.ods,.odp,.pdf,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif,.avif,.svg,.mp4,.mov,.m4v,application/pdf,image/jpeg,image/png,image/webp,image/gif,image/heic,image/avif,image/svg+xml,video/mp4,video/quicktime">
     <input type="file" id="folderInput" webkitdirectory directory multiple>
   </div>
 
@@ -439,15 +556,15 @@
     </div>
 
   <section class="sample" id="sample">
-    <h2 style="font-family:var(--cond);font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:36px;margin-top:64px">Prove what you removed</h2>
+    <h2 style="font-family:var(--brand);font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:36px;margin-top:64px">Prove what you removed</h2>
     <div class="sample-grid">
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn-sample" href="/sample-report.pdf" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn-sample" href="/sample-report.pdf?v=1.5.4" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf" target="_blank" rel="noopener" aria-label="Open the sample verification report">
-        <img src="/sample-report-preview.png" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
+      <a class="sample-shot" href="/sample-report.pdf?v=1.5.4" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+        <img src="/sample-report-preview.png?v=1.5.4" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
   </section>
@@ -515,14 +632,16 @@
 
 <footer>
   <div class="wrap foot-in">
-    <span>Barecopy v1.1 — clean documents before you send them.</span>
-    <span><a href="/remove-author-name-word-document.html">Guides</a> · <a href="/security.html">Security</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="#pro">Pro</a></span>
+    <span id="footVer">Barecopy — clean documents before you send them.</span>
+    <span><a href="/remove-author-name-word-document.html">Guides</a> · <a href="/vs-microsoft-document-inspector.html">Compare</a> · <a href="/security.html">Security</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="#pro">Pro</a></span>
   </div>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+<!-- Libraries self-hosted from same origin (/vendor/). Loading these from a CDN
+     silently broke PDF processing on networks that block external hosts. -->
+<script src="/vendor/jszip.min.js"></script>
+<script src="/vendor/pdf-lib.min.js"></script>
+<script src="/vendor/exif.min.js"></script>
 <script src="/config.js"></script>
 <script>
 (function(){
@@ -533,7 +652,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.3.0",
+  version: "1.7.0",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
@@ -552,6 +671,28 @@ const $cards = document.getElementById("cards");
 const $bar = document.getElementById("actionsBar");
 const $count = document.getElementById("filesCount");
 const $cleanAll = document.getElementById("cleanAllBtn");
+
+// Inspect-only framing (/#inspect): show what a file reveals without pushing the
+// clean action. The original file is never modified in either mode; this only
+// changes emphasis, so it's an honest reframe, not a different code path.
+const $inspectBanner = document.getElementById("inspectBanner");
+function applyInspect(){
+  const on = location.hash === "#inspect";
+  document.body.classList.toggle("inspect", on);
+  if($inspectBanner) $inspectBanner.hidden = !on;
+}
+window.addEventListener("hashchange", applyInspect);
+applyInspect();
+const $inspectExit = document.getElementById("inspectExit");
+if($inspectExit) $inspectExit.addEventListener("click", e => {
+  e.preventDefault();
+  history.replaceState(null, "", location.pathname + location.search);
+  applyInspect();
+});
+
+// Single source of truth for the on-page version marker.
+(function(){ const el = document.getElementById("footVer");
+  if(el) el.textContent = "Barecopy v" + BC_CONFIG.version + " — clean documents before you send them."; })();
 
 /* ---------------- helpers ---------------- */
 function esc(s){
@@ -611,7 +752,12 @@ function readBuffer(file){
 
 /* ---------------- intake ---------------- */
 const OOXML = { docx:"Word document", xlsx:"Excel workbook", pptx:"PowerPoint presentation" };
-const IMG = { jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", webp:"image/webp" };
+const ODF = { odt:"application/vnd.oasis.opendocument.text",
+              ods:"application/vnd.oasis.opendocument.spreadsheet",
+              odp:"application/vnd.oasis.opendocument.presentation" };
+const IMG = { jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", webp:"image/webp", gif:"image/gif" };
+const VID = { mp4:"video/mp4", mov:"video/quicktime", m4v:"video/x-m4v" };
+const HEIF = { heic:"image/heic", heif:"image/heif", avif:"image/avif" };
 
 const $folderInput = document.getElementById("folderInput");
 $drop.addEventListener("click", e => {
@@ -641,7 +787,7 @@ $drop.addEventListener("keydown", e => {
 $drop.addEventListener("drop", onDrop);
 $input.addEventListener("change", () => { handleFiles($input.files); $input.value = ""; });
 
-const SUPPORTED = { docx:1, xlsx:1, pptx:1, pdf:1, jpg:1, jpeg:1, png:1, webp:1 };
+const SUPPORTED = { docx:1, xlsx:1, pptx:1, odt:1, ods:1, odp:1, pdf:1, jpg:1, jpeg:1, png:1, webp:1, gif:1, heic:1, heif:1, avif:1, svg:1, mp4:1, mov:1, m4v:1 };
 
 // Drop can contain folders. The DataTransferItem entry API lets us walk the
 // tree; we read files eagerly, then hand the flat list to the normal intake.
@@ -709,9 +855,11 @@ function addFile(file){
   const ext = extOf(file.name);
   const rec = {
     id, file, ext,
-    kind: OOXML[ext] ? "ooxml" : (ext === "pdf" ? "pdf" : (IMG[ext] ? "image" : "unsupported")),
+    kind: OOXML[ext] ? "ooxml" : (ODF[ext] ? "odf" : (ext === "pdf" ? "pdf" : (IMG[ext] ? "image"
+      : (VID[ext] ? "video" : (HEIF[ext] ? "heif" : (ext === "svg" ? "svg" : "unsupported")))))),
     fields: [], warnings: [], error: null,
-    leaks: 0, status: "working", cleanedBlob: null
+    leaks: 0, status: "working", cleanedBlob: null,
+    deepSelected: new Set(), deepApplied: [], deepInit: false
   };
   files.set(id, rec);
   renderCard(rec);
@@ -720,7 +868,7 @@ function addFile(file){
     rec.status = "failed";
     rec.error = ext === "doc" || ext === "xls" || ext === "ppt"
       ? "Legacy ." + ext + " format isn't supported. Open it in Office and save as ." + ext + "x, then drop it here."
-      : "This file type isn't supported yet. Supported: DOCX, XLSX, PPTX, PDF, JPG, PNG, WEBP.";
+      : "This file type isn't supported yet. Supported: DOCX, XLSX, PPTX, ODT, ODS, ODP, PDF, JPG, PNG, WEBP, GIF, HEIC, AVIF, SVG, MP4, MOV.";
     renderCard(rec);
     return;
   }
@@ -741,7 +889,11 @@ async function analyze(rec){
   const buf = await readBuffer(rec.file);
   rec.buffer = buf;
   if(rec.kind === "ooxml") await analyzeOoxml(rec, buf);
+  else if(rec.kind === "odf") await analyzeOdf(rec, buf);
   else if(rec.kind === "pdf") await analyzePdf(rec, buf);
+  else if(rec.kind === "video") analyzeVideo(rec, buf);
+  else if(rec.kind === "heif") analyzeHeif(rec, buf);
+  else if(rec.kind === "svg") analyzeSvg(rec, buf);
   else await analyzeImage(rec, buf);
   rec.leaks = rec.fields.filter(f => f.leak && f.value).length;
   rec.status = "analyzed";
@@ -776,6 +928,419 @@ function allLocal(doc, local){
   }
   return out; // duplicated elements are invalid OOXML but must not survive cleaning
 }
+
+/* ==DEEP:START==  content-level ("deep") OOXML inspection & removal.
+   These handle what docProps cleaning (and Word's own Document Inspector)
+   miss: tracked-change history that survives "Accept All", comments,
+   speaker notes, hidden sheets, rsid session fingerprints. Detection is
+   free (see analyzeOoxml); removal is Pro and opt-in (rec.deepSelected),
+   because flattening revisions changes the visible document.
+   Namespace-agnostic: everything matches on localName so it survives
+   both transitional and strict OOXML. Every write is well-formedness
+   checked (partDoc returns null on a parse error) so a malformed part is
+   left untouched rather than re-zipped broken. */
+
+function allWithin(el, local){
+  const out = [], all = el.getElementsByTagName("*");
+  for(let i = 0; i < all.length; i++){
+    if(all[i].localName === local) out.push(all[i]);
+  }
+  return out;
+}
+function attrLocal(el, local){
+  const at = el.attributes;
+  for(let i = 0; i < at.length; i++){
+    if(at[i].localName === local) return (at[i].value || "").trim();
+  }
+  return "";
+}
+function serializeXml(doc){
+  // Serialize the root element (not the Document) so we control the XML
+  // declaration and never emit a duplicate one. Word tolerates a missing
+  // declaration on the parts we already rewrite, but document.xml is safest with it.
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n' +
+    new XMLSerializer().serializeToString(doc.documentElement);
+}
+async function partDoc(zip, path){
+  const f = zip.file(path);
+  if(!f) return null;
+  const doc = xmlDoc(await f.async("string"));
+  // DOMParser reports XML errors as a <parsererror> element in the tree.
+  if(doc.getElementsByTagName("parsererror").length) return null;
+  return doc;
+}
+function zipPaths(zip, rx){
+  const out = [];
+  zip.forEach(p => { if(rx.test(p)) out.push(p); });
+  return out;
+}
+function removeParts(zip, patterns){
+  const gone = zipPaths(zip, new RegExp(patterns.map(r => "(?:" + r.source + ")").join("|")));
+  for(const p of gone) zip.remove(p);
+  return gone;
+}
+async function removeRels(zip, relsPath, rx){
+  const doc = await partDoc(zip, relsPath);
+  if(!doc) return;
+  let changed = false;
+  for(const el of allLocal(doc, "Relationship")){
+    const t = el.getAttribute("Type") || "", tgt = el.getAttribute("Target") || "";
+    if(rx.test(t) || rx.test(tgt)){ el.parentNode.removeChild(el); changed = true; }
+  }
+  if(changed) zip.file(relsPath, serializeXml(doc));
+}
+async function removeContentTypeOverrides(zip, rx){
+  const doc = await partDoc(zip, "[Content_Types].xml");
+  if(!doc) return;
+  let changed = false;
+  for(const el of allLocal(doc, "Override")){
+    if(rx.test(el.getAttribute("PartName") || "")){ el.parentNode.removeChild(el); changed = true; }
+  }
+  if(changed) zip.file("[Content_Types].xml", serializeXml(doc));
+}
+
+// ---- DOCX content parts & revision handling ----
+const DOCX_CONTENT = /^word\/(document|header\d*|footer\d*|footnotes|endnotes)\.xml$|^word\/glossary\/document\.xml$/;
+// Revision element localNames that carry an author + (for ins/del/move) content.
+const REV_LOCALS = ["ins","del","moveFrom","moveTo","rPrChange","pPrChange","sectPrChange",
+  "tblPrChange","trPrChange","tcPrChange","tblGridChange","numberingChange","cellIns","cellDel","cellMerge"];
+// Empty markers / property snapshots to drop outright when accepting.
+const REV_MARKERS = ["moveFromRangeStart","moveFromRangeEnd","moveToRangeStart","moveToRangeEnd",
+  "customXmlInsRangeStart","customXmlInsRangeEnd","customXmlDelRangeStart","customXmlDelRangeEnd",
+  "rPrChange","pPrChange","sectPrChange","tblPrChange","trPrChange","tcPrChange","tblGridChange",
+  "numberingChange","cellIns","cellDel","cellMerge"];
+
+function unwrapEl(el){
+  const parent = el.parentNode;
+  if(!parent) return;
+  while(el.firstChild) parent.insertBefore(el.firstChild, el);
+  parent.removeChild(el);
+}
+function hasVisibleContent(p){
+  for(const t of allWithin(p, "t")) if(t.textContent && t.textContent.trim()) return true;
+  for(const k of ["drawing","pict","object"]) if(allWithin(p, k).length) return true;
+  return false;
+}
+// Accept-all flattening of one XML part. Returns {changed, unmerged}.
+function flattenRevisions(doc){
+  let changed = false, unmerged = 0;
+
+  // Row deletions (w:trPr/w:del) accept to a removed row — do this before the
+  // blanket w:del sweep, which would otherwise just unmark the row.
+  for(const del of allLocal(doc, "del")){
+    const par = del.parentNode;
+    if(par && par.localName === "trPr"){
+      const tr = par.parentNode;
+      if(tr && tr.localName === "tr" && tr.parentNode){ tr.parentNode.removeChild(tr); changed = true; }
+    }
+  }
+  // Remember paragraphs whose end-mark is deleted (w:pPr/w:rPr/w:del) so we can
+  // merge-by-removal after their content is gone.
+  const markDeletedParas = new Set();
+  for(const del of allLocal(doc, "del")){
+    const rpr = del.parentNode;
+    if(rpr && rpr.localName === "rPr" && rpr.parentNode && rpr.parentNode.localName === "pPr"){
+      const p = rpr.parentNode.parentNode;
+      if(p && p.localName === "p") markDeletedParas.add(p);
+    }
+  }
+  // Deletions (and the "from" side of moves) go away entirely.
+  for(const el of allLocal(doc, "del")) if(el.parentNode){ el.parentNode.removeChild(el); changed = true; }
+  for(const el of allLocal(doc, "moveFrom")) if(el.parentNode){ el.parentNode.removeChild(el); changed = true; }
+  // Insertions (and the "to" side of moves) are kept — unwrap the wrapper.
+  for(const el of allLocal(doc, "ins")) if(el.parentNode){ unwrapEl(el); changed = true; }
+  for(const el of allLocal(doc, "moveTo")) if(el.parentNode){ unwrapEl(el); changed = true; }
+  // Range markers and property-change snapshots: drop.
+  for(const local of REV_MARKERS)
+    for(const el of allLocal(doc, local)) if(el.parentNode){ el.parentNode.removeChild(el); changed = true; }
+  // Paragraph-mark deletions: if the paragraph is now empty and it is safe to
+  // drop (not the only paragraph in a table cell, no section properties), remove
+  // it — that matches Word's "merge into next". Otherwise leave it and count it.
+  for(const p of markDeletedParas){
+    if(!p.parentNode) continue;
+    if(allWithin(p, "sectPr").length){ unmerged++; continue; }
+    const parent = p.parentNode;
+    if(parent.localName === "tc"){
+      let pc = 0;
+      for(let c = parent.firstChild; c; c = c.nextSibling) if(c.nodeType === 1 && c.localName === "p") pc++;
+      if(pc <= 1){ unmerged++; continue; }
+    }
+    if(hasVisibleContent(p)){ unmerged++; continue; }
+    parent.removeChild(p); changed = true;
+  }
+  return { changed, unmerged };
+}
+function stripRsids(doc){
+  let changed = false;
+  const all = doc.getElementsByTagName("*");
+  for(let i = 0; i < all.length; i++){
+    const at = all[i].attributes;
+    for(let a = at.length - 1; a >= 0; a--){
+      if(at[a].localName.indexOf("rsid") === 0){ all[i].removeAttributeNode(at[a]); changed = true; }
+    }
+  }
+  return changed;
+}
+function stripCommentRefs(doc){
+  let changed = false;
+  for(const local of ["commentRangeStart","commentRangeEnd","commentReference"]){
+    for(const el of allLocal(doc, local)){
+      if(!el.parentNode) continue;
+      const parent = el.parentNode;
+      parent.removeChild(el); changed = true;
+      if(local === "commentReference" && parent.localName === "r"){
+        let keep = false;
+        for(let c = parent.firstChild; c; c = c.nextSibling)
+          if(c.nodeType === 1 && c.localName !== "rPr"){ keep = true; break; }
+        if(!keep && parent.parentNode) parent.parentNode.removeChild(parent);
+      }
+    }
+  }
+  return changed;
+}
+function authorList(set){
+  const a = [...set];
+  if(!a.length) return "";
+  const shown = a.slice(0, 3).join(", ");
+  return shown + (a.length > 3 ? " +" + (a.length - 3) + " more" : "");
+}
+
+async function deepScanDocx(zip, rec){
+  const parts = zipPaths(zip, DOCX_CONTENT);
+  let revCount = 0, rsidCount = 0;
+  const revAuthors = new Set();
+  for(const p of parts){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    const all = doc.getElementsByTagName("*");
+    for(let i = 0; i < all.length; i++){
+      const el = all[i];
+      if(REV_LOCALS.indexOf(el.localName) !== -1){
+        revCount++;
+        const a = attrLocal(el, "author");
+        if(a) revAuthors.add(a);
+      }
+      const at = el.attributes;
+      for(let a = 0; a < at.length; a++) if(at[a].localName.indexOf("rsid") === 0) rsidCount++;
+    }
+  }
+  if(revCount){
+    rec.fields.push({ label: "Tracked changes",
+      value: revCount + " revision" + (revCount > 1 ? "s" : "") +
+        (revAuthors.size ? " by " + revAuthors.size + " author" + (revAuthors.size > 1 ? "s" : "") +
+          " (" + authorList(revAuthors) + ")" : "") +
+        " — deleted text stays recoverable in the file",
+      leak: true, deep: "trackedChanges" });
+  }
+  if(rsidCount){
+    rec.fields.push({ label: "Revision IDs (rsid)",
+      value: rsidCount + " editing-session fingerprints — can link this file to others you edited",
+      leak: true, deep: "rsid" });
+  }
+  // Comments + reviewer identities (comments.xml and people.xml).
+  let cCount = 0;
+  const cAuthors = new Set();
+  const cDoc = await partDoc(zip, "word/comments.xml");
+  if(cDoc){
+    for(const el of allLocal(cDoc, "comment")){ cCount++; const a = attrLocal(el, "author"); if(a) cAuthors.add(a); }
+  }
+  const pDoc = await partDoc(zip, "word/people.xml");
+  if(pDoc){ for(const el of allLocal(pDoc, "person")){ const a = attrLocal(el, "author"); if(a) cAuthors.add(a); } }
+  if(cCount || cAuthors.size){
+    rec.fields.push({ label: "Comments",
+      value: (cCount ? cCount + " comment" + (cCount !== 1 ? "s" : "") : "reviewer identities") +
+        (cAuthors.size ? " by " + authorList(cAuthors) : "") +
+        " — internal notes visible to anyone who opens the file",
+      leak: true, deep: "comments" });
+  }
+}
+async function deepCleanDocx(zip, rec, info){
+  const sel = rec.deepSelected;
+  const parts = zipPaths(zip, DOCX_CONTENT);
+  if(sel.has("trackedChanges") || sel.has("rsid")){
+    let unmerged = 0;
+    for(const p of parts){
+      const doc = await partDoc(zip, p);
+      if(!doc) continue; // malformed part: leave as-is
+      let changed = false;
+      if(sel.has("trackedChanges")){ const r = flattenRevisions(doc); changed = r.changed || changed; unmerged += r.unmerged; }
+      if(sel.has("rsid")) changed = stripRsids(doc) || changed;
+      if(changed) zip.file(p, serializeXml(doc));
+    }
+    const setDoc = await partDoc(zip, "word/settings.xml");
+    if(setDoc){
+      let ch = false;
+      if(sel.has("rsid")) for(const el of allLocal(setDoc, "rsids")) if(el.parentNode){ el.parentNode.removeChild(el); ch = true; }
+      if(sel.has("trackedChanges")) for(const el of allLocal(setDoc, "trackChanges")) if(el.parentNode){ el.parentNode.removeChild(el); ch = true; }
+      if(ch) zip.file("word/settings.xml", serializeXml(setDoc));
+    }
+    if(sel.has("trackedChanges")) info.push(unmerged
+      ? "Accepted and removed all tracked changes (" + unmerged + " paragraph-mark deletion" + (unmerged > 1 ? "s were" : " was") + " unmarked, not merged — check layout in Word)"
+      : "Accepted and removed all tracked changes");
+    if(sel.has("rsid")) info.push("Stripped rsid editing-session fingerprints");
+  }
+  if(sel.has("comments")){
+    for(const p of parts){
+      const doc = await partDoc(zip, p);
+      if(!doc) continue;
+      if(stripCommentRefs(doc)) zip.file(p, serializeXml(doc));
+    }
+    removeParts(zip, [/^word\/comments.*\.xml$/, /^word\/people\.xml$/]);
+    await removeRels(zip, "word/_rels/document.xml.rels", /comments|people/i);
+    await removeContentTypeOverrides(zip, /comments|people/i);
+    info.push("Removed comments and reviewer identities");
+  }
+}
+
+// ---- PPTX: speaker notes + comments ----
+async function deepScanPptx(zip, rec){
+  const notePaths = zipPaths(zip, /^ppt\/notesSlides\/notesSlide\d+\.xml$/);
+  let noteSlides = 0, noteChars = 0;
+  for(const p of notePaths){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    let txt = "";
+    for(const t of allLocal(doc, "t")) txt += t.textContent || "";
+    txt = txt.trim();
+    if(txt.length){ noteSlides++; noteChars += txt.length; }
+  }
+  if(noteSlides){
+    rec.fields.push({ label: "Speaker notes",
+      value: "notes on " + noteSlides + " slide" + (noteSlides > 1 ? "s" : "") + " (~" + noteChars +
+        " characters) — visible to anyone who opens the file",
+      leak: true, deep: "notes" });
+  }
+  const cPaths = zipPaths(zip, /^ppt\/comments\/.*\.xml$/);
+  let cCount = 0;
+  const cAuthors = new Set();
+  for(const p of cPaths){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    for(const el of allLocal(doc, "cm")) cCount++;
+    for(const el of allLocal(doc, "comment")) cCount++;
+  }
+  for(const ap of ["ppt/commentAuthors.xml","ppt/authors.xml"]){
+    const doc = await partDoc(zip, ap);
+    if(!doc) continue;
+    for(const el of allLocal(doc, "cmAuthor")){ const n = attrLocal(el, "name"); if(n) cAuthors.add(n); }
+    for(const el of allLocal(doc, "author")){ const n = attrLocal(el, "name"); if(n) cAuthors.add(n); }
+  }
+  if(cCount || cAuthors.size){
+    rec.fields.push({ label: "Comments",
+      value: (cCount ? cCount + " comment" + (cCount !== 1 ? "s" : "") : "commenter identities") +
+        (cAuthors.size ? " by " + authorList(cAuthors) : "") + " — visible to anyone who opens the file",
+      leak: true, deep: "comments" });
+  }
+}
+async function deepCleanPptx(zip, rec, info){
+  const sel = rec.deepSelected;
+  if(sel.has("notes")){
+    removeParts(zip, [/^ppt\/notesSlides\/notesSlide\d+\.xml$/, /^ppt\/notesSlides\/_rels\/notesSlide\d+\.xml\.rels$/]);
+    for(const rp of zipPaths(zip, /^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/)) await removeRels(zip, rp, /notesSlide/i);
+    await removeContentTypeOverrides(zip, /notesSlide/i);
+    info.push("Removed speaker notes");
+  }
+  if(sel.has("comments")){
+    removeParts(zip, [/^ppt\/comments\//, /^ppt\/commentAuthors\.xml$/, /^ppt\/authors\.xml$/]);
+    for(const rp of zipPaths(zip, /\.rels$/)) await removeRels(zip, rp, /comment|authors/i);
+    await removeContentTypeOverrides(zip, /comment|authors/i);
+    info.push("Removed comments");
+  }
+}
+
+// ---- XLSX: comments (removal) + hidden sheets (detection only) ----
+async function deepScanXlsx(zip, rec){
+  let cCount = 0;
+  const cAuthors = new Set();
+  for(const p of zipPaths(zip, /^xl\/comments\d*\.xml$/)){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    for(const el of allLocal(doc, "comment")) cCount++;
+    for(const el of allLocal(doc, "author")){ const n = (el.textContent || "").trim(); if(n) cAuthors.add(n); }
+  }
+  for(const p of zipPaths(zip, /^xl\/threadedComments\/.*\.xml$/)){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    for(const el of allLocal(doc, "threadedComment")) cCount++;
+  }
+  for(const p of zipPaths(zip, /^xl\/persons\/.*\.xml$/)){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    for(const el of allLocal(doc, "person")){ const n = attrLocal(el, "displayName"); if(n) cAuthors.add(n); }
+  }
+  if(cCount || cAuthors.size){
+    rec.fields.push({ label: "Cell comments",
+      value: (cCount ? cCount + " comment" + (cCount !== 1 ? "s" : "") : "commenter identities") +
+        (cAuthors.size ? " by " + authorList(cAuthors) : "") + " — visible to recipients",
+      leak: true, deep: "comments" });
+  }
+  const wb = await partDoc(zip, "xl/workbook.xml");
+  if(wb){
+    const hidden = [];
+    for(const s of allLocal(wb, "sheet")){
+      const st = attrLocal(s, "state");
+      if(st === "hidden" || st === "veryHidden") hidden.push(attrLocal(s, "name") || "?");
+    }
+    if(hidden.length){
+      rec.fields.push({ label: "Hidden sheets",
+        value: hidden.length + " hidden (" + authorList(new Set(hidden)) + ") — recipients can unhide them; kept by design, review in Excel",
+        leak: true, deep: "hiddenSheets" });
+    }
+  }
+}
+async function deepCleanXlsx(zip, rec, info){
+  const sel = rec.deepSelected;
+  if(!sel.has("comments")) return;
+  // Modern comments + threaded comments + person parts.
+  const removed = removeParts(zip, [/^xl\/comments\d*\.xml$/, /^xl\/threadedComments\//, /^xl\/persons\//]);
+  // Legacy VML notes: drop only note shapes; delete the part if nothing else remains.
+  for(const vp of zipPaths(zip, /^xl\/drawings\/vmlDrawing\d*\.vml$/)){
+    const doc = await partDoc(zip, vp);
+    if(!doc) continue;
+    let ch = false, remaining = 0;
+    for(const shape of allLocal(doc, "shape")){
+      let isNote = false;
+      for(const cd of allWithin(shape, "ClientData")) if(attrLocal(cd, "ObjectType") === "Note") isNote = true;
+      if(isNote){ if(shape.parentNode){ shape.parentNode.removeChild(shape); ch = true; } }
+      else remaining++;
+    }
+    if(ch){
+      if(remaining === 0){ zip.remove(vp); removed.push(vp); }
+      else zip.file(vp, serializeXml(doc));
+    }
+  }
+  // Drop <legacyDrawing> refs from sheets and matching rels for any removed part.
+  const removedBase = new Set(removed.map(p => p.split("/").pop()));
+  for(const rp of zipPaths(zip, /^xl\/worksheets\/_rels\/sheet\d+\.xml\.rels$/)){
+    const doc = await partDoc(zip, rp);
+    if(!doc) continue;
+    let ch = false;
+    const deadIds = new Set();
+    for(const el of allLocal(doc, "Relationship")){
+      const tgt = (el.getAttribute("Target") || "").split("/").pop();
+      const type = el.getAttribute("Type") || "";
+      if(removedBase.has(tgt) || /comments|vmlDrawing/i.test(type)){
+        const id = el.getAttribute("Id"); if(id) deadIds.add(id);
+        el.parentNode.removeChild(el); ch = true;
+      }
+    }
+    if(ch) zip.file(rp, serializeXml(doc));
+    // Remove now-dangling legacyDrawing/reference elements in the matching sheet.
+    const sheet = rp.replace("_rels/", "").replace(/\.rels$/, "");
+    const sDoc = await partDoc(zip, sheet);
+    if(sDoc && deadIds.size){
+      let sch = false;
+      for(const el of allLocal(sDoc, "legacyDrawing")){
+        const rid = attrLocal(el, "id");
+        if(!rid || deadIds.has(rid)){ if(el.parentNode){ el.parentNode.removeChild(el); sch = true; } }
+      }
+      if(sch) zip.file(sheet, serializeXml(sDoc));
+    }
+  }
+  await removeContentTypeOverrides(zip, /comments|threadedComment|person/i);
+  info.push("Removed cell comments");
+}
+/* ==DEEP:END== */
 
 async function analyzeOoxml(rec, buf){
   let zip;
@@ -844,24 +1409,11 @@ async function analyzeOoxml(rec, buf){
     if(zip.file(p)){ rec.thumbPath = p; rec.fields.push({ label:"Preview thumbnail", value:"embedded image of page 1", leak:true }); break; }
   }
 
-  // content warnings (docx)
-  if(rec.ext === "docx"){
-    const docXmlFile = zip.file("word/document.xml");
-    if(docXmlFile){
-      const s = await docXmlFile.async("string");
-      if(s.indexOf("<w:ins ") !== -1 || s.indexOf("<w:del ") !== -1){
-        rec.warnings.push("Tracked changes found in the text. They contain editor names and deleted passages — accept or reject them in Word before sending. Metadata cleaning does not remove them.");
-      }
-    }
-    if(zip.file("word/comments.xml")){
-      rec.warnings.push("Comments found in the document. They include commenter names — delete them in Word before sending.");
-    }
-  }
-  if(rec.ext === "xlsx"){
-    let hasHidden = false;
-    zip.forEach(path => { if(/^xl\/comments\d*\.xml$/.test(path)) hasHidden = true; });
-    if(hasHidden) rec.warnings.push("Cell comments found — they may include reviewer names. Remove them in Excel before sending.");
-  }
+  // content-level ("deep") findings: tracked changes, comments, notes, hidden
+  // sheets, rsids. Detected here (free); removed only on opt-in (see cleanOoxml).
+  if(rec.ext === "docx") await deepScanDocx(zip, rec);
+  else if(rec.ext === "pptx") await deepScanPptx(zip, rec);
+  else if(rec.ext === "xlsx") await deepScanXlsx(zip, rec);
 }
 
 const CLEAN_CORE =
@@ -877,8 +1429,10 @@ const CLEAN_CUSTOM =
 '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/custom-properties" ' +
 'xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"></Properties>';
 
-async function cleanOoxml(rec){
-  const zip = rec.zip;
+const DEEP_FAIL_WARN = "Deep clean couldn't be applied to this file safely, so only standard metadata was removed. Tracked changes / comments / notes may remain — accept or delete them in the Office app before sending.";
+
+// Standard docProps cleaning (core/app/custom/thumbnail). Runs on any OOXML zip.
+async function cleanOoxmlMeta(zip, rec){
   if(zip.file("docProps/core.xml")) zip.file("docProps/core.xml", CLEAN_CORE);
   if(zip.file("docProps/custom.xml")) zip.file("docProps/custom.xml", CLEAN_CUSTOM);
 
@@ -907,6 +1461,35 @@ async function cleanOoxml(rec){
       zip.file("_rels/.rels", new XMLSerializer().serializeToString(rels));
     }
   }
+}
+
+async function deepCleanOoxml(zip, rec){
+  if(rec.ext === "docx") await deepCleanDocx(zip, rec, rec.deepApplied);
+  else if(rec.ext === "pptx") await deepCleanPptx(zip, rec, rec.deepApplied);
+  else if(rec.ext === "xlsx") await deepCleanXlsx(zip, rec, rec.deepApplied);
+}
+
+async function cleanOoxml(rec){
+  let zip = rec.zip;
+  await cleanOoxmlMeta(zip, rec);
+  rec.deepApplied = [];
+  rec.deepFailed = false;
+
+  // Deep (content-level) removal — opt-in and Pro. If anything throws, the file
+  // could be left with dangling references, so we rebuild a fresh metadata-only
+  // clean from the original bytes and warn — never hand over a broken document.
+  if(rec.deepSelected && rec.deepSelected.size){
+    try{
+      await deepCleanOoxml(zip, rec);
+    }catch(e){
+      zip = await JSZip.loadAsync(rec.buffer);
+      rec.zip = zip;
+      await cleanOoxmlMeta(zip, rec);
+      rec.deepApplied = [];
+      rec.deepFailed = true;
+      if(rec.warnings.indexOf(DEEP_FAIL_WARN) === -1) rec.warnings.push(DEEP_FAIL_WARN);
+    }
+  }
 
   const mimes = {
     docx:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -914,6 +1497,95 @@ async function cleanOoxml(rec){
     pptx:"application/vnd.openxmlformats-officedocument.presentationml.presentation"
   };
   return zip.generateAsync({ type:"blob", mimeType: mimes[rec.ext], compression:"DEFLATE" });
+}
+
+/* ---------------- OpenDocument (odt / ods / odp) ---------------- */
+// ODF stores its identity metadata in meta.xml (office:meta) and, like OOXML,
+// an embedded page-one thumbnail. Same jszip approach as OOXML.
+async function analyzeOdf(rec, buf){
+  let zip;
+  try{ zip = await JSZip.loadAsync(buf); }
+  catch(e){ throw new Error("This file doesn't look like a valid OpenDocument file (the internal package can't be opened)."); }
+  rec.zip = zip;
+
+  const metaFile = zip.file("meta.xml");
+  if(metaFile){
+    const doc = xmlDoc(await metaFile.async("string"));
+    if(!doc.getElementsByTagName("parsererror").length){
+      const push = (local, label, leak, map) => {
+        const vals = [];
+        for(const el of allLocal(doc, local)){
+          let v = (el.textContent || "").trim();
+          if(!v) continue;
+          if(map){ v = map(v); if(v == null) continue; }
+          if(vals.indexOf(v) === -1) vals.push(v);
+        }
+        if(vals.length) rec.fields.push({ label, value: vals.join(" / "), leak });
+      };
+      push("initial-creator", "Author", true);
+      push("creator", "Last modified by", true);
+      push("generator", "Created with", false);
+      push("title", "Title", false);
+      push("subject", "Subject", false);
+      push("description", "Comments field", true);
+      push("keyword", "Keywords", false);
+      push("creation-date", "Created", false, fmtDate);
+      push("date", "Last modified", false, fmtDate);
+      push("printed-by", "Last printed by", true);
+      push("editing-cycles", "Revision number", false);
+      push("editing-duration", "Total editing time", true, v => {
+        const m = /P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?/.exec(v);
+        if(!m) return v;
+        const total = (+(m[1] || 0)) * 1440 + (+(m[2] || 0)) * 60 + (+(m[3] || 0));
+        if(total === 0) return null;
+        return total >= 60 ? Math.floor(total / 60) + " h " + (total % 60) + " min" : total + " min";
+      });
+      for(const el of allLocal(doc, "user-defined")){
+        const nm = attrLocal(el, "name") || "Custom property";
+        const val = (el.textContent || "").trim();
+        if(val) rec.fields.push({ label: "Custom · " + nm, value: val, leak: true });
+      }
+    }
+  }
+
+  rec.thumbPath = null;
+  if(zip.file("Thumbnails/thumbnail.png")){
+    rec.thumbPath = "Thumbnails/thumbnail.png";
+    rec.fields.push({ label: "Preview thumbnail", value: "embedded image of page 1", leak: true });
+  }
+}
+
+const CLEAN_ODF_META =
+'<?xml version="1.0" encoding="UTF-8"?>' +
+'<office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" ' +
+'xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" ' +
+'xmlns:dc="http://purl.org/dc/elements/1.1/" office:version="1.2"><office:meta/></office:document-meta>';
+
+async function cleanOdf(rec){
+  const zip = rec.zip;
+  if(zip.file("meta.xml")) zip.file("meta.xml", CLEAN_ODF_META);
+  if(rec.thumbPath) zip.remove(rec.thumbPath);
+
+  // Keep the package manifest consistent after dropping the thumbnail.
+  const manifest = zip.file("META-INF/manifest.xml");
+  if(manifest){
+    const doc = xmlDoc(await manifest.async("string"));
+    if(!doc.getElementsByTagName("parsererror").length){
+      let changed = false;
+      for(const el of allLocal(doc, "file-entry")){
+        if(/^Thumbnails\//.test(attrLocal(el, "full-path"))){ el.parentNode.removeChild(el); changed = true; }
+      }
+      if(changed) zip.file("META-INF/manifest.xml", serializeXml(doc));
+    }
+  }
+
+  // ODF requires the 'mimetype' entry to be first and STORED (uncompressed);
+  // re-set it in place with STORE so a re-zip doesn't deflate it.
+  const mimeFile = zip.file("mimetype");
+  if(mimeFile){
+    zip.file("mimetype", await mimeFile.async("uint8array"), { compression: "STORE" });
+  }
+  return zip.generateAsync({ type:"blob", mimeType: ODF[rec.ext], compression:"DEFLATE" });
 }
 
 /* ---------------- PDF ---------------- */
@@ -942,6 +1614,27 @@ async function analyzePdf(rec, buf){
       rec.fields.push({ label:"XMP metadata", value:"embedded XML block (often mirrors author & software)", leak:true });
     }
   }catch(e){}
+  // Per-page authoring residue (PieceInfo / LastModified) — editor-tool history
+  // that pdf-lib leaves untouched by default. Catalog-level PieceInfo too.
+  try{
+    let pieceInfoPages = 0, lastModPages = 0;
+    for(const page of doc.getPages()){
+      const n = page.node;
+      try{ if(n.get(PDFLib.PDFName.of("PieceInfo"))) pieceInfoPages++; }catch(e){}
+      try{ if(n.get(PDFLib.PDFName.of("LastModified"))) lastModPages++; }catch(e){}
+    }
+    let catalogPiece = false;
+    try{ catalogPiece = !!doc.catalog.get(PDFLib.PDFName.of("PieceInfo")); }catch(e){}
+    if(pieceInfoPages || catalogPiece){
+      rec.fields.push({ label:"Editor data (PieceInfo)",
+        value:(pieceInfoPages ? "on " + pieceInfoPages + " page" + (pieceInfoPages > 1 ? "s" : "") : "document-level") +
+          " — private authoring-tool data added by the editor", leak:true });
+    }
+    if(lastModPages){
+      rec.fields.push({ label:"Page last-modified",
+        value:"timestamps on " + lastModPages + " page" + (lastModPages > 1 ? "s" : ""), leak:false });
+    }
+  }catch(e){}
 }
 
 async function cleanPdf(rec){
@@ -951,6 +1644,14 @@ async function cleanPdf(rec){
   const epoch = new Date(0);
   try{ doc.setCreationDate(epoch); doc.setModificationDate(epoch); }catch(e){}
   try{ doc.catalog.delete(PDFLib.PDFName.of("Metadata")); }catch(e){}
+  try{ doc.catalog.delete(PDFLib.PDFName.of("PieceInfo")); }catch(e){}
+  try{
+    for(const page of doc.getPages()){
+      try{ page.node.delete(PDFLib.PDFName.of("PieceInfo")); }catch(e){}
+      try{ page.node.delete(PDFLib.PDFName.of("LastModified")); }catch(e){}
+      try{ page.node.delete(PDFLib.PDFName.of("Metadata")); }catch(e){}
+    }
+  }catch(e){}
   const bytes = await doc.save({ useObjectStreams:false });
   return new Blob([bytes], { type:"application/pdf" });
 }
@@ -994,6 +1695,39 @@ async function analyzeImage(rec, buf){
     }catch(e){}
     if(texts) rec.fields.push({ label:"Text chunks", value: texts + " embedded text block(s) — may include software or author", leak:true });
     if(hasExif) rec.fields.push({ label:"EXIF block", value:"embedded EXIF data", leak:true });
+  }
+  if(rec.ext === "webp"){
+    // Walk RIFF chunks (mirrors stripWebp) so the re-scan can actually verify
+    // WebP cleaning instead of reporting nothing.
+    try{
+      const v = new DataView(buf), u8 = new Uint8Array(buf);
+      if(v.byteLength >= 12 && asciiAt(u8, 0, 4) === "RIFF" && asciiAt(u8, 8, 4) === "WEBP"){
+        let off = 12, hasExif = false, hasXmp = false;
+        while(off + 8 <= v.byteLength){
+          const fourcc = asciiAt(u8, off, 4);
+          const size = v.getUint32(off + 4, true);
+          if(fourcc === "EXIF") hasExif = true;
+          if(fourcc === "XMP ") hasXmp = true;
+          off += 8 + size + (size & 1);
+        }
+        if(hasExif) rec.fields.push({ label:"EXIF block", value:"embedded EXIF data (camera, possibly GPS)", leak:true });
+        if(hasXmp) rec.fields.push({ label:"XMP metadata", value:"embedded XML block — may include author & software", leak:true });
+      }
+    }catch(e){}
+  }
+  if(rec.ext === "gif"){
+    try{
+      const u8 = new Uint8Array(buf);
+      if(u8.length >= 6 && asciiAt(u8, 0, 3) === "GIF"){
+        let comments = 0, hasXmp = false;
+        for(const blk of gifBlocks(u8)){
+          if(blk.type === "ext" && blk.label === 0xFE) comments++;
+          if(blk.type === "ext" && blk.label === 0xFF && blk.xmp) hasXmp = true;
+        }
+        if(comments) rec.fields.push({ label:"Comment blocks", value: comments + " embedded comment block" + (comments > 1 ? "s" : "") + " — may include software or notes", leak:true });
+        if(hasXmp) rec.fields.push({ label:"XMP metadata", value:"embedded XML block — may include author & software", leak:true });
+      }
+    }catch(e){}
   }
 }
 
@@ -1089,12 +1823,62 @@ function stripWebp(buf){
   return new Blob(parts, { type: "image/webp" });
 }
 
+// Parse a GIF into its top-level blocks so detection and stripping share one
+// walker. Returns [{type:"header"|"image"|"ext"|"trailer", start, end, label, xmp}].
+function gifBlocks(u8){
+  if(u8.length < 13 || asciiAt(u8, 0, 3) !== "GIF") throw new Error("not a GIF");
+  const blocks = [];
+  const packed = u8[10];
+  const gct = (packed & 0x80) ? 3 * (1 << ((packed & 0x07) + 1)) : 0;
+  let idx = 13 + gct;
+  blocks.push({ type:"header", start:0, end:idx });
+  const skip = i => { while(i < u8.length){ const l = u8[i]; if(l === 0) return i + 1; i += 1 + l; } return i; };
+  while(idx < u8.length){
+    const b = u8[idx];
+    if(b === 0x3B){ blocks.push({ type:"trailer", start:idx, end:idx + 1 }); break; }
+    if(b === 0x2C){
+      let i = idx + 10;
+      const lp = u8[idx + 9];
+      if(lp & 0x80) i += 3 * (1 << ((lp & 0x07) + 1));
+      i += 1;               // LZW minimum code size
+      i = skip(i);
+      blocks.push({ type:"image", start:idx, end:i });
+      idx = i; continue;
+    }
+    if(b === 0x21){
+      const label = u8[idx + 1];
+      const i = skip(idx + 2);
+      const xmp = label === 0xFF && u8[idx + 2] === 11 && /^XMP Data/.test(asciiAt(u8, idx + 3, 11));
+      blocks.push({ type:"ext", label, start:idx, end:i, xmp });
+      idx = i; continue;
+    }
+    throw new Error("unexpected GIF block");
+  }
+  return blocks;
+}
+// GIF: drop Comment (0xFE) and XMP application (0xFF "XMP Data") extensions.
+// Image data, color tables and graphic-control blocks are copied verbatim → lossless.
+function stripGif(buf){
+  const u8 = new Uint8Array(buf);
+  const parts = [];
+  for(const blk of gifBlocks(u8)){
+    if(blk.type === "ext" && blk.label === 0xFE) continue;              // comment
+    if(blk.type === "ext" && blk.label === 0xFF && blk.xmp) continue;   // XMP packet
+    parts.push(u8.subarray(blk.start, blk.end));
+  }
+  return new Blob(parts, { type:"image/gif" });
+}
+
 async function cleanImage(rec){
   try{
     if(rec.ext === "png") return stripPng(rec.buffer);
     if(rec.ext === "webp") return stripWebp(rec.buffer);
+    if(rec.ext === "gif") return stripGif(rec.buffer);
     return stripJpeg(rec.buffer);
   }catch(e){
+    // GIF must never go through the lossy canvas re-encode — it would flatten
+    // the animation. Fail honestly instead.
+    if(rec.ext === "gif") throw new Error("This GIF has an unusual internal structure and couldn't be cleaned safely. Re-export it and try again.");
     return reencodeFallback(rec); // unusual internal structure → decode & re-encode
   }
 }
@@ -1114,11 +1898,287 @@ async function reencodeFallback(rec){
   });
 }
 
+/* ---------------- Video (mp4 / mov / m4v) ---------------- */
+// ISO-BMFF is a tree of [size][type][payload] boxes. Metadata (device, GPS,
+// tags, XMP) lives in moov/udta, moov/meta, per-track udta, and top-level uuid
+// (XMP). We neuter those boxes IN PLACE — rename the type to 'free' and zero the
+// payload — so nothing shifts and the mdat chunk-offset tables (stco/co64) stay
+// valid. Removing boxes would break those offsets; this avoids all offset math.
+function readU32(u8, o){ return (u8[o] * 16777216) + (u8[o+1] << 16) + (u8[o+2] << 8) + u8[o+3]; }
+function readU64(u8, o){ return readU32(u8, o) * 4294967296 + readU32(u8, o+4); }
+function mp4Boxes(u8, start, end){
+  const out = [];
+  let p = start;
+  while(p + 8 <= end){
+    let size = readU32(u8, p);
+    const type = asciiAt(u8, p+4, 4);
+    let headerSize = 8;
+    if(size === 1){ size = readU64(u8, p+8); headerSize = 16; }
+    else if(size === 0){ size = end - p; }
+    if(size < headerSize || p + size > end) break; // malformed — stop, don't guess
+    out.push({ type, start:p, headerSize, contentStart:p + headerSize, end:p + size });
+    p += size;
+  }
+  return out;
+}
+function neuterMp4Box(u8, box){
+  u8[box.start+4] = 0x66; u8[box.start+5] = 0x72; u8[box.start+6] = 0x65; u8[box.start+7] = 0x65; // 'free'
+  for(let i = box.contentStart; i < box.end; i++) u8[i] = 0; // physically erase the data
+}
+function isXmpUuid(u8, box){
+  const s = asciiAt(u8, box.contentStart, Math.min(400, box.end - box.contentStart));
+  return /ns\.adobe\.com\/xap|<\?xpacket|<x:xmpmeta/.test(s);
+}
+function analyzeVideo(rec, buf){
+  const u8 = new Uint8Array(buf);
+  const top = mp4Boxes(u8, 0, u8.length);
+  if(!top.length || !top.some(b => b.type === "ftyp" || b.type === "moov" || b.type === "mdat"))
+    throw new Error("This doesn't look like a valid MP4 or MOV video.");
+  let hasMeta = false, hasLoc = false, locStr = "", hasXmp = false, created = null;
+  const scan = boxes => {
+    for(const c of boxes){
+      if(c.type === "udta" || c.type === "meta"){
+        hasMeta = true;
+        const region = asciiAt(u8, c.contentStart, Math.min(4000, c.end - c.contentStart));
+        if(/ISO6709|com\.apple\.quicktime\.location|©xyz/.test(region)) hasLoc = true;
+        for(const cc of mp4Boxes(u8, c.contentStart, c.end)){
+          if(cc.type === "©xyz"){
+            const len = (u8[cc.contentStart] << 8) | u8[cc.contentStart+1];
+            locStr = asciiAt(u8, cc.contentStart+4, Math.min(len, cc.end - cc.contentStart - 4));
+            hasLoc = true;
+          }
+        }
+      }
+    }
+  };
+  for(const b of top){
+    if(b.type === "moov"){
+      const kids = mp4Boxes(u8, b.contentStart, b.end);
+      scan(kids);
+      for(const k of kids){
+        if(k.type === "trak") scan(mp4Boxes(u8, k.contentStart, k.end));
+        if(k.type === "mvhd"){
+          const ver = u8[k.contentStart];
+          const ct = ver === 1 ? readU64(u8, k.contentStart+4) : readU32(u8, k.contentStart+4);
+          if(ct) created = new Date((ct - 2082844800) * 1000); // 1904 epoch → unix
+        }
+      }
+    }
+    if(b.type === "uuid" && isXmpUuid(u8, b)) hasXmp = true;
+  }
+  if(hasLoc) rec.fields.push({ label:"Location (GPS)", value:(locStr ? locStr.trim() + "  ← where this was filmed" : "embedded location — where this was filmed"), leak:true });
+  if(hasMeta) rec.fields.push({ label:"Metadata", value:"device, software and tags in the file's user-data", leak:true });
+  if(hasXmp) rec.fields.push({ label:"XMP metadata", value:"embedded XML block — may include author & software", leak:true });
+  if(created && !isNaN(created)) rec.fields.push({ label:"Created", value: fmtDate(created), leak:false });
+}
+function stripVideo(rec){
+  const src = new Uint8Array(rec.buffer);
+  const u8 = new Uint8Array(src.length);
+  u8.set(src); // work on a copy — the original buffer feeds the report hash
+  const top = mp4Boxes(u8, 0, u8.length);
+  if(!top.some(b => b.type === "ftyp" || b.type === "moov"))
+    throw new Error("This doesn't look like a valid MP4 or MOV video.");
+  for(const b of top){
+    if(b.type === "moov"){
+      for(const c of mp4Boxes(u8, b.contentStart, b.end)){
+        if(c.type === "udta" || c.type === "meta") neuterMp4Box(u8, c);
+        else if(c.type === "trak"){
+          for(const t of mp4Boxes(u8, c.contentStart, c.end))
+            if(t.type === "udta" || t.type === "meta") neuterMp4Box(u8, t);
+        }
+      }
+    } else if(b.type === "uuid" && isXmpUuid(u8, b)){
+      neuterMp4Box(u8, b);
+    }
+  }
+  return new Blob([u8], { type: VID[rec.ext] });
+}
+
+/* ---------------- HEIC / HEIF / AVIF ---------------- */
+// Also ISO-BMFF. Metadata items (Exif, XMP) are declared in meta/iinf and their
+// bytes located via meta/iloc (usually inside mdat). We reuse the box walker to
+// find those items and ZERO their data extents in place — no decoder needed, no
+// iloc rewriting, image items untouched. Invalid/empty EXIF is ignored by viewers.
+function metaChildren(u8, meta){ return mp4Boxes(u8, meta.contentStart + 4, meta.end); } // meta is a FullBox
+function parseIinf(u8, iinf){
+  const map = {};
+  let p = iinf.contentStart;
+  const version = u8[p]; p += 4;              // version + flags
+  p += version === 0 ? 2 : 4;                 // entry_count
+  for(const b of mp4Boxes(u8, p, iinf.end)){
+    if(b.type !== "infe") continue;
+    let q = b.contentStart;
+    const ver = u8[q]; q += 4;
+    if(ver < 2) continue;
+    let id;
+    if(ver === 2){ id = (u8[q] << 8) | u8[q+1]; q += 2; } else { id = readU32(u8, q); q += 4; }
+    q += 2;                                    // protection index
+    const type = asciiAt(u8, q, 4); q += 4;
+    let contentType = "";
+    if(type === "mime"){ let e = q; while(e < b.end && u8[e] !== 0) e++; contentType = asciiAt(u8, q, e - q); }
+    map[id] = { type, contentType };
+  }
+  return map;
+}
+function parseIloc(u8, iloc){
+  const loc = {};
+  let p = iloc.contentStart;
+  const version = u8[p]; p += 4;
+  const b0 = u8[p++], b1 = u8[p++];
+  const offsetSize = b0 >> 4, lengthSize = b0 & 0xF, baseOffsetSize = b1 >> 4, indexSize = b1 & 0xF;
+  let count;
+  if(version < 2){ count = (u8[p] << 8) | u8[p+1]; p += 2; } else { count = readU32(u8, p); p += 4; }
+  const readN = n => { let v = 0; for(let i = 0; i < n; i++) v = v * 256 + u8[p++]; return v; };
+  for(let i = 0; i < count; i++){
+    let id;
+    if(version < 2){ id = (u8[p] << 8) | u8[p+1]; p += 2; } else { id = readU32(u8, p); p += 4; }
+    let method = 0;
+    if(version === 1 || version === 2){ method = ((u8[p] << 8) | u8[p+1]) & 0xF; p += 2; }
+    p += 2;                                    // data_reference_index
+    const baseOffset = readN(baseOffsetSize);
+    const extentCount = (u8[p] << 8) | u8[p+1]; p += 2;
+    const extents = [];
+    for(let e = 0; e < extentCount; e++){
+      if((version === 1 || version === 2) && indexSize > 0) readN(indexSize);
+      const off = readN(offsetSize), len = readN(lengthSize);
+      extents.push({ offset: baseOffset + off, length: len, method });
+    }
+    loc[id] = extents;
+  }
+  return loc;
+}
+function heifItems(u8){
+  const top = mp4Boxes(u8, 0, u8.length);
+  const meta = top.find(b => b.type === "meta");
+  if(!meta) return null;
+  const kids = metaChildren(u8, meta);
+  const iinf = kids.find(b => b.type === "iinf"), iloc = kids.find(b => b.type === "iloc"), idat = kids.find(b => b.type === "idat");
+  if(!iinf || !iloc) return { items: [] };
+  const info = parseIinf(u8, iinf), locs = parseIloc(u8, iloc), items = [];
+  for(const id in info){
+    const extents = (locs[id] || []).map(ex => ({
+      abs: ex.method === 1 && idat ? idat.contentStart + ex.offset : ex.offset,
+      length: ex.length
+    }));
+    items.push({ id: +id, type: info[id].type, contentType: info[id].contentType, extents });
+  }
+  return { items };
+}
+function heifExtentHasData(u8, extents){
+  for(const ex of extents){
+    const end = Math.min(ex.abs + ex.length, u8.length);
+    for(let i = ex.abs; i < end; i++) if(u8[i] !== 0) return true;
+  }
+  return false;
+}
+function heifItemHead(u8, extents, n){
+  let s = "";
+  for(const ex of extents){
+    const end = Math.min(ex.abs + n, ex.abs + ex.length, u8.length);
+    for(let i = ex.abs; i < end && s.length < n; i++) s += String.fromCharCode(u8[i]);
+    if(s.length >= n) break;
+  }
+  return s;
+}
+// Which metadata kind an item is, if any. XMP is matched on the DATA, not the
+// declared content_type — real encoders (ExifTool-written AVIF) often leave the
+// mime item's content_type empty, so trusting it silently missed the XMP.
+function heifMetaKind(u8, it){
+  if(it.type === "Exif") return "exif";
+  if(it.type === "mime"){
+    if(/rdf\+xml|xml/i.test(it.contentType)) return "xmp";
+    const head = heifItemHead(u8, it.extents, 96);
+    if(/<\?xpacket|<x:xmpmeta|adobe:ns|<rdf:/i.test(head)) return "xmp";
+  }
+  return null;
+}
+function analyzeHeif(rec, buf){
+  const u8 = new Uint8Array(buf);
+  const info = heifItems(u8);
+  if(!info) throw new Error("This doesn't look like a valid HEIC/HEIF/AVIF image. If it opens only on an iPhone, export a copy first.");
+  for(const it of info.items){
+    if(!heifExtentHasData(u8, it.extents)) continue;
+    const kind = heifMetaKind(u8, it);
+    if(kind === "exif")
+      rec.fields.push({ label:"EXIF (camera, GPS)", value:"embedded EXIF — camera, settings and often GPS location", leak:true });
+    else if(kind === "xmp")
+      rec.fields.push({ label:"XMP metadata", value:"embedded XML block — may include author & software", leak:true });
+  }
+}
+function stripHeif(rec){
+  const src = new Uint8Array(rec.buffer);
+  const u8 = new Uint8Array(src.length); u8.set(src);
+  const info = heifItems(u8);
+  if(!info) throw new Error("This doesn't look like a valid HEIC/HEIF/AVIF image.");
+  for(const it of info.items){
+    if(!heifMetaKind(u8, it)) continue;
+    for(const ex of it.extents){
+      const end = Math.min(ex.abs + ex.length, u8.length);
+      for(let i = ex.abs; i < end; i++) u8[i] = 0;
+    }
+  }
+  return new Blob([u8], { type: HEIF[rec.ext] });
+}
+
+/* ---------------- SVG ---------------- */
+// SVG is XML. Strip editor cruft and metadata: <metadata>, comments, and the
+// inkscape:/sodipodi: editor namespaces + attributes. Pixels/paths untouched.
+const SVG_EDITOR_NS = /^(inkscape|sodipodi|dc|cc|rdf)$/;
+function analyzeSvg(rec, buf){
+  const text = new TextDecoder().decode(new Uint8Array(buf));
+  const doc = xmlDoc(text);
+  if(doc.getElementsByTagName("parsererror").length) throw new Error("This SVG couldn't be parsed as XML.");
+  rec.svgText = text;
+  if(allLocal(doc, "metadata").length)
+    rec.fields.push({ label:"Metadata block", value:"embedded <metadata> — often author, licence, editor", leak:true });
+  let editorAttrs = 0;
+  const all = doc.getElementsByTagName("*");
+  for(let i = 0; i < all.length; i++){
+    const at = all[i].attributes;
+    for(let a = 0; a < at.length; a++){
+      const pfx = at[a].name.split(":")[0];
+      if(at[a].name.indexOf(":") !== -1 && SVG_EDITOR_NS.test(pfx)) editorAttrs++;
+    }
+  }
+  if(editorAttrs) rec.fields.push({ label:"Editor attributes", value: editorAttrs + " Inkscape/editor attribute" + (editorAttrs > 1 ? "s" : "") + " — reveal the tool used", leak:true });
+  if(/<!--/.test(text)) rec.fields.push({ label:"Comments", value:"XML comments in the file — may include notes or a generator line", leak:true });
+}
+function stripSvg(rec){
+  const doc = xmlDoc(rec.svgText || new TextDecoder().decode(new Uint8Array(rec.buffer)));
+  for(const el of allLocal(doc, "metadata")) if(el.parentNode) el.parentNode.removeChild(el);
+  // strip editor-namespace attributes
+  const all = doc.getElementsByTagName("*");
+  for(let i = 0; i < all.length; i++){
+    const el = all[i], at = el.attributes;
+    for(let a = at.length - 1; a >= 0; a--){
+      const nm = at[a].name;
+      if(nm.indexOf(":") !== -1 && SVG_EDITOR_NS.test(nm.split(":")[0])) el.removeAttributeNode(at[a]);
+      else if(nm === "xmlns:inkscape" || nm === "xmlns:sodipodi" || nm === "xmlns:dc" || nm === "xmlns:cc" || nm === "xmlns:rdf") el.removeAttributeNode(at[a]);
+    }
+  }
+  // drop comment nodes
+  const strip = node => {
+    for(let c = node.firstChild; c;){
+      const next = c.nextSibling;
+      if(c.nodeType === 8) node.removeChild(c);          // comment
+      else if(c.nodeType === 1) strip(c);
+      c = next;
+    }
+  };
+  strip(doc);
+  const out = new XMLSerializer().serializeToString(doc.documentElement);
+  return new Blob([out], { type:"image/svg+xml" });
+}
+
 /* ---------------- clean action ---------------- */
 async function ensureCleanedBlob(rec){
   if(!rec.cleanedBlob){
     if(rec.kind === "ooxml") rec.cleanedBlob = await cleanOoxml(rec);
+    else if(rec.kind === "odf") rec.cleanedBlob = await cleanOdf(rec);
     else if(rec.kind === "pdf") rec.cleanedBlob = await cleanPdf(rec);
+    else if(rec.kind === "video") rec.cleanedBlob = await stripVideo(rec);
+    else if(rec.kind === "heif") rec.cleanedBlob = await stripHeif(rec);
+    else if(rec.kind === "svg") rec.cleanedBlob = await stripSvg(rec);
     else rec.cleanedBlob = await cleanImage(rec);
   }
   return rec.cleanedBlob;
@@ -1127,18 +2187,32 @@ async function ensureCleanedBlob(rec){
 // Re-open the CLEANED copy and run the same analyzer over it, so we can prove
 // (not just claim) that no identifying fields survived. Returns the list of
 // any leaks still present — empty means verified clean.
+// A field is "removed by this clean" if it's a standard leak (always removed)
+// or a deep item the user opted into. Deep items left in place on purpose
+// (unchecked, or detection-only like hidden sheets) are NOT failures.
+function wasRemoved(rec, f){
+  return f.leak && f.value && (!f.deep || (rec.deepSelected && rec.deepSelected.has(f.deep)));
+}
 async function reScanCleaned(rec){
   if(rec.verify) return rec.verify;
   const buf = await rec.cleanedBlob.arrayBuffer();
-  const probe = { ext: rec.ext, kind: rec.kind, fields: [], warnings: [], thumbPath: null };
+  const probe = { ext: rec.ext, kind: rec.kind, fields: [], warnings: [], thumbPath: null,
+                  deepSelected: rec.deepSelected };
   try{
     if(rec.kind === "ooxml") await analyzeOoxml(probe, buf);
+    else if(rec.kind === "odf") await analyzeOdf(probe, buf);
     else if(rec.kind === "pdf") await analyzePdf(probe, buf);
+    else if(rec.kind === "video") analyzeVideo(probe, buf);
+    else if(rec.kind === "heif") analyzeHeif(probe, buf);
+    else if(rec.kind === "svg") analyzeSvg(probe, buf);
     else await analyzeImage(probe, buf);
-    const remaining = probe.fields.filter(f => f.leak && f.value);
-    rec.verify = { ok: remaining.length === 0, remaining, error: null };
+    // Only fields we intended to remove count against verification; intentionally
+    // kept deep items (e.g. hidden sheets) are reported separately, not as leaks.
+    const remaining = probe.fields.filter(f => wasRemoved(rec, f));
+    const kept = probe.fields.filter(f => f.leak && f.value && f.deep && !(rec.deepSelected && rec.deepSelected.has(f.deep)));
+    rec.verify = { ok: remaining.length === 0, remaining, kept, error: null };
   }catch(e){
-    rec.verify = { ok: null, remaining: [], error: (e && e.message) || "re-scan failed" };
+    rec.verify = { ok: null, remaining: [], kept: [], error: (e && e.message) || "re-scan failed" };
   }
   return rec.verify;
 }
@@ -1175,6 +2249,40 @@ $cleanAll.addEventListener("click", async () => {
 });
 
 /* ---------------- render ---------------- */
+// Deep-clean options: which content-level removals to offer, in display order.
+// hiddenSheets is intentionally absent — it's detection-only (no safe remover).
+const DEEP_META = {
+  trackedChanges: { label: "Accept &amp; remove tracked changes", note: "Removes revision history. Changes the visible document, like Accept All in Word." },
+  comments:       { label: "Remove comments &amp; reviewer names", note: "" },
+  notes:          { label: "Remove speaker notes", note: "" },
+  rsid:           { label: "Strip revision IDs (rsid)", note: "Invisible editing-session fingerprints. Safe to remove.", def: true }
+};
+const DEEP_ORDER = ["trackedChanges","comments","notes","rsid"];
+
+function renderDeepBlock(rec){
+  const keys = DEEP_ORDER.filter(k => rec.fields.some(f => f.deep === k));
+  if(!keys.length || (rec.status !== "analyzed" && rec.status !== "cleaned")) return "";
+  const pro = isPro();
+  if(!rec.deepInit){
+    rec.deepInit = true;
+    if(pro) for(const k of keys) if(DEEP_META[k].def) rec.deepSelected.add(k);
+  }
+  let opts = "";
+  for(const k of keys){
+    const checked = rec.deepSelected.has(k) ? " checked" : "";
+    opts += '<label class="deep-opt">' +
+      '<input type="checkbox" data-deep="' + k + '" data-id="' + rec.id + '"' + checked + '>' +
+      '<span class="deep-t">' + DEEP_META[k].label +
+      (DEEP_META[k].note ? '<span class="deep-note">' + DEEP_META[k].note + '</span>' : '') +
+      '</span></label>';
+  }
+  return '<div class="deep-block' + (pro ? "" : " locked") + '">' +
+    '<div class="deep-head">Deep clean' + (pro ? '' : ' <span class="deep-pro">Pro</span>') + '</div>' +
+    opts +
+    (pro ? '' : '<div class="deep-locked-msg">One-click removal of the above is a Pro feature. Detection is always free.</div>') +
+  '</div>';
+}
+
 function renderCard(rec){
   let card = document.getElementById("card-" + rec.id);
   if(!card){
@@ -1185,19 +2293,19 @@ function renderCard(rec){
   }
   card.classList.toggle("is-clean", rec.status === "cleaned");
 
-  const typeLabel = rec.kind === "ooxml" ? rec.ext.toUpperCase()
-    : rec.kind === "pdf" ? "PDF"
-    : rec.kind === "image" ? rec.ext.toUpperCase() : "FILE";
+  const typeLabel = (rec.kind === "ooxml" || rec.kind === "odf" || rec.kind === "image" || rec.kind === "video" || rec.kind === "heif" || rec.kind === "svg") ? rec.ext.toUpperCase()
+    : rec.kind === "pdf" ? "PDF" : "FILE";
 
+  const keptAfter = rec.verify && rec.verify.kept ? rec.verify.kept.length : 0;
   let stamp;
   if(rec.status === "working") stamp = '<span class="stamp working">Analyzing…</span>';
-  else if(rec.status === "cleaned") stamp = (rec.verify && rec.verify.ok === true)
-    ? '<span class="stamp cleaned">Verified clean ✓</span>'
-    : '<span class="stamp cleaned">Cleaned ✓</span>';
+  else if(rec.status === "cleaned") stamp = (rec.verify && rec.verify.ok === true && !keptAfter)
+    ? '<span class="stamp cleaned">Verified clean</span>'
+    : '<span class="stamp cleaned">Cleaned</span>';
   else if(rec.status === "failed") stamp = '<span class="stamp failed">Skipped</span>';
   else stamp = rec.leaks
-    ? '<span class="stamp analyzed">' + rec.leaks + ' leak' + (rec.leaks > 1 ? 's' : '') + '</span>'
-    : '<span class="stamp cleanfile">No leaks</span>';
+    ? '<span class="stamp analyzed">' + rec.leaks + ' finding' + (rec.leaks > 1 ? 's' : '') + '</span>'
+    : '<span class="stamp cleanfile">No findings</span>';
 
   let body = "";
   if(rec.status === "working"){
@@ -1207,14 +2315,22 @@ function renderCard(rec){
   } else {
     let rows = "";
     rec.fields.forEach((f, i) => {
-      rows += '<div class="row' + (f.leak ? ' leak' : '') + '" style="animation-delay:' + Math.min(i * 45, 400) + 'ms">' +
+      const removed = rec.status === "cleaned" && wasRemoved(rec, f);
+      const kept = rec.status === "cleaned" && f.leak && f.value && !!f.deep &&
+        !(rec.deepSelected && rec.deepSelected.has(f.deep));
+      rows += '<div class="row' + (f.leak ? ' leak' : '') + (removed ? ' removed' : '') + (kept ? ' kept' : '') +
+        '" style="animation-delay:' + Math.min(i * 45, 400) + 'ms">' +
         '<span class="k">' + esc(f.label) + '</span>' +
         '<span class="v">' + esc(f.value) + '</span></div>';
     });
+    const deepBlock = renderDeepBlock(rec);
     let verifyLine = "";
     if(rec.status === "cleaned" && rec.verify){
-      if(rec.verify.ok === true)
+      if(rec.verify.ok === true && !keptAfter)
         verifyLine = '<div class="verified-badge"><span class="tick">✓</span> Re-scanned after cleaning: 0 identifying fields remain.</div>';
+      else if(rec.verify.ok === true && keptAfter)
+        verifyLine = '<div class="verified-badge partial"><span class="tick">✓</span> Standard metadata removed &amp; re-scanned. Still in the file: ' +
+          esc(rec.verify.kept.map(f => f.label).join(", ")) + '. Use Deep clean above to remove ' + (keptAfter > 1 ? 'them' : 'it') + '.</div>';
       else if(rec.verify.ok === false)
         verifyLine = '<div class="verified-badge fail"><span class="tick">!</span> Re-scan still found: ' + esc(rec.verify.remaining.map(f => f.label).join(", ")) + '. Please report this file.</div>';
       else
@@ -1230,7 +2346,7 @@ function renderCard(rec){
     body =
       '<div class="card-body">' +
         (rec.fields.length ? '<div class="report-label">What this file reveals</div><div class="rows">' + rows + '</div>' : '') +
-        summary + warns +
+        summary + deepBlock + warns +
       '</div>' +
       '<div class="card-foot">' +
         (rec.status === "cleaned"
@@ -1248,6 +2364,23 @@ function renderCard(rec){
 
   const btn = card.querySelector("[data-clean]");
   if(btn) btn.addEventListener("click", () => cleanFile(rec));
+
+  card.querySelectorAll("input[data-deep]").forEach(cb => {
+    cb.addEventListener("change", () => {
+      if(!isPro()){
+        cb.checked = false;
+        nudgePro("One-click deep clean (tracked changes, comments, notes) is a Pro feature. Detection is free.");
+        return;
+      }
+      const k = cb.getAttribute("data-deep");
+      if(cb.checked) rec.deepSelected.add(k); else rec.deepSelected.delete(k);
+      // Selection changed — invalidate the cached clean + its verification so the
+      // next download reflects the new choice.
+      rec.cleanedBlob = null; rec.verify = null; rec.deepApplied = [];
+      if(rec.status === "cleaned") rec.status = "analyzed";
+      renderCard(rec);
+    });
+  });
 }
 
 function refreshBar(){
@@ -1284,6 +2417,13 @@ function setPro(on, key){
   if(on) store("bc_last_ok", String(Date.now()));
   else store("bc_last_ok", null);
   refreshBar();
+  // Re-render analyzed cards so the deep-clean block reflects the new Pro state
+  // (and picks up safe defaults like rsid on upgrade).
+  try{
+    for(const rec of files.values()){
+      if(rec.status === "analyzed" || rec.status === "cleaned"){ rec.deepInit = false; renderCard(rec); }
+    }
+  }catch(e){}
 }
 
 // Pure policy helpers (unit-tested)
@@ -1385,7 +2525,9 @@ async function buildReportData(list){
       sizeAfter: rec.cleanedBlob.size,
       hashBefore: await sha256hex(origBlob),
       hashAfter: await sha256hex(rec.cleanedBlob),
-      removed: rec.fields.filter(f => f.leak && f.value).map(f => ({ label: f.label, value: f.value })),
+      removed: rec.fields.filter(f => wasRemoved(rec, f)).map(f => ({ label: f.label, value: f.value })),
+      deepActions: rec.deepApplied ? rec.deepApplied.slice() : [],
+      kept: v && v.kept ? v.kept.map(f => f.label) : [],
       warnings: rec.warnings.slice(),
       verify: v ? (v.ok === true ? "verified" : v.ok === false ? "failed" : "manual") : "manual",
       verifyRemaining: v && v.remaining ? v.remaining.map(f => f.label) : []
@@ -1397,7 +2539,7 @@ async function buildReportData(list){
 // Plain-text fallback (kept for robustness / non-Pro paths).
 function reportToText(data){
   const L = [];
-  L.push("BARECOPY VERIFICATION REPORT");
+  L.push("barecopy verification report");
   L.push("Generated: " + data.generated + " · Barecopy v" + data.version);
   L.push("All processing performed locally in the browser. No file was transmitted.");
   L.push("");
@@ -1410,6 +2552,8 @@ function reportToText(data){
       L.push("   Removed:");
       for(const f of it.removed) L.push("     - " + f.label + ": " + f.value);
     } else L.push("   Removed: no identifying fields were present.");
+    for(const a of it.deepActions) L.push("   Deep clean: " + a);
+    if(it.kept.length) L.push("   Kept by choice: " + it.kept.join(", "));
     for(const w of it.warnings) L.push("   Warning: " + w);
     L.push("   Re-scan: " + (it.verify === "verified" ? "0 identifying fields remain (verified)"
       : it.verify === "failed" ? "STILL FOUND: " + it.verifyRemaining.join(", ")
@@ -1421,6 +2565,18 @@ function reportToText(data){
 
 // Professional PDF report via pdf-lib (already loaded). Letter-style, on-brand,
 // with before/after hashes as a chain-of-custody record.
+// pdf-lib's standard fonts only encode WinAnsi; drawing other codepoints throws.
+// Normalize common typography to ASCII and replace anything else with '?', so a
+// non-Latin author/commenter name in the report never aborts PDF generation.
+function winAnsiSafe(s){
+  return String(s == null ? "" : s)
+    .replace(/[‘’‚′]/g, "'")
+    .replace(/[“”„″]/g, '"')
+    .replace(/[–—−]/g, "-")
+    .replace(/…/g, "...")
+    .replace(/[   ]/g, " ")
+    .replace(/[^\x20-\x7E\xA1-\xFF]/g, "?");
+}
 async function buildReportPDF(data){
   const { PDFDocument, StandardFonts, rgb } = PDFLib;
   const doc = await PDFDocument.create();
@@ -1439,19 +2595,26 @@ async function buildReportPDF(data){
 
   const nl = (n=1) => { y -= 14*n; };
   const ensure = h => { if(y - h < M){ page = doc.addPage([W,H]); y = H - M; } };
-  const text = (s, x, size, f, color) => page.drawText(s, { x, y, size, font: f, color });
+  const text = (s, x, size, f, color) => page.drawText(winAnsiSafe(s), { x, y, size, font: f, color });
   const wrapMono = (s, x, size, color, maxChars) => {
+    s = winAnsiSafe(s);
     for(let i=0;i<s.length;i+=maxChars){ ensure(12); text(s.slice(i,i+maxChars), x, size, mono, color); nl(1); }
   };
 
-  // header
-  // Center the dot on the wordmark's cap-height midpoint (drawText is
-  // baseline-anchored, drawCircle is center-anchored — so lift by ~cap/2).
-  const capMid = bold.heightAtSize(15) * 0.40;
-  page.drawCircle({ x: M+5, y: y + capMid, size: 4.5, color: ink });
-  text("BARECOPY", M+16, 15, bold, ink);
-  const markW = bold.widthOfTextAtSize("BARECOPY", 15);
-  text("VERIFICATION REPORT", M+16+markW+10, 15, font, soft);
+  // header — draw the "b" mark from the logo geometry (stem + bowl ring) so the
+  // report matches the brand. Glyph units come from the source SVG; baseline at y.
+  const mk = 11 / 52.5;                     // scale a ~11pt-tall glyph
+  const mkS = 7 * mk;                        // brand stroke width
+  const gX = gx => M + (gx - 15.5) * mk;     // glyph x -> pdf x
+  const gY = gy => y + (60 - gy) * mk;       // glyph y -> pdf y (flip; baseline y)
+  page.drawLine({ start:{x:gX(19),y:gY(11)}, end:{x:gX(19),y:gY(60)}, thickness:mkS, color:ink });
+  page.drawCircle({ x:gX(37), y:gY(43), size:17*mk, borderColor:ink, borderWidth:mkS });
+  const divX = M + (57.5 - 15.5) * mk + 7;   // subtle divider after the mark
+  page.drawLine({ start:{x:divX,y:y-2}, end:{x:divX,y:y+12}, thickness:0.75, color:line });
+  const wordX = divX + 7;                      // lowercase wordmark, matching the site
+  text("barecopy", wordX, 15, bold, ink);
+  const markW = bold.widthOfTextAtSize("barecopy", 15);
+  text("verification report", wordX+markW+10, 15, font, soft);
   nl(1.4);
   text("Generated " + data.generated + "   |   v" + data.version, M, 9, font, soft); nl(1.1);
   text("All processing performed locally in the browser. No file was transmitted.", M, 9, font, soft);
@@ -1480,6 +2643,13 @@ async function buildReportPDF(data){
         text(val, M+22+lw, 9, font, red); nl(1);
       }
     } else { ensure(12); text("No identifying fields were present.", M+14, 9, font, soft); nl(1); }
+
+    for(const a of it.deepActions){
+      ensure(12); text("+ " + a, M+14, 9, bold, green); nl(1);
+    }
+    if(it.kept.length){
+      ensure(12); text("Kept by choice: " + it.kept.join(", "), M+14, 9, font, rgb(0.54,0.35,0)); nl(1);
+    }
 
     for(const w of it.warnings){
       ensure(24);
@@ -1544,6 +2714,20 @@ if($zip) $zip.addEventListener("click", async () => {
   $zip.textContent = "ZIP + report";
   refreshBar();
 });
+
+// Test hook: no-op in production. A harness sets window.__BC_ALLOW_TEST before
+// loading the page to exercise the pure cleaning functions directly.
+try{
+  if(typeof window !== "undefined" && window.__BC_ALLOW_TEST){
+    window.__BC = { analyzeOoxml, cleanOoxml, deepScanDocx, deepCleanDocx,
+      deepScanPptx, deepCleanPptx, deepScanXlsx, deepCleanXlsx,
+      flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
+      renderCard, refreshBar, setPro, isPro, files,
+      analyzeOdf, cleanOdf, analyzeImage, stripGif, gifBlocks,
+      analyzeVideo, stripVideo, mp4Boxes,
+      analyzeHeif, stripHeif, heifItems, analyzeSvg, stripSvg };
+  }
+}catch(e){}
 
 })();
 </script>

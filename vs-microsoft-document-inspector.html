@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barecopy vs Microsoft's Document Inspector (2026) — an honest comparison | Barecopy</title>
+<meta name="description" content="Word's built-in Document Inspector is capable, but it needs Office installed, runs per file, gives no confirmation the file is clean, and stops at Office formats. See where it helps, where it doesn't, and what a browser-based cleaner adds.">
+<link rel="canonical" href="https://barecopy.com/vs-microsoft-document-inspector.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Barecopy vs Microsoft's Document Inspector — an honest comparison">
+<meta property="og:description" content="Where Word's Document Inspector helps, where it stops, and what a browser-based cleaner with verification adds. Factual, no hype.">
+<meta property="og:url" content="https://barecopy.com/vs-microsoft-document-inspector.html">
+<meta property="og:image" content="https://barecopy.com/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Does Word's Document Inspector remove tracked changes and comments?","acceptedAnswer":{"@type":"Answer","text":"Yes, when you run it and tick the relevant boxes it can remove comments, revisions and personal information. The catches are practical: you have to run it deliberately on every file, it is part of desktop Office so you need Office installed, the Mac version is more limited than Windows, and it gives you no confirmation afterwards that the file is actually clean. Many people skip it and use Accept All Changes instead, which hides revisions but leaves the history recoverable in the file."}},
+{"@type":"Question","name":"What does Document Inspector not cover?","acceptedAnswer":{"@type":"Answer","text":"Document Inspector only works on Office documents opened in Office. It does nothing for PDFs, JPEG or HEIC photos, videos, SVGs or other files, and it cannot inspect a file you have received without opening it in Word, Excel or PowerPoint. It also does not produce a record of what it removed, which matters if you need to demonstrate a file was cleaned."}},
+{"@type":"Question","name":"Is a browser-based cleaner safe for sensitive files?","acceptedAnswer":{"@type":"Answer","text":"It depends on the tool. Barecopy processes files entirely in your browser with JavaScript, so the file is never uploaded to a server, and a Content-Security-Policy blocks the page from sending file contents anywhere. You can disconnect from the internet after the page loads and it still works. That is different from cleaners that upload your file to process it on their servers."}}]}
+</script>
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{
+    --paper:#F6F5F0; --card:#FFFFFF; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE;
+    --leak:#C2273A; --leak-bg:#FBEEEF; --leak-line:#EFCBD0;
+    --clean:#1E7F4F; --warn-bg:#FBF3E2; --warn-line:#EBD9AE; --warn:#8A5A00;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .wordmark .wm-div{width:1px;height:21px;background:rgba(28,36,48,.22);flex:0 0 auto}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  article{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--brand);font-weight:600;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:22ch}
+  .lead{margin-top:18px;font-size:18px;color:var(--ink-soft)}
+  h2{font-family:var(--brand);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h3{font-family:var(--brand);font-size:17px;font-weight:600;margin:22px 0 4px}
+  p{margin-top:12px}
+  ol,ul{margin:14px 0 0 0;padding-left:22px}
+  li{margin-top:7px}
+  code{font-family:var(--mono);font-size:.9em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
+  .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
+  .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--leak)}
+  .callout h3{margin-top:6px}
+  .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
+  .warnbox{margin-top:18px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;padding:14px 16px;font-size:15px;color:var(--warn)}
+  .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
+  .faq summary{font-weight:600;cursor:pointer;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq details[open] summary::before{content:"–"}
+  .faq p{font-size:15.5px;color:var(--ink-soft)}
+  /* comparison table */
+  .cmp-scroll{margin-top:20px;overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+  table.cmp{border-collapse:collapse;width:100%;font-size:15px;min-width:520px}
+  table.cmp th,table.cmp td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  table.cmp thead th{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);background:var(--line-soft)}
+  table.cmp tbody tr:last-child td{border-bottom:none}
+  table.cmp td.feat{font-weight:600;color:var(--ink)}
+  table.cmp td .mono{font-family:var(--mono);font-size:12px;color:var(--ink-faint);display:block;margin-top:2px}
+  .yes{color:var(--clean);font-weight:600}
+  .no{color:var(--leak);font-weight:600}
+  .part{color:var(--warn);font-weight:600}
+  .disclaimer{margin-top:14px;font-size:13.5px;color:var(--ink-faint)}
+  footer{border-top:1px solid var(--line);margin-top:50px}
+  .foot-in{padding:22px 0 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="18" height="22" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <a class="head-cta" href="/">Open the tool</a>
+  </div>
+</header>
+
+<main class="wrap">
+<article>
+  <div class="eyebrow">Comparison · updated 2026</div>
+  <h1>Barecopy vs Microsoft's Document Inspector</h1>
+  <p class="lead">Word's built-in Document Inspector is a genuinely useful tool, and if you already run it on every file you are ahead of most people. This is an honest look at what it does well, where it stops, and what a browser-based cleaner adds — written by the people who make one, so read it with that in mind.</p>
+
+  <h2>What Document Inspector is good at</h2>
+  <p>Document Inspector ships inside desktop Word, Excel and PowerPoint. Run it from <code>File → Info → Check for Issues → Inspect Document</code>, tick the categories you care about, and it will remove document properties and personal information, comments, revisions and versions, hidden text, custom XML data and more. When you actually run it and select those categories, it removes them properly — this is not a tool that pretends to work. Credit where it is due.</p>
+  <p>If your workflow is entirely inside Office on Windows, you send Office files only, and you remember to inspect every document before it leaves, Document Inspector covers most of what matters. For a lot of people that is enough, and it costs nothing beyond the Office licence you already have.</p>
+
+  <h2>Where it stops</h2>
+  <p>The gaps are practical rather than a failure to remove things:</p>
+  <ul>
+    <li><strong>It needs Office installed and open.</strong> You cannot inspect a file you have received without opening it in Word, Excel or PowerPoint, and there is no option on a machine without Office — a locked-down work laptop, a phone, a Chromebook.</li>
+    <li><strong>It is per file and manual.</strong> There is no built-in way to clean a folder of files in one pass, and it is easy to forget on the one document that matters.</li>
+    <li><strong>The Mac version is more limited</strong> than the Windows one, and can leave custom properties and the embedded preview thumbnail behind.</li>
+    <li><strong>It tells you it ran, not that you are clean.</strong> There is no second pass that re-reads the saved file and confirms the fields are gone, and no record of what was removed — which matters if you ever need to show a file was cleaned before it was sent.</li>
+    <li><strong>It only covers Office documents.</strong> PDFs, JPEG and HEIC photos, videos and SVGs are outside its scope entirely — and those carry metadata too, from GPS coordinates in a photo to the author in a PDF exported from Word.</li>
+  </ul>
+  <div class="warnbox">The most common real-world gap is not Document Inspector missing something — it is people not running it, and using <strong>Accept All Changes</strong> instead. That hides tracked changes but leaves the edit history, including deleted text and editor names, recoverable in the file. If a document is sensitive, hiding is not removing.</div>
+
+  <h2>Side by side</h2>
+  <div class="cmp-scroll">
+  <table class="cmp">
+    <thead><tr><th>&nbsp;</th><th>Document Inspector</th><th>Barecopy</th></tr></thead>
+    <tbody>
+      <tr><td class="feat">Runs without installing Office</td><td><span class="no">No</span><span class="mono">part of desktop Office</span></td><td><span class="yes">Yes</span><span class="mono">any modern browser</span></td></tr>
+      <tr><td class="feat">Inspect a file you received</td><td><span class="part">Only by opening it in Office</span></td><td><span class="yes">Yes</span><span class="mono">free inspect-only mode</span></td></tr>
+      <tr><td class="feat">Removes author / company / edit time</td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td></tr>
+      <tr><td class="feat">Flattens tracked changes &amp; comments</td><td><span class="yes">Yes, when run</span></td><td><span class="yes">Yes, opt-in</span></td></tr>
+      <tr><td class="feat">Removes <code>people.xml</code> reviewer identities</td><td><span class="part">Not consistently</span></td><td><span class="yes">Yes</span></td></tr>
+      <tr><td class="feat">Re-scans to confirm the file is clean</td><td><span class="no">No</span></td><td><span class="yes">Yes</span><span class="mono">verifies after cleaning</span></td></tr>
+      <tr><td class="feat">Record of what was removed</td><td><span class="no">No</span></td><td><span class="yes">Yes</span><span class="mono">optional PDF report + SHA-256</span></td></tr>
+      <tr><td class="feat">PDFs, photos, HEIC, video, SVG</td><td><span class="no">No</span></td><td><span class="yes">Yes</span></td></tr>
+      <tr><td class="feat">Batch a whole folder</td><td><span class="no">No</span></td><td><span class="yes">Yes</span><span class="mono">Pro</span></td></tr>
+      <tr><td class="feat">File never leaves your device</td><td><span class="yes">Yes</span><span class="mono">local app</span></td><td><span class="yes">Yes</span><span class="mono">in-browser, CSP-enforced</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="disclaimer">"Not consistently" reflects behaviour we have seen vary by Office version and platform; check your own version if a specific field matters to you. Both tools keep your file on your own machine — that is a point in Document Inspector's favour over cleaners that upload.</p>
+
+  <h2>How to think about it</h2>
+  <p>Document Inspector and Barecopy are not really rivals for the same minute of your day. Document Inspector is the thing built into the app you are already in; Barecopy is the thing you reach for when you want to <em>check</em> a file quickly, when it is not an Office file, when you are on a machine without Office, or when you want the result verified and recorded rather than taken on trust.</p>
+  <p>The two combine well: inspect in Word if you like, then drop the file on Barecopy to confirm nothing survived and to get a record of it. Seeing zero fields on a second, independent pass is worth more than assuming the first pass worked.</p>
+
+  <div class="callout">
+    <div class="k">See for yourself</div>
+    <h3>Check what a file reveals — free, no upload</h3>
+    <p>Drop a document or photo on Barecopy. It lists every identifying field it finds and, if you want, hands back a verified clean copy. The file never leaves your browser.</p>
+    <a class="btn" href="/">Open Barecopy →</a>
+  </div>
+
+  <h2>Frequently asked</h2>
+  <div class="faq">
+    <details open>
+      <summary>Does Document Inspector remove tracked changes?</summary>
+      <p>Yes, when you run it and select the revisions category. The practical catches are that you have to run it on every file, it needs desktop Office, the Mac version is more limited, and it does not confirm afterwards that the file is clean. Using Accept All instead is not the same — that leaves the history recoverable.</p>
+    </details>
+    <details>
+      <summary>So why use Barecopy at all?</summary>
+      <p>For files that are not Office documents, for machines without Office, for a quick inspection of a file you have received, and for the verification and record — a re-scan that confirms the fields are gone plus an optional report listing exactly what was removed.</p>
+    </details>
+    <details>
+      <summary>Is my file uploaded to Barecopy's servers?</summary>
+      <p>No. Everything runs in JavaScript inside your browser tab, and a Content-Security-Policy blocks the page from sending file contents anywhere. Open your developer tools, watch the network while you clean a file: nothing leaves.</p>
+    </details>
+    <details>
+      <summary>Is this comparison biased?</summary>
+      <p>We make Barecopy, so treat it as a considered case, not a neutral one. We have tried to be fair about what Document Inspector does well — it removes what it removes properly, and it keeps your file local. The honest gaps are reach and confirmation, not capability.</p>
+    </details>
+  </div>
+
+  <div class="more" style="margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px">
+    <div style="font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)">More guides</div>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/remove-tracked-changes-metadata-word.html">Remove tracked changes and their hidden history from Word &rarr;</a>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/check-file-metadata.html">Check what any file reveals about you &rarr;</a>
+  </div>
+</article>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — clean documents before you send them.</span>
+    <span><a href="/">Home</a> · <a href="/privacy.html">Privacy</a></span>
+  </div>
+</footer>
+</body>
+</html>

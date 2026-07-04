@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barecopy — Übersicht zu Datenverarbeitung &amp; Sicherheit</title>
+<meta name="description" content="Wie Barecopy Dateien verarbeitet: vollständig im Browser, ohne Upload, ohne serverseitige Speicherung und ohne Tracking. Eine einseitige Übersicht für die Sicherheits- und Compliance-Prüfung.">
+<link rel="canonical" href="https://barecopy.com/de/sicherheit.html">
+<link rel="alternate" hreflang="en" href="https://barecopy.com/security.html">
+<link rel="alternate" hreflang="de" href="https://barecopy.com/de/sicherheit.html">
+<link rel="alternate" hreflang="x-default" href="https://barecopy.com/security.html">
+<meta property="og:url" content="https://barecopy.com/de/sicherheit.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{--paper:#F6F5F0;--card:#FFFFFF;--ink:#1C2430;--ink-soft:#5B6472;--ink-faint:#8A8F98;--line:#DCD9CF;--line-soft:#E8E6DE;--clean:#1E7F4F;--clean-bg:#E9F4EE;--clean-line:#C4E0D0;--sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);--cond:"IBM Plex Sans Condensed",var(--sans);--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .wordmark .wm-div{width:1px;height:21px;background:rgba(28,36,48,.22);flex:0 0 auto}
+  .print{font-size:13px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px;cursor:pointer;background:none}
+  h1{font-family:var(--brand);font-weight:600;font-size:28px;letter-spacing:-.01em;margin-top:38px}
+  .sub{margin-top:10px;color:var(--ink-soft);font-size:16px}
+  h2{font-family:var(--brand);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin:32px 0 4px;padding-top:22px;border-top:1px solid var(--line-soft)}
+  p{margin-top:10px}
+  ul{margin:10px 0 0 0;padding-left:20px}
+  li{margin-top:6px}
+  code{font-family:var(--mono);font-size:.88em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
+  .keybox{margin-top:16px;background:var(--clean-bg);border:1px solid var(--clean-line);border-radius:8px;padding:16px 18px}
+  .keybox strong{color:var(--clean)}
+  table{margin-top:14px;border-collapse:collapse;width:100%;font-size:14px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  th{font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .verify{font-family:var(--mono);font-size:13px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-top:12px;line-height:1.7}
+  footer{border-top:1px solid var(--line);margin-top:40px}
+  .foot-in{padding:20px 0 40px;font-size:13px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media print{.print,header .print{display:none}body{background:#fff}.head-in{padding:0 0 10px}h1{margin-top:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="18" height="22" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <button class="print" onclick="window.print()">Drucken / Als PDF speichern</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>Übersicht zu Datenverarbeitung &amp; Sicherheit</h1>
+  <p class="sub">Eine einseitige Zusammenfassung für die Prüfung durch Sicherheit, IT und Compliance. Sie beschreibt genau, wie Barecopy Dateien verarbeitet und was das Gerät des Nutzers verlässt und was nicht.</p>
+
+  <div class="keybox">
+    <strong>Die zentrale Tatsache:</strong> Barecopy führt jede Prüfung und Entfernung von Metadaten lokal aus, direkt im Webbrowser des Nutzers. Dateien werden niemals hochgeladen, übertragen oder auf einem Server gespeichert. Es gibt kein Backend, das Dateidaten empfängt.
+  </div>
+
+  <h2>So funktioniert die Verarbeitung</h2>
+  <p>Barecopy ist eine statische Webseite, die JavaScript enthält. Wenn ein Nutzer eine Datei auswählt, wird die Datei in den Arbeitsspeicher des Browsers eingelesen und mit dem Code auf der Seite auf dem Gerät verarbeitet. Die bereinigte Kopie wird lokal erzeugt und zum Download angeboten. Zu keinem Zeitpunkt wird die Datei oder ein Teil ihres Inhalts über das Netzwerk gesendet.</p>
+  <p>Da die Verarbeitung vollständig clientseitig erfolgt, funktioniert die Anwendung auch ohne Netzwerkverbindung weiter, sobald die Seite geladen wurde — eine Eigenschaft, die sich überprüfen lässt, indem Sie die Internetverbindung trennen und eine Datei bereinigen.</p>
+
+  <h2>Vom Browser erzwungen, nicht nur versprochen</h2>
+  <p>Die obige Aussage beruht nicht auf Vertrauen. Barecopy wird mit einer strengen <strong>Content-Security-Policy</strong> ausgeliefert, die den Browser anweist, ausgehende Verbindungen nur zur eigenen Herkunft (Origin) von Barecopy und zum Zahlungsdienstleister (zur Lizenzvalidierung) zuzulassen. Unter dieser Richtlinie wird jeder Versuch der Seite, Dateiinhalte an einen Dritten zu übertragen, vom Browser selbst blockiert — bevor sie das Gerät verlassen.</p>
+  <p>Die relevante Direktive lautet:</p>
+  <div class="verify">connect-src 'self' https://api.polar.sh</div>
+  <p>Sie können die vollständige Richtlinie selbst nachlesen in den Entwicklertools &rarr; Netzwerk (Network-Tab) &rarr; Dokument-Anfrage auswählen &rarr; Response Headers (Antwort-Header) &rarr; <code>Content-Security-Policy</code>. Die Skripte und Schriftarten, die die Seite verwendet, werden alle von derselben Herkunft (Origin) ausgeliefert (es gibt keine Drittanbieter-CDNs), was eine so strenge Richtlinie überhaupt erst möglich macht.</p>
+
+  <h2>Welche Daten das Gerät verlassen</h2>
+  <table>
+    <tr><th>Daten</th><th>Verlässt das Gerät?</th></tr>
+    <tr><td>Dateiinhalte (Dokumente, Bilder)</td><td><strong>Nein.</strong> Werden nur im Browser verarbeitet; niemals übertragen.</td></tr>
+    <tr><td>Entfernte Metadatenwerte</td><td><strong>Nein.</strong> Werden lokal angezeigt; niemals übertragen.</td></tr>
+    <tr><td>Prüfbericht (Pro)</td><td><strong>Nein.</strong> Wird im Browser erzeugt; direkt vom Nutzer heruntergeladen.</td></tr>
+    <tr><td>Pro-Lizenzschlüssel</td><td>Ja — wird ausschließlich an den Zahlungsdienstleister (Polar) gesendet, um den Abonnementstatus zu bestätigen. Es werden dabei keine Dateidaten mitgesendet.</td></tr>
+  </table>
+  <p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">Die einzige zugelassene externe Verbindung — die Lizenzprüfung beim Zahlungsdienstleister — ist die einzige Ausnahme von „Nichts verlässt das Gerät", und sie überträgt einen Schlüssel, niemals Dateidaten. Alles andere wird durch die oben genannte Content-Security-Policy am Browser blockiert.</p>
+
+  <h2>Speicherung &amp; Aufbewahrung</h2>
+  <ul>
+    <li><strong>Dateien:</strong> werden nirgends gespeichert. Sie existieren nur im Arbeitsspeicher des Browser-Tabs während der Verarbeitung und werden verworfen, sobald der Tab geschlossen wird.</li>
+    <li><strong>Serverseitig:</strong> es gibt keinen Anwendungsserver, der Dateien empfängt, also gibt es nichts, was aufbewahrt, protokolliert oder kompromittiert werden könnte.</li>
+    <li><strong>Lokaler Browser-Speicher:</strong> für Pro-Nutzer werden lediglich der Lizenzschlüssel und der Aktivierungsstatus im lokalen Speicher des Browsers gespeichert, auf dem eigenen Gerät des Nutzers.</li>
+  </ul>
+
+  <h2>Tracking &amp; Drittanbieter</h2>
+  <p>Barecopy setzt keine Werbe- oder Analyse-Cookies und führt keine Skripte zum Nutzer-Tracking aus. Zahlung und Abonnementverwaltung werden von Polar Software Inc. als Merchant of Record abgewickelt; Kartendaten werden an Polar übergeben, niemals an Barecopy.</p>
+
+  <h2>Vertrauen Sie uns nicht — überprüfen Sie es</h2>
+  <p>Jede Aussage auf dieser Seite ist von Ihren eigenen Fachleuten in etwa einer Minute direkt überprüfbar, ohne besondere Werkzeuge:</p>
+  <div class="verify">
+    1. Öffnen Sie die Entwicklertools &rarr; Netzwerk-Tab (Network-Tab).<br>
+    2. Laden Sie barecopy.com und prüfen oder bereinigen Sie eine Testdatei.<br>
+    3. Beobachten Sie, dass keine Anfrage mit Dateidaten gesendet wird.<br>
+    4. Prüfen Sie die Response Headers des Dokuments auf die Content-Security-Policy.<br>
+    5. Trennen Sie die Netzwerkverbindung und bestätigen Sie, dass das Tool weiterhin funktioniert.
+  </div>
+  <p>Schritte 3 und 4 sind die entscheidenden: Schritt 3 zeigt, dass in der Praxis nichts das Gerät verlässt, und Schritt 4 zeigt, dass der Browser dies verweigern würde, selbst wenn der Code es versuchte.</p>
+
+  <h2>Umfang &amp; Einschränkungen</h2>
+  <p>Barecopy entfernt <em>Metadaten</em> aus Dateien. Manche identifizierenden Daten sind Dokument<em>inhalt</em> und keine Metadaten — Verlauf verfolgter Änderungen, Kommentare, PowerPoint-Sprechernotizen, ausgeblendete Excel-Tabellenblätter. Barecopy erkennt all dies und zeigt es Ihnen kostenlos an; da das Entfernen das sichtbare Dokument verändert, ist die Entfernung ein ausdrücklicher, optionaler Schritt (Teil von Pro) und wird niemals stillschweigend angewendet. Ausgeblendete Tabellenblätter werden gekennzeichnet, aber an Ort und Stelle belassen, da ihr Löschen Formeln beschädigen kann. Passwortgeschützte PDFs werden abgelehnt, anstatt eine Beschädigung zu riskieren. Nutzern wird empfohlen, bereinigte Dateien vor der Weitergabe zu überprüfen.</p>
+
+  <p style="margin-top:28px;color:var(--ink-faint);font-size:13px">Bei Fragen von einem Sicherheits- oder Compliance-Team wenden Sie sich an <a href="mailto:support@barecopy.com" style="color:var(--ink-soft)">support@barecopy.com</a>.</p>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — bereinigen Sie Dokumente, bevor Sie sie versenden.</span>
+    <span><a href="/">Startseite</a> · <a href="/privacy.html">Datenschutz</a> · <a href="/terms.html">AGB</a></span>
+  </div>
+</footer>
+</body>
+</html>

@@ -6,21 +6,28 @@
 <title>Barecopy — Data Handling &amp; Security Overview</title>
 <meta name="description" content="How Barecopy processes files: entirely in the browser, with no upload, no server-side storage and no tracking. A one-page overview for security and compliance review.">
 <link rel="canonical" href="https://barecopy.com/security.html">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="alternate" hreflang="en" href="https://barecopy.com/security.html">
+<link rel="alternate" hreflang="de" href="https://barecopy.com/de/sicherheit.html">
+<link rel="alternate" hreflang="x-default" href="https://barecopy.com/security.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
 <style>
-  :root{--paper:#F6F5F0;--card:#FFFFFF;--ink:#1C2430;--ink-soft:#5B6472;--ink-faint:#8A8F98;--line:#DCD9CF;--line-soft:#E8E6DE;--clean:#1E7F4F;--clean-bg:#E9F4EE;--clean-line:#C4E0D0;--sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--cond:"IBM Plex Sans Condensed",var(--sans);--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{--paper:#F6F5F0;--card:#FFFFFF;--ink:#1C2430;--ink-soft:#5B6472;--ink-faint:#8A8F98;--line:#DCD9CF;--line-soft:#E8E6DE;--clean:#1E7F4F;--clean-bg:#E9F4EE;--clean-line:#C4E0D0;--sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);--cond:"IBM Plex Sans Condensed",var(--sans);--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6}
   .wrap{max-width:760px;margin:0 auto;padding:0 24px}
   header{border-bottom:1px solid var(--line)}
   .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
-  .wordmark{font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:9px;color:var(--ink);text-decoration:none}
-  .wordmark .dot{width:10px;height:10px;border-radius:50%;background:var(--ink);position:relative}
-  .wordmark .dot::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--paper)}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .wordmark .wm-div{width:1px;height:21px;background:rgba(28,36,48,.22);flex:0 0 auto}
   .print{font-size:13px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px;cursor:pointer;background:none}
-  h1{font-weight:650;font-size:28px;letter-spacing:-.01em;margin-top:38px}
+  h1{font-family:var(--brand);font-weight:600;font-size:28px;letter-spacing:-.01em;margin-top:38px}
   .sub{margin-top:10px;color:var(--ink-soft);font-size:16px}
-  h2{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin:32px 0 4px;padding-top:22px;border-top:1px solid var(--line-soft)}
+  h2{font-family:var(--brand);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin:32px 0 4px;padding-top:22px;border-top:1px solid var(--line-soft)}
   p{margin-top:10px}
   ul{margin:10px 0 0 0;padding-left:20px}
   li{margin-top:6px}
@@ -40,7 +47,7 @@
 <body>
 <header>
   <div class="wrap head-in">
-    <a class="wordmark" href="/"><span class="dot" aria-hidden="true"></span>Barecopy</a>
+    <a class="wordmark" href="/"><svg width="18" height="22" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
     <button class="print" onclick="window.print()">Print / Save as PDF</button>
   </div>
 </header>
@@ -57,6 +64,12 @@
   <p>Barecopy is a static web page containing JavaScript. When a user selects a file, the file is read into the browser's memory and processed on the device using in-page code. The cleaned copy is generated locally and offered as a download. At no point is the file, or any part of its contents, sent over the network.</p>
   <p>Because processing is entirely client-side, the application continues to function with no network connection after the page has loaded — a property that can be verified by disconnecting from the internet and cleaning a file.</p>
 
+  <h2>Enforced by the browser, not just promised</h2>
+  <p>The claim above does not rest on trust. Barecopy is served with a strict <strong>Content-Security-Policy</strong> that instructs the browser to allow outbound connections only to Barecopy's own origin and to the payment provider (for licence validation). Under this policy, any attempt by the page to transmit file contents to a third party is blocked by the browser itself — before it leaves the machine.</p>
+  <p>The relevant directive is:</p>
+  <div class="verify">connect-src 'self' https://api.polar.sh</div>
+  <p>You can read the full policy for yourself in Developer Tools &rarr; Network &rarr; select the document request &rarr; Response Headers &rarr; <code>Content-Security-Policy</code>. The scripts and fonts the page uses are all served from the same origin (there are no third-party CDNs), which is what makes such a tight policy possible.</p>
+
   <h2>What data leaves the device</h2>
   <table>
     <tr><th>Data</th><th>Leaves the device?</th></tr>
@@ -65,6 +78,7 @@
     <tr><td>Verification report (Pro)</td><td><strong>No.</strong> Generated in-browser; downloaded directly by the user.</td></tr>
     <tr><td>Pro licence key</td><td>Yes — sent only to the payment provider (Polar) to confirm subscription status. No file data accompanies it.</td></tr>
   </table>
+  <p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">The single permitted external connection — the licence check to the payment provider — is the only exception to "nothing leaves the device", and it carries a key, never file data. Everything else is blocked at the browser by the Content-Security-Policy above.</p>
 
   <h2>Storage &amp; retention</h2>
   <ul>
@@ -76,17 +90,19 @@
   <h2>Tracking &amp; third parties</h2>
   <p>Barecopy sets no advertising or analytics cookies and runs no user-tracking scripts. Payment and subscription management are handled by Polar Software Inc. as merchant of record; card details are provided to Polar, never to Barecopy.</p>
 
-  <h2>Independent verification</h2>
-  <p>These claims are directly testable by your own technical staff:</p>
+  <h2>Don't trust us — verify it</h2>
+  <p>Every claim on this page is directly testable by your own technical staff in about a minute, with no special tools:</p>
   <div class="verify">
-    1. Open the browser Developer Tools &rarr; Network tab.<br>
-    2. Load barecopy.com and clean a test file.<br>
+    1. Open Developer Tools &rarr; Network tab.<br>
+    2. Load barecopy.com and inspect or clean a test file.<br>
     3. Observe that no request carrying file data is sent.<br>
-    4. Optionally, disconnect from the network and confirm the tool still works.
+    4. Check the document's Response Headers for the Content-Security-Policy.<br>
+    5. Disconnect from the network and confirm the tool still works.
   </div>
+  <p>Steps 3 and 4 are the important ones: step 3 shows nothing leaves in practice, and step 4 shows the browser would refuse to let it, even if the code tried.</p>
 
   <h2>Scope &amp; limitations</h2>
-  <p>Barecopy removes file <em>metadata</em>. It deliberately does not alter document <em>content</em> such as tracked changes or comments; it detects and warns about these instead, leaving the decision to the user. Password-protected PDFs are refused rather than risk corruption. Users are advised to review cleaned files before distribution.</p>
+  <p>Barecopy removes file <em>metadata</em>. Some identifying data is document <em>content</em> rather than metadata — tracked-change history, comments, PowerPoint speaker notes, hidden Excel sheets. Barecopy detects all of these and shows them to you for free; because removing them alters the visible document, removal is an explicit, opt-in step (part of Pro) and is never applied silently. Hidden sheets are flagged but left in place, since deleting them can break formulas. Password-protected PDFs are refused rather than risk corruption. Users are advised to review cleaned files before distribution.</p>
 
   <p style="margin-top:28px;color:var(--ink-faint);font-size:13px">For questions from a security or compliance team, contact <a href="mailto:support@barecopy.com" style="color:var(--ink-soft)">support@barecopy.com</a>.</p>
 </main>

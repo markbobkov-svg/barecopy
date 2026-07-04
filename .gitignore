@@ -1,0 +1,12 @@
+# nothing to build; keep the repo clean
+.DS_Store
+node_modules/
+*.log
+
+# local test fixtures (not part of the site)
+demo-*.docx
+demo-*.xlsx
+demo-*.pptx
+
+# Dropped screenshots / scratch references
+Screenshot *.png

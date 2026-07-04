@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barecopy vs ExifTool (2026) — when to use which | Barecopy</title>
+<meta name="description" content="ExifTool is the most powerful metadata tool there is — and a command line most people won't touch. Here's an honest comparison: where ExifTool wins, where a browser tool is the better call, and how they work together.">
+<link rel="canonical" href="https://barecopy.com/vs-exiftool.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Barecopy vs ExifTool — when to use which">
+<meta property="og:description" content="ExifTool is unmatched on the command line. A browser tool wins on approachability, Office content cleaning and a verified record. Honest comparison.">
+<meta property="og:url" content="https://barecopy.com/vs-exiftool.html">
+<meta property="og:image" content="https://barecopy.com/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Is ExifTool better than Barecopy?","acceptedAnswer":{"@type":"Answer","text":"For raw power over image and media metadata, ExifTool is unmatched — it reads and writes more tags in more formats than anything else, and it is free. It is also a command-line tool, which is a wall for a lot of people, and it does not flatten tracked changes or comments inside Office documents. Barecopy trades some of that breadth for a drop-and-clean browser interface, deep cleaning of Office files, a re-scan that confirms the result, and an optional report. Different tools for different people."}},
+{"@type":"Question","name":"Does ExifTool remove metadata from Word documents?","acceptedAnswer":{"@type":"Answer","text":"ExifTool can read and edit the standard document properties in Office files, but it is not designed to flatten tracked changes, remove comments and reviewer identities, or delete speaker notes — the content-level leaks inside the document XML. Barecopy focuses on exactly that, with an opt-in step and verification."}},
+{"@type":"Question","name":"Can I run ExifTool in the browser?","acceptedAnswer":{"@type":"Answer","text":"Not directly — ExifTool is a Perl program you run on your own computer, which is completely private but requires installing and using a command line. Barecopy runs in the browser with nothing to install and processes files locally, so the file is never uploaded either."}}]}
+</script>
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{
+    --paper:#F6F5F0; --card:#FFFFFF; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE;
+    --leak:#C2273A; --leak-bg:#FBEEEF; --leak-line:#EFCBD0;
+    --clean:#1E7F4F; --warn-bg:#FBF3E2; --warn-line:#EBD9AE; --warn:#8A5A00;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .wordmark .wm-div{width:1px;height:21px;background:rgba(28,36,48,.22);flex:0 0 auto}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  article{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--brand);font-weight:600;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:22ch}
+  .lead{margin-top:18px;font-size:18px;color:var(--ink-soft)}
+  h2{font-family:var(--brand);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h3{font-family:var(--brand);font-size:17px;font-weight:600;margin:22px 0 4px}
+  p{margin-top:12px}
+  ol,ul{margin:14px 0 0 0;padding-left:22px}
+  li{margin-top:7px}
+  code{font-family:var(--mono);font-size:.9em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
+  .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
+  .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--leak)}
+  .callout h3{margin-top:6px}
+  .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
+  .warnbox{margin-top:18px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;padding:14px 16px;font-size:15px;color:var(--warn)}
+  .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
+  .faq summary{font-weight:600;cursor:pointer;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq details[open] summary::before{content:"–"}
+  .faq p{font-size:15.5px;color:var(--ink-soft)}
+  .cmp-scroll{margin-top:20px;overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+  table.cmp{border-collapse:collapse;width:100%;font-size:15px;min-width:520px}
+  table.cmp th,table.cmp td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  table.cmp thead th{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);background:var(--line-soft)}
+  table.cmp tbody tr:last-child td{border-bottom:none}
+  table.cmp td.feat{font-weight:600;color:var(--ink)}
+  table.cmp td .mono{font-family:var(--mono);font-size:12px;color:var(--ink-faint);display:block;margin-top:2px}
+  .yes{color:var(--clean);font-weight:600}
+  .no{color:var(--leak);font-weight:600}
+  .part{color:var(--warn);font-weight:600}
+  .disclaimer{margin-top:14px;font-size:13.5px;color:var(--ink-faint)}
+  footer{border-top:1px solid var(--line);margin-top:50px}
+  .foot-in{padding:22px 0 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="18" height="22" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <a class="head-cta" href="/">Open the tool</a>
+  </div>
+</header>
+
+<main class="wrap">
+<article>
+  <div class="eyebrow">Comparison · updated 2026</div>
+  <h1>Barecopy vs ExifTool</h1>
+  <p class="lead">ExifTool is the most capable metadata tool ever written, it is free, and it runs entirely on your own machine. If you are comfortable on a command line, you may not need anything else. This compares it with Barecopy honestly — where ExifTool wins outright, where a browser tool is the better call, and why they are good companions rather than competitors.</p>
+
+  <h2>What ExifTool is</h2>
+  <p>ExifTool, by Phil Harvey, reads and writes metadata across an enormous range of image, audio, video and document formats — more tags, more formats, and more precision than any other tool. It is a command-line program you install and run locally, so nothing is uploaded, and it is scriptable, which makes it the backbone of countless automated pipelines. For a photographer batch-editing thousands of files, or an engineer building a workflow, it is the right tool and it is not close.</p>
+  <p>We use ExifTool ourselves — as an independent check when we test that Barecopy actually removes what it says it removes. That should tell you how much we respect it.</p>
+
+  <h2>Where a browser tool is the better call</h2>
+  <ul>
+    <li><strong>No command line.</strong> The single biggest reason people look past ExifTool is the terminal. <code>exiftool -all= file.jpg</code> is simple once you know it; getting there is a wall for most non-technical users, and the flags for "remove everything, safely" are easy to get subtly wrong.</li>
+    <li><strong>Nothing to install.</strong> Barecopy runs in a browser tab. There is no download, no PATH, no Perl, no admin rights needed on a locked-down work laptop.</li>
+    <li><strong>Office content, not just tags.</strong> ExifTool handles the standard document properties, but it is not built to flatten tracked changes, strip comments and <code>people.xml</code> reviewer identities, or delete speaker notes — the recoverable content inside an Office file. That is Barecopy's focus.</li>
+    <li><strong>See before you clean.</strong> Barecopy shows every field in plain language and lets you inspect a file without touching it — no memorising which tag names to query.</li>
+    <li><strong>Verification and a record.</strong> Barecopy re-scans the cleaned file to confirm the fields are gone and can produce a PDF report with a SHA-256 of the clean copy — useful when you need to show a file was cleaned, not just assert it.</li>
+  </ul>
+  <div class="warnbox">Both tools keep your file on your own machine — ExifTool because it runs locally, Barecopy because it runs in your browser and a Content-Security-Policy blocks it from sending file contents anywhere. Neither uploads your file. If a tool asks you to upload a sensitive file to "clean" it, that is the one to be wary of.</div>
+
+  <h2>Side by side</h2>
+  <div class="cmp-scroll">
+  <table class="cmp">
+    <thead><tr><th>&nbsp;</th><th>ExifTool</th><th>Barecopy</th></tr></thead>
+    <tbody>
+      <tr><td class="feat">Interface</td><td><span class="part">Command line</span></td><td><span class="yes">Drop &amp; click, in-browser</span></td></tr>
+      <tr><td class="feat">Nothing to install</td><td><span class="no">Install required</span></td><td><span class="yes">Yes</span></td></tr>
+      <tr><td class="feat">Breadth of image / media tags</td><td><span class="yes">Unmatched</span></td><td><span class="part">Common fields</span></td></tr>
+      <tr><td class="feat">Scriptable / automatable</td><td><span class="yes">Yes</span></td><td><span class="no">No</span><span class="mono">interactive tool</span></td></tr>
+      <tr><td class="feat">Flatten tracked changes in Office</td><td><span class="no">Not its purpose</span></td><td><span class="yes">Yes, opt-in</span></td></tr>
+      <tr><td class="feat">Remove comments &amp; reviewer identities</td><td><span class="no">Not its purpose</span></td><td><span class="yes">Yes</span></td></tr>
+      <tr><td class="feat">Plain-language inspection</td><td><span class="part">Tag names</span></td><td><span class="yes">Yes</span></td></tr>
+      <tr><td class="feat">Re-scan to confirm clean</td><td><span class="no">Manual re-query</span></td><td><span class="yes">Automatic</span></td></tr>
+      <tr><td class="feat">Report of what was removed</td><td><span class="no">No</span></td><td><span class="yes">Yes</span><span class="mono">optional PDF + SHA-256</span></td></tr>
+      <tr><td class="feat">Runs locally, no upload</td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td></tr>
+      <tr><td class="feat">Price</td><td><span class="yes">Free</span></td><td><span class="yes">Free tier</span><span class="mono">Pro €4/mo for batch</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="disclaimer">ExifTool is free and open source; if the command line is not a barrier for you, it is an excellent choice and this page is not trying to talk you out of it.</p>
+
+  <h2>How to think about it</h2>
+  <p>If you live in a terminal, or you need to process files by the thousand in a script, use ExifTool. If you want to hand a colleague a link they can use without training, clean an Office file's tracked changes and comments as well as its properties, or produce a verified record that a file was cleaned, Barecopy is built for that. Many people will use both: ExifTool in a pipeline, Barecopy for the one-off sensitive document a non-technical teammate needs to send today.</p>
+
+  <div class="callout">
+    <div class="k">Try it</div>
+    <h3>Clean a file without opening a terminal</h3>
+    <p>Drop a document or photo on Barecopy. It shows what the file reveals, removes it, and re-scans to confirm — all in your browser, nothing uploaded.</p>
+    <a class="btn" href="/">Open Barecopy →</a>
+  </div>
+
+  <h2>Frequently asked</h2>
+  <div class="faq">
+    <details open>
+      <summary>Is ExifTool more powerful than Barecopy?</summary>
+      <p>On raw image and media metadata, yes — nothing beats it, and it is free. Barecopy trades some of that breadth for approachability, Office content cleaning, verification and a record. They are aimed at different people and different jobs.</p>
+    </details>
+    <details>
+      <summary>Does ExifTool clean tracked changes in Word?</summary>
+      <p>It is not designed to. ExifTool edits metadata tags; flattening tracked changes, removing comments and reviewer identities and deleting speaker notes is document-surgery that Barecopy does specifically.</p>
+    </details>
+    <details>
+      <summary>Is this comparison biased?</summary>
+      <p>We make Barecopy, so it is a considered case rather than a neutral one — but we genuinely admire ExifTool and use it to verify our own results. The honest split is approachability and Office depth versus breadth and scriptability.</p>
+    </details>
+  </div>
+
+  <div class="more" style="margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px">
+    <div style="font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)">More guides</div>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/remove-exif-gps-from-photos.html">Remove EXIF and GPS data from photos &rarr;</a>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/vs-microsoft-document-inspector.html">Barecopy vs Word's Document Inspector &rarr;</a>
+  </div>
+</article>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — clean documents before you send them.</span>
+    <span><a href="/">Home</a> · <a href="/privacy.html">Privacy</a></span>
+  </div>
+</footer>
+</body>
+</html>
