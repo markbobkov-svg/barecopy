@@ -433,6 +433,11 @@
     *,*::before,*::after{animation:none!important;transition:none!important}
   }
 </style>
+<!-- Vercel Web Analytics: anonymous, cookieless page views, same-origin
+     (/_vercel/insights/*), no file data. Loaded only where that endpoint
+     exists (live site / Vercel); skipped on localhost & preview hosts so it
+     doesn't 404 there. See security.html / privacy.html. -->
+<script>(function(){var h=location.hostname;if(h==="localhost"||h==="127.0.0.1"||h===""||h.endsWith(".github.dev")||h.endsWith(".gitpod.io"))return;window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";document.head.appendChild(s);})();</script>
 </head>
 <body>
 
@@ -527,7 +532,7 @@
       </div>
       <div class="how-item">
         <h3>Zero servers</h3>
-        <p>This page has no backend and sends no requests with your data. Open DevTools → Network while cleaning a file: nothing leaves.</p>
+        <p>This page has no backend and never sends your files anywhere. Open DevTools → Network while cleaning a file: no file data leaves — just an anonymous page-view ping.</p>
       </div>
     </div>
 
@@ -628,7 +633,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.7.4",
+  version: "1.7.5",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),

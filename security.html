@@ -43,6 +43,11 @@
   .foot-in a{color:var(--ink-soft)}
   @media print{.print,header .print{display:none}body{background:#fff}.head-in{padding:0 0 10px}h1{margin-top:16px}}
 </style>
+<!-- Vercel Web Analytics: anonymous, cookieless page views, same-origin
+     (/_vercel/insights/*), no file data. Loaded only where that endpoint
+     exists (live site / Vercel); skipped on localhost & preview hosts so it
+     doesn't 404 there. See security.html / privacy.html. -->
+<script>(function(){var h=location.hostname;if(h==="localhost"||h==="127.0.0.1"||h===""||h.endsWith(".github.dev")||h.endsWith(".gitpod.io"))return;window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";document.head.appendChild(s);})();</script>
 </head>
 <body>
 <header>
@@ -77,8 +82,9 @@
     <tr><td>Removed metadata values</td><td><strong>No.</strong> Displayed locally; never transmitted.</td></tr>
     <tr><td>Verification report (Pro)</td><td><strong>No.</strong> Generated in-browser; downloaded directly by the user.</td></tr>
     <tr><td>Pro licence key</td><td>Yes — sent only to the payment provider (Polar) to confirm subscription status. No file data accompanies it.</td></tr>
+    <tr><td>Page-view analytics</td><td>Yes — an anonymous, cookieless page-view count (which page, referrer, country, device type) is recorded by Vercel Web Analytics from the site's own origin. No file data, file names or metadata are included.</td></tr>
   </table>
-  <p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">The single permitted external connection — the licence check to the payment provider — is the only exception to "nothing leaves the device", and it carries a key, never file data. Everything else is blocked at the browser by the Content-Security-Policy above.</p>
+  <p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">Two things leave the device, and neither is file data: the licence check to the payment provider (a key), and an anonymous page-view ping used to count visits. File contents, the metadata found in them, and the cleaned copies are all blocked from leaving by the Content-Security-Policy above.</p>
 
   <h2>Storage &amp; retention</h2>
   <ul>
@@ -88,7 +94,7 @@
   </ul>
 
   <h2>Tracking &amp; third parties</h2>
-  <p>Barecopy sets no advertising or analytics cookies and runs no user-tracking scripts. Payment and subscription management are handled by Polar Software Inc. as merchant of record; card details are provided to Polar, never to Barecopy.</p>
+  <p>Barecopy sets no advertising cookies and runs no cross-site trackers. It uses <strong>Vercel Web Analytics</strong> to count page views: this is cookieless, stores no personal data and does not fingerprint or follow you across sites — it records only which page was viewed, the referrer, an approximate country and the device type, in aggregate. It never sees your files, file names or the metadata inside them. Payment and subscription management are handled by Polar Software Inc. as merchant of record; card details are provided to Polar, never to Barecopy.</p>
 
   <h2>Don't trust us — verify it</h2>
   <p>Every claim on this page is directly testable by your own technical staff in about a minute, with no special tools:</p>
@@ -99,7 +105,7 @@
     4. Check the document's Response Headers for the Content-Security-Policy.<br>
     5. Disconnect from the network and confirm the tool still works.
   </div>
-  <p>Steps 3 and 4 are the important ones: step 3 shows nothing leaves in practice, and step 4 shows the browser would refuse to let it, even if the code tried.</p>
+  <p>Steps 3 and 4 are the important ones: step 3 shows nothing leaves in practice, and step 4 shows the browser would refuse to let it, even if the code tried. You may see one small, anonymous page-view request to <code>/_vercel/insights</code> — that is the visit counter described above; it carries no file data, and it stops the moment you disconnect (step 5), while file cleaning keeps working.</p>
 
   <h2>Scope &amp; limitations</h2>
   <p>Barecopy removes file <em>metadata</em>. Some identifying data is document <em>content</em> rather than metadata — tracked-change history, comments, PowerPoint speaker notes, hidden Excel sheets. Barecopy detects all of these and shows them to you for free; because removing them alters the visible document, removal is an explicit, opt-in step (part of Pro) and is never applied silently. Hidden sheets are flagged but left in place, since deleting them can break formulas. Password-protected PDFs are refused rather than risk corruption. Users are advised to review cleaned files before distribution.</p>
