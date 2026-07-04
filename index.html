@@ -581,7 +581,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.5.3",
+  version: "1.5.4",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
@@ -2026,7 +2026,7 @@ async function buildReportData(list){
 // Plain-text fallback (kept for robustness / non-Pro paths).
 function reportToText(data){
   const L = [];
-  L.push("BARECOPY VERIFICATION REPORT");
+  L.push("barecopy verification report");
   L.push("Generated: " + data.generated + " · Barecopy v" + data.version);
   L.push("All processing performed locally in the browser. No file was transmitted.");
   L.push("");
@@ -2101,7 +2101,7 @@ async function buildReportPDF(data){
   const wordX = divX + 7;                      // lowercase wordmark, matching the site
   text("barecopy", wordX, 15, bold, ink);
   const markW = bold.widthOfTextAtSize("barecopy", 15);
-  text("VERIFICATION REPORT", wordX+markW+10, 15, font, soft);
+  text("verification report", wordX+markW+10, 15, font, soft);
   nl(1.4);
   text("Generated " + data.generated + "   |   v" + data.version, M, 9, font, soft); nl(1.1);
   text("All processing performed locally in the browser. No file was transmitted.", M, 9, font, soft);
