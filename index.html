@@ -760,12 +760,23 @@ const VID = { mp4:"video/mp4", mov:"video/quicktime", m4v:"video/x-m4v" };
 const HEIF = { heic:"image/heic", heif:"image/heif", avif:"image/avif" };
 
 const $folderInput = document.getElementById("folderInput");
+// Open at most one native picker per gesture. The .click() stays inside the
+// user-gesture handler (so the browser doesn't block it), but a short lock
+// swallows any second call — belt-and-suspenders against a stray click reaching
+// both the dropzone (file) and a pick button (folder) from one interaction.
+let pickerLock = false;
+function openPicker(inp){
+  if(pickerLock) return;
+  pickerLock = true;
+  setTimeout(() => { pickerLock = false; }, 600);
+  inp.click();
+}
 $drop.addEventListener("click", e => {
-  if(e.target.closest(".dz-pick")) return; // buttons handle themselves
-  $input.click();
+  if(e.target.closest("button")) return; // the pick buttons handle themselves
+  openPicker($input);
 });
-document.getElementById("pickFilesBtn").addEventListener("click", e => { e.stopPropagation(); $input.click(); });
-document.getElementById("pickFolderBtn").addEventListener("click", e => { e.stopPropagation(); $folderInput.click(); });
+document.getElementById("pickFilesBtn").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); openPicker($input); });
+document.getElementById("pickFolderBtn").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); openPicker($folderInput); });
 $folderInput.addEventListener("change", () => {
   const all = [...$folderInput.files];
   const ok = all.filter(f => SUPPORTED[extOf(f.name)]);
@@ -780,7 +791,7 @@ $drop.addEventListener("keydown", e => {
   // guard, activating the "Choose folder" button by keyboard bubbles up here and
   // opens the file dialog first, then the button opens the folder dialog.
   if(e.target !== $drop) return;
-  if(e.key === "Enter" || e.key === " "){ e.preventDefault(); $input.click(); }
+  if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openPicker($input); }
 });
 ["dragenter","dragover"].forEach(ev =>
   $drop.addEventListener(ev, e => { e.preventDefault(); $drop.classList.add("dragover"); })
