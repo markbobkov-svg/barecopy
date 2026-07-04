@@ -1,11 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url><loc>https://barecopy.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
   <url><loc>https://barecopy.com/privacy.html</loc><priority>0.2</priority></url>
   <url><loc>https://barecopy.com/terms.html</loc><priority>0.2</priority></url>
   <url><loc>https://barecopy.com/remove-author-name-word-document.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://barecopy.com/word-to-pdf-metadata.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://barecopy.com/remove-exif-gps-from-photos.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://barecopy.com/check-file-metadata.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://barecopy.com/security.html</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://barecopy.com/remove-tracked-changes-metadata-word.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://barecopy.com/remove-speaker-notes-powerpoint.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://barecopy.com/find-hidden-sheets-excel.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://barecopy.com/remove-comments-before-sending.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://barecopy.com/vs-microsoft-document-inspector.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://barecopy.com/vs-exiftool.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://barecopy.com/vs-online-metadata-removers.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url>
+    <loc>https://barecopy.com/check-file-metadata.html</loc><changefreq>monthly</changefreq><priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://barecopy.com/check-file-metadata.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://barecopy.com/de/datei-metadaten-pruefen.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://barecopy.com/check-file-metadata.html"/>
+  </url>
+  <url>
+    <loc>https://barecopy.com/de/datei-metadaten-pruefen.html</loc><changefreq>monthly</changefreq><priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://barecopy.com/check-file-metadata.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://barecopy.com/de/datei-metadaten-pruefen.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://barecopy.com/check-file-metadata.html"/>
+  </url>
+  <url>
+    <loc>https://barecopy.com/security.html</loc><changefreq>monthly</changefreq><priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://barecopy.com/security.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://barecopy.com/de/sicherheit.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://barecopy.com/security.html"/>
+  </url>
+  <url>
+    <loc>https://barecopy.com/de/sicherheit.html</loc><changefreq>monthly</changefreq><priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://barecopy.com/security.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://barecopy.com/de/sicherheit.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://barecopy.com/security.html"/>
+  </url>
 </urlset>

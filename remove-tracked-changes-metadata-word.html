@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Remove Tracked Changes and Their Hidden History from Word (2026) | Barecopy</title>
+<meta name="description" content="Tracked changes keep editor names, timestamps and the actual deleted text inside a Word file — and Accept All Changes doesn't fully remove them. Here's how to check and flatten that history, including a way that never uploads your file.">
+<link rel="canonical" href="https://barecopy.com/remove-tracked-changes-metadata-word.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to remove tracked changes and their hidden history from Word">
+<meta property="og:description" content="Tracked changes hide editor names and deleted text in your .docx. See what's there and flatten it — locally, without uploading the file.">
+<meta property="og:url" content="https://barecopy.com/remove-tracked-changes-metadata-word.html">
+<meta property="og:image" content="https://barecopy.com/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Does Accept All Changes fully remove tracked changes from a Word document?","acceptedAnswer":{"@type":"Answer","text":"Not always. Clicking Accept All Changes makes the revision markup invisible, but if the changes are not truly flattened the deleted text, editor names and timestamps can still remain in the document's underlying XML, where they are recoverable. If the file is sensitive, verify the result rather than assuming it is clean."}},
+{"@type":"Question","name":"Can deleted text be recovered after accepting tracked changes?","acceptedAnswer":{"@type":"Answer","text":"Yes, if the changes were not properly flattened. Text you deleted is stored in the file as revision elements, and simply accepting the changes can leave that content and the associated author names behind in word/document.xml, from where it can be recovered. Real leaks have happened this way."}},
+{"@type":"Question","name":"Can I remove tracked changes without uploading the file anywhere?","acceptedAnswer":{"@type":"Answer","text":"Yes. Barecopy processes the file entirely inside your browser using JavaScript, so the document is never uploaded to a server. It detects tracked changes, flattens them locally and re-scans the output to confirm the history is gone. You can disconnect from the internet after loading the page and it still works."}}]}
+</script>
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{
+    --paper:#F6F5F0; --card:#FFFFFF; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE;
+    --leak:#C2273A; --leak-bg:#FBEEEF; --leak-line:#EFCBD0;
+    --clean:#1E7F4F; --warn-bg:#FBF3E2; --warn-line:#EBD9AE; --warn:#8A5A00;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .wordmark .wm-div{width:1px;height:21px;background:rgba(28,36,48,.22);flex:0 0 auto}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  article{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--brand);font-weight:600;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:20ch}
+  h1 .strike{position:relative;white-space:nowrap}
+  h1 .strike::after{content:"";position:absolute;left:-2%;right:-2%;top:54%;height:.13em;background:var(--leak);border-radius:1px;transform:rotate(-1.2deg)}
+  .lead{margin-top:18px;font-size:18px;color:var(--ink-soft)}
+  h2{font-family:var(--brand);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h3{font-family:var(--brand);font-size:17px;font-weight:600;margin:22px 0 4px}
+  p{margin-top:12px}
+  ol,ul{margin:14px 0 0 0;padding-left:22px}
+  li{margin-top:7px}
+  code{font-family:var(--mono);font-size:.9em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
+  .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
+  .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--leak)}
+  .callout h3{margin-top:6px}
+  .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
+  .warnbox{margin-top:18px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;padding:14px 16px;font-size:15px;color:var(--warn)}
+  .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
+  .faq summary{font-weight:600;cursor:pointer;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq details[open] summary::before{content:"–"}
+  .faq p{font-size:15.5px;color:var(--ink-soft)}
+  footer{border-top:1px solid var(--line);margin-top:50px}
+  .foot-in{padding:22px 0 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="18" height="22" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <a class="head-cta" href="/">Open the tool</a>
+  </div>
+</header>
+
+<main class="wrap">
+<article>
+  <div class="eyebrow">Guide · updated 2026</div>
+  <h1>How to remove tracked changes and their <span class="strike">hidden history</span> from Word</h1>
+  <p class="lead">Tracked changes don't just mark up your text — they store who edited it, when, and the exact words that were deleted, all inside the file. And clicking "Accept All Changes" doesn't reliably take that out. Here's how to see what's really in there and flatten it for good.</p>
+
+  <h2>What tracked changes actually store</h2>
+  <p>A Word file is a package of XML, and revisions live in <code>word/document.xml</code> as specific elements: insertions (<code>w:ins</code>), deletions (<code>w:del</code>) and moves (<code>w:moveFrom</code> / <code>w:moveTo</code>). Each one records the editor's name and a timestamp, and — this is the part people miss — the deleted text is kept verbatim inside those elements, not thrown away. The file also carries per-session revision fingerprints (rsids) that can link edits together across drafts.</p>
+  <p>In other words, a document with tracked changes contains a running record of who changed what, when, and what the text used to say. If you send that file outside your organisation, you may be handing over an edit history you never meant to share.</p>
+
+  <h2>Why "Accept All Changes" is not enough</h2>
+  <p>The natural instinct is to accept every change so the markup disappears. On screen it works — the revision marks vanish and the document looks final. But accepting a change makes the markup <em>invisible</em>, which is not the same as making the underlying data <em>gone</em>. If the changes aren't truly flattened, the deleted text and author names can still be recovered from the file's XML.</p>
+  <div class="warnbox">This has caused real leaks. Law firms and organisations have sent out documents where the visible text looked final, but the tracked-changes history — including text they thought they had removed — was still recoverable inside the file. Redactions have failed the same way. Don't assume Accept All left the file clean; verify it.</div>
+
+  <h2>Method 1 — Word's Document Inspector</h2>
+  <p>Word ships with a Document Inspector that can flag and remove some revision data:</p>
+  <ol>
+    <li>Open the document and go to <code>File → Info</code>.</li>
+    <li>Select <code>Check for Issues → Inspect Document</code>.</li>
+    <li>Run it, then choose <strong>Remove All</strong> next to "Comments, Revisions, and Versions".</li>
+    <li>Save the file.</li>
+  </ol>
+  <p>This helps, but the inspector's behaviour varies by version and platform, and the safe path is the same as with any redaction: verify the result rather than trusting it. Reopen the file, turn on <code>Review → All Markup</code>, and confirm nothing remains.</p>
+
+  <h2>Method 2 — detect and flatten, without uploading</h2>
+  <p>The reason people reach for an online tool is precisely that the file is sensitive — which makes uploading it to someone's server the wrong move. Barecopy solves that by running entirely in your browser: you drop the file on the page, and it tells you exactly how many tracked changes are present and how many distinct authors left their names in the history. That detection is free.</p>
+  <p>If you choose to clean it, Barecopy flattens the revisions the way accepting them <em>should</em> work: it removes the deletions and move-from content (<code>w:del</code>, <code>w:moveFrom</code>), unwraps insertions and move-to content into plain text (<code>w:ins</code>, <code>w:moveTo</code>), and strips the property-change records and rsid session fingerprints. Then it re-scans the output to confirm the history is actually gone. The file is never transmitted — you can switch off your internet after the page loads and it still works.</p>
+  <div class="callout">
+    <div class="k">Do it now</div>
+    <h3>See what your document's history reveals</h3>
+    <p>Drop your <code>.docx</code> on Barecopy. It counts the tracked changes and the authors behind them, then flattens the whole history — locally, on your device.</p>
+    <a class="btn" href="/">Open Barecopy →</a>
+  </div>
+
+  <h2>Flattening changes the document — so it's opt-in</h2>
+  <p>There's an important honesty point here. Removing tracked changes isn't a silent metadata scrub: like Accept All, it changes the visible document, because the accepted edits become the final text. For that reason Barecopy never does it behind your back. Detection runs automatically and for free; the flattening step is an explicit choice you make, and the re-scan afterwards shows you the history really is gone before you send the file on.</p>
+
+  <h2>Frequently asked</h2>
+  <div class="faq">
+    <details open>
+      <summary>Does Accept All Changes fully remove tracked changes?</summary>
+      <p>Not reliably. It hides the markup, but if the changes aren't truly flattened the deleted text and author names can still remain in the file's XML, where they're recoverable. If the document is sensitive, verify it rather than assuming it's clean.</p>
+    </details>
+    <details>
+      <summary>Can deleted text be recovered after I accept the changes?</summary>
+      <p>Yes — if the file wasn't properly flattened. Text you deleted is stored as revision elements in <code>word/document.xml</code>, and accepting alone can leave that content, along with the editor names and timestamps, behind. Real leaks have happened exactly this way.</p>
+    </details>
+    <details>
+      <summary>Can I do this without uploading the file anywhere?</summary>
+      <p>Yes. Barecopy processes the document by JavaScript in your own browser tab and never sends it anywhere. It detects the tracked changes, flattens them locally, and re-scans to confirm. Open your browser's developer tools and watch the network while you clean a file: nothing leaves.</p>
+    </details>
+  </div>
+  <div class="more" style="margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px">
+    <div style="font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)">More guides</div>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/remove-author-name-word-document.html">How to remove the author name from a Word document &rarr;</a>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/remove-comments-before-sending.html">How to remove comments before sending a document &rarr;</a>
+  </div>
+</article>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — clean documents before you send them.</span>
+    <span><a href="/">Home</a> · <a href="/privacy.html">Privacy</a></span>
+  </div>
+</footer>
+</body>
+</html>

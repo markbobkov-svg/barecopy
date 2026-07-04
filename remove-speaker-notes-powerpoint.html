@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Remove Speaker Notes and Metadata from a PowerPoint (2026) | Barecopy</title>
+<meta name="description" content="Speaker notes are hidden in slideshow view but travel inside the .pptx file — anyone who opens it can read your talking points. Here's how to remove speaker notes and author metadata, without uploading the file.">
+<link rel="canonical" href="https://barecopy.com/remove-speaker-notes-powerpoint.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to remove speaker notes from a PowerPoint">
+<meta property="og:description" content="Speaker notes stay inside the .pptx even though they're hidden in the slideshow. Strip the notes and author metadata — locally, without uploading the file.">
+<meta property="og:url" content="https://barecopy.com/remove-speaker-notes-powerpoint.html">
+<meta property="og:image" content="https://barecopy.com/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Do speaker notes get shared when I send a PowerPoint file?","acceptedAnswer":{"@type":"Answer","text":"Yes. Speaker notes are stored inside the .pptx package, in ppt/notesSlides. They are hidden during a normal slideshow, but anyone who opens the file in PowerPoint, previews it, or converts it to another format can read them. If your notes contain internal talking points, pricing or reminders, they travel with the file unless you remove them."}},
+{"@type":"Question","name":"Does deleting a slide also delete its speaker notes?","acceptedAnswer":{"@type":"Answer","text":"Not on its own. Speaker notes live in separate notesSlides parts inside the package, linked to the slide by a relationship. To remove notes cleanly you have to delete the notesSlides parts, their slide relationships and the content-type overrides together, otherwise PowerPoint may show a repair prompt when the file is opened."}},
+{"@type":"Question","name":"Can I strip speaker notes without uploading the file anywhere?","acceptedAnswer":{"@type":"Answer","text":"Yes. Barecopy processes the .pptx entirely inside your browser using JavaScript, so the presentation is never uploaded to a server. You can disconnect from the internet after loading the page and it still works."}}]}
+</script>
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{
+    --paper:#F6F5F0; --card:#FFFFFF; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE;
+    --leak:#C2273A; --leak-bg:#FBEEEF; --leak-line:#EFCBD0;
+    --clean:#1E7F4F; --warn-bg:#FBF3E2; --warn-line:#EBD9AE; --warn:#8A5A00;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .wordmark .wm-div{width:1px;height:21px;background:rgba(28,36,48,.22);flex:0 0 auto}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  article{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--brand);font-weight:600;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:20ch}
+  h1 .strike{position:relative;white-space:nowrap}
+  h1 .strike::after{content:"";position:absolute;left:-2%;right:-2%;top:54%;height:.13em;background:var(--leak);border-radius:1px;transform:rotate(-1.2deg)}
+  .lead{margin-top:18px;font-size:18px;color:var(--ink-soft)}
+  h2{font-family:var(--brand);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h3{font-family:var(--brand);font-size:17px;font-weight:600;margin:22px 0 4px}
+  p{margin-top:12px}
+  ol,ul{margin:14px 0 0 0;padding-left:22px}
+  li{margin-top:7px}
+  code{font-family:var(--mono);font-size:.9em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
+  .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
+  .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--leak)}
+  .callout h3{margin-top:6px}
+  .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
+  .warnbox{margin-top:18px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;padding:14px 16px;font-size:15px;color:var(--warn)}
+  .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
+  .faq summary{font-weight:600;cursor:pointer;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq details[open] summary::before{content:"–"}
+  .faq p{font-size:15.5px;color:var(--ink-soft)}
+  footer{border-top:1px solid var(--line);margin-top:50px}
+  .foot-in{padding:22px 0 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="18" height="22" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <a class="head-cta" href="/">Open the tool</a>
+  </div>
+</header>
+
+<main class="wrap">
+<article>
+  <div class="eyebrow">Guide · updated 2026</div>
+  <h1>How to remove <span class="strike">speaker notes</span> from a PowerPoint before sharing</h1>
+  <p class="lead">Speaker notes sit quietly beside every slide — your talking points, your reminders, the things you meant to say out loud but not write down. They're hidden during the slideshow, so it's easy to forget they're still inside the <code>.pptx</code> when you send it. Here's how to see them and take them out, along with the author and company metadata.</p>
+
+  <h2>Where speaker notes actually live</h2>
+  <p>A PowerPoint file is a package of XML. Your speaker notes are stored in their own parts inside it, under <code>ppt/notesSlides/</code>, with one file per slide that has notes. Nothing shows them during a normal slideshow — which is exactly why they get forgotten — but anyone who opens the file in PowerPoint, previews it in a file browser, or converts it to another format can read every word.</p>
+  <p>That matters because of what notes usually contain: internal talking points, draft pricing, the name of the person you're presenting to, and the occasional "don't say this out loud" reminder. None of it is meant for the recipient, yet it ships with every copy you send.</p>
+
+  <h2>What else a .pptx carries</h2>
+  <p>Alongside the notes, a PowerPoint stores the author and company in its properties record (<code>docProps/core.xml</code> and <code>docProps/app.xml</code>), written automatically from your Office account. If anyone has left comments on the deck, their names sit in <code>ppt/comments/</code> and an <code>authors.xml</code> file too. Most of this you never typed — but it travels with the file.</p>
+
+  <h2>Method 1 — deleting notes by hand</h2>
+  <p>You can remove notes slide by slide inside PowerPoint:</p>
+  <ol>
+    <li>Open the <code>View → Notes</code> pane, or switch to <code>Notes Page</code> view.</li>
+    <li>Go through each slide and clear the notes text.</li>
+    <li>Separately, open <code>File → Info</code> and use <code>Check for Issues → Inspect Document</code> to remove document properties and personal information.</li>
+    <li>Save the file.</li>
+  </ol>
+  <div class="warnbox">Speaker notes are invisible in slideshow view but they travel with the file. Going slide by slide is tedious on a long deck and easy to miss one — a single skipped slide is enough to leak. If the presentation is sensitive, it's worth confirming the notes are gone rather than assuming.</div>
+
+  <h2>Method 2 — remove notes and metadata, without uploading</h2>
+  <p>The reason people reach for an online tool is precisely that the deck is sensitive — which makes uploading it to someone's server the wrong move. Barecopy runs entirely in your browser: you drop the <code>.pptx</code> on the page, it detects the speaker notes and shows you how many slides carry them and roughly how much text is there, and it strips the standard author and company metadata for free. The file is never transmitted. You can switch off your internet after the page loads and it still works.</p>
+  <div class="callout">
+    <div class="k">Do it now</div>
+    <h3>See what your deck reveals</h3>
+    <p>Drop your <code>.pptx</code> on Barecopy. It flags speaker notes, author, company and comment authors — then removes them, locally, on your device.</p>
+    <a class="btn" href="/">Open Barecopy →</a>
+  </div>
+
+  <h2>How Barecopy removes notes cleanly</h2>
+  <p>Removing speaker notes is more than deleting a file inside the package. Barecopy deletes the <code>notesSlides</code> parts, their slide relationships and the content-type overrides together, so the presentation stays valid and PowerPoint doesn't greet the recipient with a repair prompt. Once it's done, it re-scans the deck to confirm the notes are actually gone.</p>
+  <p>Because removing the notes changes the deliverable you're handing over, it's an explicit, opt-in step rather than something done behind your back — you decide, and you see the result confirmed. The author and company metadata is stripped as part of the standard clean.</p>
+
+  <h2>Frequently asked</h2>
+  <div class="faq">
+    <details open>
+      <summary>Do speaker notes get shared when I send a PowerPoint file?</summary>
+      <p>Yes. Notes are stored inside the <code>.pptx</code>, in <code>ppt/notesSlides</code>. They're hidden during the slideshow, but anyone who opens or converts the file can read them. They only go away if you remove them.</p>
+    </details>
+    <details>
+      <summary>Does deleting a slide also delete its speaker notes?</summary>
+      <p>Not by itself. The notes sit in a separate part linked to the slide, so the <code>notesSlides</code> part has to be removed too — along with its relationship and content-type entries — or PowerPoint may prompt to repair the file.</p>
+    </details>
+    <details>
+      <summary>Can I strip them without uploading the file anywhere?</summary>
+      <p>Yes. The presentation is processed by JavaScript in your own browser tab and never sent anywhere. Open your browser's developer tools, watch the network while you clean the file: nothing leaves.</p>
+    </details>
+  </div>
+  <div class="more" style="margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px">
+    <div style="font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)">More guides</div>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/remove-author-name-word-document.html">How to remove the author name from a Word document &rarr;</a>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/remove-comments-before-sending.html">How to remove comments before sending a file &rarr;</a>
+  </div>
+</article>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — clean documents before you send them.</span>
+    <span><a href="/">Home</a> · <a href="/privacy.html">Privacy</a></span>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barecopy vs Online Metadata Removers (2026) — the upload question | Barecopy</title>
+<meta name="description" content="Most free online metadata removers upload your file to a server to process it — which defeats the point when the file is sensitive. Here's how to tell, and how a browser-only tool differs.">
+<link rel="canonical" href="https://barecopy.com/vs-online-metadata-removers.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Barecopy vs online metadata removers — the upload question">
+<meta property="og:description" content="The one question to ask any online metadata cleaner: does it upload your file? How to check, and why a browser-only tool is different.">
+<meta property="og:url" content="https://barecopy.com/vs-online-metadata-removers.html">
+<meta property="og:image" content="https://barecopy.com/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Do online metadata removers upload my file?","acceptedAnswer":{"@type":"Answer","text":"Many do. A large share of free online metadata tools work by uploading your file to their server, cleaning it there, and sending back a copy. That means a sensitive document leaves your device and is briefly, and sometimes not so briefly, in someone else's hands. The way to tell is to open your browser's developer tools, watch the Network panel while you process a file, and see whether the file is sent. A tool that processes in the browser makes no such request."}},
+{"@type":"Question","name":"How do I know a metadata tool is really private?","acceptedAnswer":{"@type":"Answer","text":"Do not take the claim on faith — verify it. Open Developer Tools, go to the Network tab, and process a file while watching. If the file is uploaded you will see a large request carrying it. Barecopy makes no such request; it processes files in JavaScript in your tab, and a Content-Security-Policy blocks the page from sending file contents anywhere. You can also disconnect from the internet after the page loads and confirm it still works."}},
+{"@type":"Question","name":"Is a browser-based cleaner as thorough as a server one?","acceptedAnswer":{"@type":"Answer","text":"It can be more thorough. Running in the browser is a privacy choice, not a capability limit. Barecopy strips standard metadata from documents, PDFs and photos, and additionally cleans content-level leaks in Office files — tracked changes, comments, reviewer identities and speaker notes — then re-scans to confirm the result, all without the file leaving your device."}}]}
+</script>
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{
+    --paper:#F6F5F0; --card:#FFFFFF; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE;
+    --leak:#C2273A; --leak-bg:#FBEEEF; --leak-line:#EFCBD0;
+    --clean:#1E7F4F; --warn-bg:#FBF3E2; --warn-line:#EBD9AE; --warn:#8A5A00;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .wordmark .wm-div{width:1px;height:21px;background:rgba(28,36,48,.22);flex:0 0 auto}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  article{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--brand);font-weight:600;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:22ch}
+  .lead{margin-top:18px;font-size:18px;color:var(--ink-soft)}
+  h2{font-family:var(--brand);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h3{font-family:var(--brand);font-size:17px;font-weight:600;margin:22px 0 4px}
+  p{margin-top:12px}
+  ol,ul{margin:14px 0 0 0;padding-left:22px}
+  li{margin-top:7px}
+  code{font-family:var(--mono);font-size:.9em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
+  .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
+  .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--leak)}
+  .callout h3{margin-top:6px}
+  .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
+  .warnbox{margin-top:18px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;padding:14px 16px;font-size:15px;color:var(--warn)}
+  .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
+  .faq summary{font-weight:600;cursor:pointer;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq details[open] summary::before{content:"–"}
+  .faq p{font-size:15.5px;color:var(--ink-soft)}
+  .cmp-scroll{margin-top:20px;overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+  table.cmp{border-collapse:collapse;width:100%;font-size:15px;min-width:520px}
+  table.cmp th,table.cmp td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  table.cmp thead th{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);background:var(--line-soft)}
+  table.cmp tbody tr:last-child td{border-bottom:none}
+  table.cmp td.feat{font-weight:600;color:var(--ink)}
+  table.cmp td .mono{font-family:var(--mono);font-size:12px;color:var(--ink-faint);display:block;margin-top:2px}
+  .yes{color:var(--clean);font-weight:600}
+  .no{color:var(--leak);font-weight:600}
+  .part{color:var(--warn);font-weight:600}
+  .disclaimer{margin-top:14px;font-size:13.5px;color:var(--ink-faint)}
+  footer{border-top:1px solid var(--line);margin-top:50px}
+  .foot-in{padding:22px 0 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="18" height="22" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <a class="head-cta" href="/">Open the tool</a>
+  </div>
+</header>
+
+<main class="wrap">
+<article>
+  <div class="eyebrow">Comparison · updated 2026</div>
+  <h1>Barecopy vs online metadata removers</h1>
+  <p class="lead">Search for a metadata remover and you will find dozens of free web tools. Most of them work well enough. But there is one question that matters more than any feature when the file is sensitive, and it is the one almost none of them answer plainly: <strong>does my file get uploaded?</strong></p>
+
+  <h2>The upload question</h2>
+  <p>A large share of free online metadata removers process your file on their server. You choose a file, it is uploaded, cleaned somewhere you cannot see, and a copy is sent back. For a holiday photo that is fine. For a contract, a medical form, a document with a client's name in it, or anything you are cleaning <em>precisely because it is sensitive</em>, it is the wrong trade — you have handed the file to a stranger's computer to remove the traces of yourself from it.</p>
+  <p>Server processing is not automatically malicious. Reputable services delete files promptly. But "trust our retention policy" is a weaker promise than "the file never left your device", and you usually cannot verify the former.</p>
+  <div class="warnbox">The tell is easy to check. Open your browser's <strong>Developer Tools</strong>, switch to the <strong>Network</strong> tab, and process a file while watching. If you see a large upload request carrying your file, it is a server tool. A browser-only tool makes no such request — and you can prove it by turning off your internet after the page loads and cleaning a file anyway.</div>
+
+  <h2>How Barecopy is different</h2>
+  <p>Barecopy does all of its work in JavaScript inside your browser tab. The file is read, analysed and cleaned locally, and the result is handed back by the page itself. Nothing is uploaded — not to us, not to anyone. Two things back that up beyond our word:</p>
+  <ul>
+    <li>A <strong>Content-Security-Policy</strong> on the site restricts where the page is allowed to send data, so exfiltrating file contents is blocked by the browser itself, not just by our good intentions.</li>
+    <li>It <strong>works offline.</strong> Load the page, disconnect, and it still cleans files — which is only possible because there was never a server in the loop.</li>
+  </ul>
+  <p>On top of privacy, Barecopy goes deeper than a typical stripper: as well as standard metadata it cleans content-level leaks in Office files — tracked changes, comments, reviewer identities, speaker notes — and then re-scans the result to confirm the fields are actually gone.</p>
+
+  <h2>Side by side</h2>
+  <div class="cmp-scroll">
+  <table class="cmp">
+    <thead><tr><th>&nbsp;</th><th>Typical online remover</th><th>Barecopy</th></tr></thead>
+    <tbody>
+      <tr><td class="feat">File leaves your device</td><td><span class="no">Often uploaded</span><span class="mono">server processing</span></td><td><span class="yes">Never</span><span class="mono">in-browser</span></td></tr>
+      <tr><td class="feat">Verifiable privacy</td><td><span class="part">Policy you must trust</span></td><td><span class="yes">CSP-enforced + works offline</span></td></tr>
+      <tr><td class="feat">Standard metadata removal</td><td><span class="yes">Usually</span></td><td><span class="yes">Yes</span></td></tr>
+      <tr><td class="feat">Tracked changes &amp; comments</td><td><span class="part">Rarely</span></td><td><span class="yes">Yes, opt-in</span></td></tr>
+      <tr><td class="feat">Reviewer identities (<code>people.xml</code>)</td><td><span class="no">Almost never</span></td><td><span class="yes">Yes</span></td></tr>
+      <tr><td class="feat">Re-scan to confirm clean</td><td><span class="no">Rare</span></td><td><span class="yes">Yes</span></td></tr>
+      <tr><td class="feat">Record of what was removed</td><td><span class="no">Rare</span></td><td><span class="yes">Optional PDF + SHA-256</span></td></tr>
+      <tr><td class="feat">Works behind corporate proxies</td><td><span class="part">Varies</span></td><td><span class="yes">Yes</span><span class="mono">self-hosted, no CDNs</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="disclaimer">"Typical online remover" describes the common server-upload pattern; individual tools vary, and some are browser-based too. The point is to check, not to assume — the Network tab tells you in seconds.</p>
+
+  <h2>How to choose one</h2>
+  <p>For a non-sensitive file, any working tool is fine — pick whatever is convenient. For anything you would not want a stranger to keep a copy of, the deciding question is not the feature list; it is whether the file is uploaded. Prefer a tool you can verify processes locally, and take thirty seconds to verify it. Barecopy is built to pass that test, and to do more once you trust it.</p>
+
+  <div class="callout">
+    <div class="k">Verify it yourself</div>
+    <h3>Clean a file without it leaving your device</h3>
+    <p>Drop a document or photo on Barecopy, open your Network tab, and watch: nothing is uploaded. It shows what the file reveals, removes it, and re-scans to confirm.</p>
+    <a class="btn" href="/">Open Barecopy →</a>
+  </div>
+
+  <h2>Frequently asked</h2>
+  <div class="faq">
+    <details open>
+      <summary>How can I tell if an online tool uploads my file?</summary>
+      <p>Open Developer Tools, go to the Network tab, and process a file while watching. An upload shows as a large request carrying the file. A browser-only tool like Barecopy makes no such request — and still works with your internet switched off.</p>
+    </details>
+    <details>
+      <summary>Is browser processing less thorough than server processing?</summary>
+      <p>No — where you run the code is a privacy decision, not a capability one. Barecopy cleans standard metadata plus content-level Office leaks and verifies the result, all locally.</p>
+    </details>
+    <details>
+      <summary>Is this comparison biased?</summary>
+      <p>We make Barecopy, so it is a considered case rather than a neutral one. But the upload question is checkable in your own browser in under a minute, whichever tool you are weighing — so you do not have to take our word for anything here.</p>
+    </details>
+  </div>
+
+  <div class="more" style="margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px">
+    <div style="font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)">More guides</div>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/check-file-metadata.html">Check what any file reveals about you &rarr;</a>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/security.html">How Barecopy proves it never uploads your file &rarr;</a>
+  </div>
+</article>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — clean documents before you send them.</span>
+    <span><a href="/">Home</a> · <a href="/privacy.html">Privacy</a></span>
+  </div>
+</footer>
+</body>
+</html>

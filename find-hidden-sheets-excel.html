@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Find Hidden and Very Hidden Sheets in Excel (2026) | Barecopy</title>
+<meta name="description" content="Excel workbooks can carry hidden and 'very hidden' sheets that never appear in the Unhide dialog — old pricing models, source data, client tabs. Here's how to find them before you send the file, without uploading it anywhere.">
+<link rel="canonical" href="https://barecopy.com/find-hidden-sheets-excel.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to find hidden and very hidden sheets in Excel">
+<meta property="og:description" content="Find the hidden and 'very hidden' sheets in a workbook before you send it — including the ones the Unhide dialog never shows. Checked locally, without uploading the file.">
+<meta property="og:url" content="https://barecopy.com/find-hidden-sheets-excel.html">
+<meta property="og:image" content="https://barecopy.com/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What is a 'very hidden' sheet in Excel?","acceptedAnswer":{"@type":"Answer","text":"A very hidden sheet is a worksheet whose state is set to veryHidden in the workbook XML. Unlike an ordinary hidden sheet, it does not appear in Excel's right-click Unhide dialog, so most people never know it is there. It can only be revealed by changing the state back through VBA or by editing the XML directly. This makes it a common accidental-leak vector for source data, old pricing models and client tabs left in a workbook that looks clean."}},
+{"@type":"Question","name":"Can recipients see the data in my hidden sheet?","acceptedAnswer":{"@type":"Answer","text":"Yes. Hiding a sheet is only a display flag; the full data still lives in xl/worksheets inside the file. Anyone who receives the workbook can right-click a tab and choose Unhide to reveal an ordinary hidden sheet, and a very hidden sheet can be exposed with a few lines of VBA. Hiding a sheet protects nothing — the content travels with the file."}},
+{"@type":"Question","name":"Does Barecopy delete hidden sheets?","acceptedAnswer":{"@type":"Answer","text":"No. Barecopy detects hidden and very hidden sheets and lists them by name so you know they are there, but it deliberately does not delete them. Removing a sheet can break formulas and references elsewhere in the workbook, so the safe action is to review each one in Excel and decide. Barecopy still strips the standard author and company metadata and comment authors for free."}}]}
+</script>
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{
+    --paper:#F6F5F0; --card:#FFFFFF; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE;
+    --leak:#C2273A; --leak-bg:#FBEEEF; --leak-line:#EFCBD0;
+    --clean:#1E7F4F; --warn-bg:#FBF3E2; --warn-line:#EBD9AE; --warn:#8A5A00;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .wordmark .wm-div{width:1px;height:21px;background:rgba(28,36,48,.22);flex:0 0 auto}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  article{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--brand);font-weight:600;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:20ch}
+  h1 .strike{position:relative;white-space:nowrap}
+  h1 .strike::after{content:"";position:absolute;left:-2%;right:-2%;top:54%;height:.13em;background:var(--leak);border-radius:1px;transform:rotate(-1.2deg)}
+  .lead{margin-top:18px;font-size:18px;color:var(--ink-soft)}
+  h2{font-family:var(--brand);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h3{font-family:var(--brand);font-size:17px;font-weight:600;margin:22px 0 4px}
+  p{margin-top:12px}
+  ol,ul{margin:14px 0 0 0;padding-left:22px}
+  li{margin-top:7px}
+  code{font-family:var(--mono);font-size:.9em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
+  .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
+  .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--leak)}
+  .callout h3{margin-top:6px}
+  .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
+  .warnbox{margin-top:18px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;padding:14px 16px;font-size:15px;color:var(--warn)}
+  .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
+  .faq summary{font-weight:600;cursor:pointer;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq details[open] summary::before{content:"–"}
+  .faq p{font-size:15.5px;color:var(--ink-soft)}
+  footer{border-top:1px solid var(--line);margin-top:50px}
+  .foot-in{padding:22px 0 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="18" height="22" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <a class="head-cta" href="/">Open the tool</a>
+  </div>
+</header>
+
+<main class="wrap">
+<article>
+  <div class="eyebrow">Guide · updated 2026</div>
+  <h1>How to find the <span class="strike">very hidden</span> sheets in an Excel workbook</h1>
+  <p class="lead">A workbook that looks clean can still carry sheets you can't see — an old pricing model, the source data behind a chart, a client tab from the last version. Some of them don't even show up in Excel's Unhide dialog. Here's how to find them before you send the file.</p>
+
+  <h2>The three visibility states</h2>
+  <p>Every worksheet in an <code>.xlsx</code> file has a visibility state stored in the workbook XML. There are three of them:</p>
+  <ul>
+    <li><strong>Visible</strong> — a normal tab you can see and click.</li>
+    <li><strong>Hidden</strong> — the tab is gone from the strip, but you can bring it back by right-clicking any tab and choosing <code>Unhide</code>.</li>
+    <li><strong>Very hidden</strong> — the state is set to <code>veryHidden</code> in the XML. This sheet does <em>not</em> appear in the Unhide dialog at all, so most people never learn it exists. It can only be revealed through VBA or by editing the XML directly.</li>
+  </ul>
+  <p>That third state is the one that catches people out. A very hidden sheet is invisible through the normal interface, so it quietly rides along with every copy of the workbook you send — often holding exactly the numbers you didn't mean to share.</p>
+
+  <div class="warnbox">A very hidden sheet will never show up when you right-click a tab and choose Unhide — the dialog simply doesn't list it. If a colleague once used a macro to set a sheet to <code>veryHidden</code>, the only ways to see it again are VBA or opening the file's XML. Assuming a workbook is clean because the Unhide dialog is empty is exactly how these sheets leak.</div>
+
+  <h2>Hiding a sheet doesn't protect its data</h2>
+  <p>It's worth being blunt about this: hiding a sheet is a display flag, nothing more. The full contents stay in <code>xl/worksheets/</code> inside the file, uncompressed and readable. Anyone who receives the workbook can unhide an ordinary hidden sheet in two clicks, and a very hidden one with a few lines of VBA. If a sheet holds something sensitive, hiding it is not a safeguard — the data travels with the file either way.</p>
+
+  <h2>How to check every sheet in Excel</h2>
+  <p>To audit a workbook by hand:</p>
+  <ol>
+    <li>Right-click any sheet tab and choose <code>Unhide</code> to reveal ordinary hidden sheets. Bring each one back and look at what it holds.</li>
+    <li>For very hidden sheets, open the VBA editor with <code>Alt+F11</code>. In the Project pane every worksheet is listed regardless of state; select one and set its <code>Visible</code> property to <code>-1 (xlSheetVisible)</code> to expose it.</li>
+    <li>Review each sheet you find, then decide whether it belongs in the copy you're sending.</li>
+  </ol>
+  <p>This works, but it's manual, it needs macros enabled, and it's easy to miss a sheet. It also does nothing about the author and company metadata stored elsewhere in the file.</p>
+
+  <h2>A faster check, without uploading the file</h2>
+  <p>Because the file is often the sensitive part, uploading it to an online tool is the wrong move. Barecopy runs entirely in your browser: drop the workbook on the page and it reads the visibility state of every sheet and lists any that are hidden or very hidden, by name, so nothing is buried. The file is never transmitted — you can switch off your internet after the page loads and it still works.</p>
+  <div class="callout">
+    <div class="k">Do it now</div>
+    <h3>See which sheets are hiding in your workbook</h3>
+    <p>Drop your <code>.xlsx</code> on Barecopy. It flags hidden and very hidden sheets by name, and strips the author, company and comment metadata — locally, on your device.</p>
+    <a class="btn" href="/">Open Barecopy →</a>
+  </div>
+
+  <h2>Why Barecopy flags sheets instead of deleting them</h2>
+  <p>Barecopy detects hidden and very hidden sheets and shows you their names, but it deliberately leaves them in place. That's an honest design choice, not a limitation: deleting a sheet can break formulas, named ranges and chart references elsewhere in the workbook, so silently removing one could quietly corrupt your numbers. The right action is to open the file in Excel, review each flagged sheet, and decide what stays.</p>
+  <p>So think of this as a detection and awareness feature. The sheets are kept by design; Barecopy makes sure you <em>know</em> about them before you hit send. At the same time it does clean the things that are always safe to remove — the author and "last modified by" names in <code>docProps</code>, the company field, and the authors attached to threaded comments — and that part is free.</p>
+
+  <h2>Frequently asked</h2>
+  <div class="faq">
+    <details open>
+      <summary>What is a "very hidden" sheet in Excel?</summary>
+      <p>It's a worksheet whose state is set to <code>veryHidden</code> in the workbook XML. Unlike an ordinary hidden sheet, it doesn't appear in the right-click Unhide dialog, so most people never know it's there. It can only be revealed through VBA or by editing the XML — which is exactly why it's a common accidental-leak vector.</p>
+    </details>
+    <details>
+      <summary>Can recipients see the data in my hidden sheet?</summary>
+      <p>Yes. Hiding is only a display flag; the data still lives in <code>xl/worksheets/</code> inside the file. A recipient can right-click a tab and choose Unhide for an ordinary hidden sheet, or use a little VBA for a very hidden one. Hiding a sheet protects nothing.</p>
+    </details>
+    <details>
+      <summary>Does Barecopy delete hidden sheets?</summary>
+      <p>No. It flags hidden and very hidden sheets by name so you know they're there, but it doesn't remove them, because deleting a sheet can break formulas and references elsewhere in the workbook. Review each one in Excel and decide. Barecopy still strips the standard author, company and comment metadata for free.</p>
+    </details>
+  </div>
+  <div class="more" style="margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px">
+    <div style="font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)">More guides</div>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/remove-author-name-word-document.html">How to remove the author name from a Word document &rarr;</a>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/check-file-metadata.html">How to check what metadata a file reveals &rarr;</a>
+  </div>
+</article>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — clean documents before you send them.</span>
+    <span><a href="/">Home</a> · <a href="/privacy.html">Privacy</a></span>
+  </div>
+</footer>
+</body>
+</html>
