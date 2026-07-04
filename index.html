@@ -431,14 +431,14 @@
   <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose files to inspect">
     <span class="dz-glyph">[ ▒▒▒▒▒▒▒▒▒▒ ]</span>
     <div class="dz-title">Drop files or a folder here, or tap to choose</div>
-    <div class="dz-formats">DOCX · XLSX · PPTX · PDF · JPG · PNG · WEBP</div>
+    <div class="dz-formats">DOCX · XLSX · PPTX · ODT · ODS · ODP · PDF · JPG · PNG · WEBP · GIF</div>
     <div class="dz-note" id="dropNote">Files are read by this page only. Airplane mode works too.</div>
     <div class="dz-pick">
       <button type="button" class="dz-pick-btn" id="pickFilesBtn">Choose files</button>
       <button type="button" class="dz-pick-btn" id="pickFolderBtn">Choose folder</button>
     </div>
     <input type="file" id="fileInput" multiple
-      accept=".docx,.xlsx,.pptx,.pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp">
+      accept=".docx,.xlsx,.pptx,.odt,.ods,.odp,.pdf,.jpg,.jpeg,.png,.webp,.gif,application/pdf,image/jpeg,image/png,image/webp,image/gif">
     <input type="file" id="folderInput" webkitdirectory directory multiple>
   </div>
 
@@ -581,7 +581,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.5.5",
+  version: "1.6.0",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
@@ -681,7 +681,10 @@ function readBuffer(file){
 
 /* ---------------- intake ---------------- */
 const OOXML = { docx:"Word document", xlsx:"Excel workbook", pptx:"PowerPoint presentation" };
-const IMG = { jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", webp:"image/webp" };
+const ODF = { odt:"application/vnd.oasis.opendocument.text",
+              ods:"application/vnd.oasis.opendocument.spreadsheet",
+              odp:"application/vnd.oasis.opendocument.presentation" };
+const IMG = { jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", webp:"image/webp", gif:"image/gif" };
 
 const $folderInput = document.getElementById("folderInput");
 $drop.addEventListener("click", e => {
@@ -711,7 +714,7 @@ $drop.addEventListener("keydown", e => {
 $drop.addEventListener("drop", onDrop);
 $input.addEventListener("change", () => { handleFiles($input.files); $input.value = ""; });
 
-const SUPPORTED = { docx:1, xlsx:1, pptx:1, pdf:1, jpg:1, jpeg:1, png:1, webp:1 };
+const SUPPORTED = { docx:1, xlsx:1, pptx:1, odt:1, ods:1, odp:1, pdf:1, jpg:1, jpeg:1, png:1, webp:1, gif:1 };
 
 // Drop can contain folders. The DataTransferItem entry API lets us walk the
 // tree; we read files eagerly, then hand the flat list to the normal intake.
@@ -779,7 +782,7 @@ function addFile(file){
   const ext = extOf(file.name);
   const rec = {
     id, file, ext,
-    kind: OOXML[ext] ? "ooxml" : (ext === "pdf" ? "pdf" : (IMG[ext] ? "image" : "unsupported")),
+    kind: OOXML[ext] ? "ooxml" : (ODF[ext] ? "odf" : (ext === "pdf" ? "pdf" : (IMG[ext] ? "image" : "unsupported"))),
     fields: [], warnings: [], error: null,
     leaks: 0, status: "working", cleanedBlob: null,
     deepSelected: new Set(), deepApplied: [], deepInit: false
@@ -791,7 +794,7 @@ function addFile(file){
     rec.status = "failed";
     rec.error = ext === "doc" || ext === "xls" || ext === "ppt"
       ? "Legacy ." + ext + " format isn't supported. Open it in Office and save as ." + ext + "x, then drop it here."
-      : "This file type isn't supported yet. Supported: DOCX, XLSX, PPTX, PDF, JPG, PNG, WEBP.";
+      : "This file type isn't supported yet. Supported: DOCX, XLSX, PPTX, ODT, ODS, ODP, PDF, JPG, PNG, WEBP, GIF.";
     renderCard(rec);
     return;
   }
@@ -812,6 +815,7 @@ async function analyze(rec){
   const buf = await readBuffer(rec.file);
   rec.buffer = buf;
   if(rec.kind === "ooxml") await analyzeOoxml(rec, buf);
+  else if(rec.kind === "odf") await analyzeOdf(rec, buf);
   else if(rec.kind === "pdf") await analyzePdf(rec, buf);
   else await analyzeImage(rec, buf);
   rec.leaks = rec.fields.filter(f => f.leak && f.value).length;
@@ -1418,6 +1422,95 @@ async function cleanOoxml(rec){
   return zip.generateAsync({ type:"blob", mimeType: mimes[rec.ext], compression:"DEFLATE" });
 }
 
+/* ---------------- OpenDocument (odt / ods / odp) ---------------- */
+// ODF stores its identity metadata in meta.xml (office:meta) and, like OOXML,
+// an embedded page-one thumbnail. Same jszip approach as OOXML.
+async function analyzeOdf(rec, buf){
+  let zip;
+  try{ zip = await JSZip.loadAsync(buf); }
+  catch(e){ throw new Error("This file doesn't look like a valid OpenDocument file (the internal package can't be opened)."); }
+  rec.zip = zip;
+
+  const metaFile = zip.file("meta.xml");
+  if(metaFile){
+    const doc = xmlDoc(await metaFile.async("string"));
+    if(!doc.getElementsByTagName("parsererror").length){
+      const push = (local, label, leak, map) => {
+        const vals = [];
+        for(const el of allLocal(doc, local)){
+          let v = (el.textContent || "").trim();
+          if(!v) continue;
+          if(map){ v = map(v); if(v == null) continue; }
+          if(vals.indexOf(v) === -1) vals.push(v);
+        }
+        if(vals.length) rec.fields.push({ label, value: vals.join(" / "), leak });
+      };
+      push("initial-creator", "Author", true);
+      push("creator", "Last modified by", true);
+      push("generator", "Created with", false);
+      push("title", "Title", false);
+      push("subject", "Subject", false);
+      push("description", "Comments field", true);
+      push("keyword", "Keywords", false);
+      push("creation-date", "Created", false, fmtDate);
+      push("date", "Last modified", false, fmtDate);
+      push("printed-by", "Last printed by", true);
+      push("editing-cycles", "Revision number", false);
+      push("editing-duration", "Total editing time", true, v => {
+        const m = /P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?/.exec(v);
+        if(!m) return v;
+        const total = (+(m[1] || 0)) * 1440 + (+(m[2] || 0)) * 60 + (+(m[3] || 0));
+        if(total === 0) return null;
+        return total >= 60 ? Math.floor(total / 60) + " h " + (total % 60) + " min" : total + " min";
+      });
+      for(const el of allLocal(doc, "user-defined")){
+        const nm = attrLocal(el, "name") || "Custom property";
+        const val = (el.textContent || "").trim();
+        if(val) rec.fields.push({ label: "Custom · " + nm, value: val, leak: true });
+      }
+    }
+  }
+
+  rec.thumbPath = null;
+  if(zip.file("Thumbnails/thumbnail.png")){
+    rec.thumbPath = "Thumbnails/thumbnail.png";
+    rec.fields.push({ label: "Preview thumbnail", value: "embedded image of page 1", leak: true });
+  }
+}
+
+const CLEAN_ODF_META =
+'<?xml version="1.0" encoding="UTF-8"?>' +
+'<office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" ' +
+'xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" ' +
+'xmlns:dc="http://purl.org/dc/elements/1.1/" office:version="1.2"><office:meta/></office:document-meta>';
+
+async function cleanOdf(rec){
+  const zip = rec.zip;
+  if(zip.file("meta.xml")) zip.file("meta.xml", CLEAN_ODF_META);
+  if(rec.thumbPath) zip.remove(rec.thumbPath);
+
+  // Keep the package manifest consistent after dropping the thumbnail.
+  const manifest = zip.file("META-INF/manifest.xml");
+  if(manifest){
+    const doc = xmlDoc(await manifest.async("string"));
+    if(!doc.getElementsByTagName("parsererror").length){
+      let changed = false;
+      for(const el of allLocal(doc, "file-entry")){
+        if(/^Thumbnails\//.test(attrLocal(el, "full-path"))){ el.parentNode.removeChild(el); changed = true; }
+      }
+      if(changed) zip.file("META-INF/manifest.xml", serializeXml(doc));
+    }
+  }
+
+  // ODF requires the 'mimetype' entry to be first and STORED (uncompressed);
+  // re-set it in place with STORE so a re-zip doesn't deflate it.
+  const mimeFile = zip.file("mimetype");
+  if(mimeFile){
+    zip.file("mimetype", await mimeFile.async("uint8array"), { compression: "STORE" });
+  }
+  return zip.generateAsync({ type:"blob", mimeType: ODF[rec.ext], compression:"DEFLATE" });
+}
+
 /* ---------------- PDF ---------------- */
 async function analyzePdf(rec, buf){
   let doc;
@@ -1545,6 +1638,20 @@ async function analyzeImage(rec, buf){
       }
     }catch(e){}
   }
+  if(rec.ext === "gif"){
+    try{
+      const u8 = new Uint8Array(buf);
+      if(u8.length >= 6 && asciiAt(u8, 0, 3) === "GIF"){
+        let comments = 0, hasXmp = false;
+        for(const blk of gifBlocks(u8)){
+          if(blk.type === "ext" && blk.label === 0xFE) comments++;
+          if(blk.type === "ext" && blk.label === 0xFF && blk.xmp) hasXmp = true;
+        }
+        if(comments) rec.fields.push({ label:"Comment blocks", value: comments + " embedded comment block" + (comments > 1 ? "s" : "") + " — may include software or notes", leak:true });
+        if(hasXmp) rec.fields.push({ label:"XMP metadata", value:"embedded XML block — may include author & software", leak:true });
+      }
+    }catch(e){}
+  }
 }
 
 /* Surgical strip: metadata segments are removed at byte level.
@@ -1639,12 +1746,62 @@ function stripWebp(buf){
   return new Blob(parts, { type: "image/webp" });
 }
 
+// Parse a GIF into its top-level blocks so detection and stripping share one
+// walker. Returns [{type:"header"|"image"|"ext"|"trailer", start, end, label, xmp}].
+function gifBlocks(u8){
+  if(u8.length < 13 || asciiAt(u8, 0, 3) !== "GIF") throw new Error("not a GIF");
+  const blocks = [];
+  const packed = u8[10];
+  const gct = (packed & 0x80) ? 3 * (1 << ((packed & 0x07) + 1)) : 0;
+  let idx = 13 + gct;
+  blocks.push({ type:"header", start:0, end:idx });
+  const skip = i => { while(i < u8.length){ const l = u8[i]; if(l === 0) return i + 1; i += 1 + l; } return i; };
+  while(idx < u8.length){
+    const b = u8[idx];
+    if(b === 0x3B){ blocks.push({ type:"trailer", start:idx, end:idx + 1 }); break; }
+    if(b === 0x2C){
+      let i = idx + 10;
+      const lp = u8[idx + 9];
+      if(lp & 0x80) i += 3 * (1 << ((lp & 0x07) + 1));
+      i += 1;               // LZW minimum code size
+      i = skip(i);
+      blocks.push({ type:"image", start:idx, end:i });
+      idx = i; continue;
+    }
+    if(b === 0x21){
+      const label = u8[idx + 1];
+      const i = skip(idx + 2);
+      const xmp = label === 0xFF && u8[idx + 2] === 11 && /^XMP Data/.test(asciiAt(u8, idx + 3, 11));
+      blocks.push({ type:"ext", label, start:idx, end:i, xmp });
+      idx = i; continue;
+    }
+    throw new Error("unexpected GIF block");
+  }
+  return blocks;
+}
+// GIF: drop Comment (0xFE) and XMP application (0xFF "XMP Data") extensions.
+// Image data, color tables and graphic-control blocks are copied verbatim → lossless.
+function stripGif(buf){
+  const u8 = new Uint8Array(buf);
+  const parts = [];
+  for(const blk of gifBlocks(u8)){
+    if(blk.type === "ext" && blk.label === 0xFE) continue;              // comment
+    if(blk.type === "ext" && blk.label === 0xFF && blk.xmp) continue;   // XMP packet
+    parts.push(u8.subarray(blk.start, blk.end));
+  }
+  return new Blob(parts, { type:"image/gif" });
+}
+
 async function cleanImage(rec){
   try{
     if(rec.ext === "png") return stripPng(rec.buffer);
     if(rec.ext === "webp") return stripWebp(rec.buffer);
+    if(rec.ext === "gif") return stripGif(rec.buffer);
     return stripJpeg(rec.buffer);
   }catch(e){
+    // GIF must never go through the lossy canvas re-encode — it would flatten
+    // the animation. Fail honestly instead.
+    if(rec.ext === "gif") throw new Error("This GIF has an unusual internal structure and couldn't be cleaned safely. Re-export it and try again.");
     return reencodeFallback(rec); // unusual internal structure → decode & re-encode
   }
 }
@@ -1668,6 +1825,7 @@ async function reencodeFallback(rec){
 async function ensureCleanedBlob(rec){
   if(!rec.cleanedBlob){
     if(rec.kind === "ooxml") rec.cleanedBlob = await cleanOoxml(rec);
+    else if(rec.kind === "odf") rec.cleanedBlob = await cleanOdf(rec);
     else if(rec.kind === "pdf") rec.cleanedBlob = await cleanPdf(rec);
     else rec.cleanedBlob = await cleanImage(rec);
   }
@@ -1690,6 +1848,7 @@ async function reScanCleaned(rec){
                   deepSelected: rec.deepSelected };
   try{
     if(rec.kind === "ooxml") await analyzeOoxml(probe, buf);
+    else if(rec.kind === "odf") await analyzeOdf(probe, buf);
     else if(rec.kind === "pdf") await analyzePdf(probe, buf);
     else await analyzeImage(probe, buf);
     // Only fields we intended to remove count against verification; intentionally
@@ -1779,9 +1938,8 @@ function renderCard(rec){
   }
   card.classList.toggle("is-clean", rec.status === "cleaned");
 
-  const typeLabel = rec.kind === "ooxml" ? rec.ext.toUpperCase()
-    : rec.kind === "pdf" ? "PDF"
-    : rec.kind === "image" ? rec.ext.toUpperCase() : "FILE";
+  const typeLabel = (rec.kind === "ooxml" || rec.kind === "odf" || rec.kind === "image") ? rec.ext.toUpperCase()
+    : rec.kind === "pdf" ? "PDF" : "FILE";
 
   const keptAfter = rec.verify && rec.verify.kept ? rec.verify.kept.length : 0;
   let stamp;
@@ -2209,7 +2367,8 @@ try{
     window.__BC = { analyzeOoxml, cleanOoxml, deepScanDocx, deepCleanDocx,
       deepScanPptx, deepCleanPptx, deepScanXlsx, deepCleanXlsx,
       flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
-      renderCard, refreshBar, setPro, isPro, files };
+      renderCard, refreshBar, setPro, isPro, files,
+      analyzeOdf, cleanOdf, analyzeImage, stripGif, gifBlocks };
   }
 }catch(e){}
 
