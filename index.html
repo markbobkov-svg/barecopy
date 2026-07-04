@@ -196,25 +196,6 @@
   .dz-pick-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   input[type=file]{display:none}
 
-  /* ---------- inspect-only mode ---------- */
-  .inspect-banner{
-    display:flex;gap:11px;align-items:flex-start;margin-top:24px;
-    background:var(--card);border:1px solid var(--line);
-    border-left:3px solid var(--ink-soft);border-radius:8px;
-    padding:12px 15px;font-size:14px;color:var(--ink-soft);line-height:1.5;
-  }
-  .inspect-banner strong{color:var(--ink);font-weight:600}
-  .inspect-banner a{color:var(--ink);text-decoration:underline;white-space:nowrap}
-  .inspect-banner .ib-dot{
-    width:8px;height:8px;border-radius:50%;background:var(--ink-soft);
-    margin-top:6px;flex:0 0 auto;
-  }
-  /* de-emphasize the clean action so inspecting doesn't feel like a funnel */
-  body.inspect .card-foot .btn:not(.done),
-  body.inspect #cleanAllBtn{
-    background:transparent;color:var(--ink);border-color:var(--line);font-weight:600;
-  }
-
   /* ---------- actions bar ---------- */
   .actions{
     margin-top:22px;display:none;align-items:center;justify-content:space-between;
@@ -494,11 +475,6 @@
     <p class="sub">Documents and photos hide the author, company, edit history and even GPS location in metadata. Drop a file to see what it reveals, then download a clean copy. <strong>Everything runs in your browser — the file never leaves this device.</strong></p>
   </section>
 
-  <div class="inspect-banner" id="inspectBanner" hidden>
-    <span class="ib-dot" aria-hidden="true"></span>
-    <div><strong>Inspect-only.</strong> See exactly what a file reveals about you — nothing is changed, and nothing is uploaded. You can still download a cleaned copy whenever you want. <a href="#" id="inspectExit">Switch to clean mode</a></div>
-  </div>
-
   <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose files to inspect">
     <span class="dz-glyph">[ ▒▒▒▒▒▒▒▒▒▒ ]</span>
     <div class="dz-title">Drop files or a folder here, or tap to choose</div>
@@ -652,7 +628,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.7.2",
+  version: "1.7.3",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
@@ -671,24 +647,6 @@ const $cards = document.getElementById("cards");
 const $bar = document.getElementById("actionsBar");
 const $count = document.getElementById("filesCount");
 const $cleanAll = document.getElementById("cleanAllBtn");
-
-// Inspect-only framing (/#inspect): show what a file reveals without pushing the
-// clean action. The original file is never modified in either mode; this only
-// changes emphasis, so it's an honest reframe, not a different code path.
-const $inspectBanner = document.getElementById("inspectBanner");
-function applyInspect(){
-  const on = location.hash === "#inspect";
-  document.body.classList.toggle("inspect", on);
-  if($inspectBanner) $inspectBanner.hidden = !on;
-}
-window.addEventListener("hashchange", applyInspect);
-applyInspect();
-const $inspectExit = document.getElementById("inspectExit");
-if($inspectExit) $inspectExit.addEventListener("click", e => {
-  e.preventDefault();
-  history.replaceState(null, "", location.pathname + location.search);
-  applyInspect();
-});
 
 // Single source of truth for the on-page version marker.
 (function(){ const el = document.getElementById("footVer");
