@@ -38,8 +38,6 @@
   header{border-bottom:1px solid var(--line)}
   .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
   .wordmark{font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:9px;color:var(--ink);text-decoration:none}
-  .wordmark .dot{width:10px;height:10px;border-radius:50%;background:var(--ink);position:relative}
-  .wordmark .dot::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--paper)}
   .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
   article{padding:44px 0 20px}
   .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
@@ -80,7 +78,7 @@
 <body>
 <header>
   <div class="wrap head-in">
-    <a class="wordmark" href="/"><span class="dot" aria-hidden="true"></span>Barecopy</a>
+    <a class="wordmark" href="/"><svg width="16" height="20" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg>Barecopy</a>
     <a class="head-cta" href="/">Open the tool</a>
   </div>
 </header>

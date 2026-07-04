@@ -74,13 +74,7 @@
     letter-spacing:.04em;text-transform:uppercase;
     display:flex;align-items:center;gap:9px;
   }
-  .wordmark .dot{
-    width:10px;height:10px;border-radius:50%;
-    background:var(--ink);position:relative;flex:0 0 auto;
-  }
-  .wordmark .dot::after{
-    content:"";position:absolute;inset:3px;border-radius:50%;background:var(--paper);
-  }
+  .wordmark svg{flex:0 0 auto;display:block}
   .local-badge{
     font-family:var(--mono);font-size:11px;font-weight:500;
     letter-spacing:.08em;text-transform:uppercase;
@@ -416,7 +410,7 @@
 
 <header>
   <div class="wrap head-in">
-    <div class="wordmark"><span class="dot" aria-hidden="true"></span>Barecopy</div>
+    <div class="wordmark"><svg width="16" height="20" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg>Barecopy</div>
     <div class="local-badge" title="All processing happens in this browser tab. You can disconnect from the internet and it still works.">
       <span class="pulse" aria-hidden="true"></span>Runs locally · nothing uploaded
     </div>
@@ -587,7 +581,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.5.1",
+  version: "1.5.2",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
@@ -2094,14 +2088,18 @@ async function buildReportPDF(data){
     for(let i=0;i<s.length;i+=maxChars){ ensure(12); text(s.slice(i,i+maxChars), x, size, mono, color); nl(1); }
   };
 
-  // header
-  // Center the dot on the wordmark's cap-height midpoint (drawText is
-  // baseline-anchored, drawCircle is center-anchored — so lift by ~cap/2).
-  const capMid = bold.heightAtSize(15) * 0.40;
-  page.drawCircle({ x: M+5, y: y + capMid, size: 4.5, color: ink });
-  text("BARECOPY", M+16, 15, bold, ink);
+  // header — draw the "b" mark from the logo geometry (stem + bowl ring) so the
+  // report matches the brand. Glyph units come from the source SVG; baseline at y.
+  const mk = 11 / 52.5;                     // scale a ~11pt-tall glyph
+  const mkS = 7 * mk;                        // brand stroke width
+  const gX = gx => M + (gx - 15.5) * mk;     // glyph x -> pdf x
+  const gY = gy => y + (60 - gy) * mk;       // glyph y -> pdf y (flip; baseline y)
+  page.drawLine({ start:{x:gX(19),y:gY(11)}, end:{x:gX(19),y:gY(60)}, thickness:mkS, color:ink });
+  page.drawCircle({ x:gX(37), y:gY(43), size:17*mk, borderColor:ink, borderWidth:mkS });
+  const markX = M + (57.5 - 15.5) * mk + 6;  // text starts just past the mark
+  text("BARECOPY", markX, 15, bold, ink);
   const markW = bold.widthOfTextAtSize("BARECOPY", 15);
-  text("VERIFICATION REPORT", M+16+markW+10, 15, font, soft);
+  text("VERIFICATION REPORT", markX+markW+10, 15, font, soft);
   nl(1.4);
   text("Generated " + data.generated + "   |   v" + data.version, M, 9, font, soft); nl(1.1);
   text("All processing performed locally in the browser. No file was transmitted.", M, 9, font, soft);
