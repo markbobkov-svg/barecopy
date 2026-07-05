@@ -773,13 +773,37 @@ $drop.addEventListener("keydown", e => {
   if(e.target !== $drop) return;
   if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openPicker($input); }
 });
-["dragenter","dragover"].forEach(ev =>
-  $drop.addEventListener(ev, e => { e.preventDefault(); $drop.classList.add("dragover"); })
-);
-["dragleave","drop"].forEach(ev =>
-  $drop.addEventListener(ev, e => { e.preventDefault(); $drop.classList.remove("dragover"); })
-);
-$drop.addEventListener("drop", onDrop);
+// The whole window accepts file drags: a file dropped anywhere must never
+// navigate the tab away (losing app state), and dragging files over the page
+// lights up the dropzone so the target is obvious. A depth counter owns the
+// highlight (dragenter/leave fire per element as the pointer crosses children).
+function dragHasFiles(e){
+  var t = e.dataTransfer && e.dataTransfer.types;
+  if(!t) return false;
+  for(var i = 0; i < t.length; i++) if(t[i] === "Files") return true; // DOMStringList-safe
+  return false;
+}
+let dragDepth = 0;
+document.addEventListener("dragenter", e => {
+  if(!dragHasFiles(e)) return;
+  e.preventDefault();
+  dragDepth++;
+  $drop.classList.add("dragover");
+});
+document.addEventListener("dragover", e => {
+  if(dragHasFiles(e)) e.preventDefault(); // cancel = drop allowed here, no navigation
+});
+document.addEventListener("dragleave", e => {
+  if(!dragHasFiles(e)) return;
+  if(--dragDepth <= 0){ dragDepth = 0; $drop.classList.remove("dragover"); }
+});
+document.addEventListener("drop", e => {
+  dragDepth = 0;
+  $drop.classList.remove("dragover");
+  if(!dragHasFiles(e)) return;            // text/URL drags keep default behaviour
+  e.preventDefault();
+  onDrop(e);                              // reuses the folder-walking intake unchanged
+});
 $input.addEventListener("change", () => { handleFiles($input.files); $input.value = ""; });
 
 const SUPPORTED = { docx:1, xlsx:1, pptx:1, odt:1, ods:1, odp:1, pdf:1, jpg:1, jpeg:1, png:1, webp:1, gif:1, heic:1, heif:1, avif:1, svg:1, mp4:1, mov:1, m4v:1 };
