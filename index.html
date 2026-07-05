@@ -277,6 +277,18 @@
   .stamp.cleaned{color:var(--clean)}
   .stamp.working{color:var(--ink-faint)}
   .stamp.failed{color:var(--warn)}
+  .head-right{flex:0 0 auto;display:flex;align-items:center;gap:8px}
+  /* remove control: quiet by default, no fill — matches the restrained card language */
+  .card-remove{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:24px;height:24px;padding:0;
+    border:none;background:none;cursor:pointer;
+    font-family:var(--brand);font-size:19px;line-height:1;
+    color:var(--ink-faint);border-radius:6px;
+    transition:color .15s ease,background .15s ease;
+  }
+  .card-remove:hover{color:var(--ink);background:var(--paper)}
+  .card-remove:focus-visible{outline:none;box-shadow:0 0 0 3px var(--focus-ring)}
 
   .card-body{padding:6px 18px 16px}
   .report-label{
@@ -564,10 +576,10 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=d063b32205" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=6f83fb2d3a" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=d063b32205" target="_blank" rel="noopener" aria-label="Open the sample verification report">
-        <img src="/sample-report-preview.png?v=d11a01c333" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
+      <a class="sample-shot" href="/sample-report.pdf?v=6f83fb2d3a" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+        <img src="/sample-report-preview.png?v=2de9d4aba8" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
   </section>
@@ -655,7 +667,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.7.6",
+  version: "1.7.7",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
@@ -2397,11 +2409,17 @@ function renderCard(rec){
     '<div class="card-head">' +
       '<div class="fmeta"><div class="fname">' + esc(rec.file.name) + '</div>' +
       '<div class="finfo">' + typeLabel + ' · ' + fmtSize(rec.file.size) + '</div></div>' +
-      stamp +
+      '<div class="head-right">' + stamp +
+        '<button type="button" class="card-remove" data-remove="' + rec.id +
+        '" aria-label="Remove ' + esc(rec.file.name) + '" title="Remove">&times;</button>' +
+      '</div>' +
     '</div>' + body;
 
   const btn = card.querySelector("[data-clean]");
   if(btn) btn.addEventListener("click", () => cleanFile(rec));
+
+  const rm = card.querySelector("[data-remove]");
+  if(rm) rm.addEventListener("click", () => removeFile(rec));
 
   card.querySelectorAll("input[data-deep]").forEach(cb => {
     cb.addEventListener("change", () => {
@@ -2421,6 +2439,15 @@ function renderCard(rec){
   });
 }
 
+// Remove a single dropped file from the page without a reload: drop its record,
+// pull its card, and re-sync the action bar (which hides itself when empty).
+function removeFile(rec){
+  files.delete(rec.id);
+  const card = document.getElementById("card-" + rec.id);
+  if(card) card.remove();
+  refreshBar();
+}
+
 function refreshBar(){
   const ready = readyFiles().length;
   if(files.size > 0){
@@ -2428,6 +2455,8 @@ function refreshBar(){
     $count.textContent = files.size + " file" + (files.size > 1 ? "s" : "") + " · processed on this device";
     $cleanAll.hidden = ready <= 1;
     $zip.hidden = ready <= 1;
+  } else {
+    $bar.classList.remove("show");
   }
   $chip.hidden = !isPro();
 }
