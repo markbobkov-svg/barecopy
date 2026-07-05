@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F6F5F0">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14181D">
+<script>(function(){try{var t=localStorage.getItem("bc_theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<title>Contact — Barecopy</title>
+<meta name="description" content="Questions, bug reports or licensing help for Barecopy. Send a message — it opens in your own email app; nothing is submitted to a server, in keeping with Barecopy's no-upload design.">
+<link rel="canonical" href="https://barecopy.com/contact.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Contact Barecopy">
+<meta property="og:description" content="Send a message — it opens in your own email app; nothing is submitted to a server.">
+<meta property="og:url" content="https://barecopy.com/contact.html">
+<meta property="og:image" content="https://barecopy.com/og.png">
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{
+    --paper:#F6F5F0; --card:#FCFBF6; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE; --divider:rgba(28,36,48,.22);
+    --clean:#1E7F4F; --clean-bg:#E9F4EE; --clean-line:#C4E0D0; --focus-ring:rgba(28,36,48,.18);
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  /* Dark palette — follows the OS preference, overridden by the in-page toggle
+     (data-theme) so an explicit choice wins both ways. Tokens only. */
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#14181D;--card:#1B2128;--ink:#E7E9EC;--ink-soft:#A3ABB5;--ink-faint:#6E7681;--line:#2C333B;--line-soft:#232A31;--clean:#54B383;--clean-bg:#16241C;--clean-line:#26382C;--divider:rgba(231,233,236,.20);--focus-ring:rgba(231,233,236,.24)}}
+  :root[data-theme="dark"]{--paper:#14181D;--card:#1B2128;--ink:#E7E9EC;--ink-soft:#A3ABB5;--ink-faint:#6E7681;--line:#2C333B;--line-soft:#232A31;--clean:#54B383;--clean-bg:#16241C;--clean-line:#26382C;--divider:rgba(231,233,236,.20);--focus-ring:rgba(231,233,236,.24)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 20px}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .wordmark .wm-div{width:1px;height:24px;background:var(--divider);flex:0 0 auto}
+  .head-right{display:flex;align-items:center;gap:12px}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  .theme-toggle{width:34px;height:34px;flex:0 0 auto;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border:none;background:none;border-radius:6px;padding:0;color:var(--ink-soft);transition:color .12s ease}
+  .theme-toggle:hover{color:var(--ink)}
+  .theme-toggle:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .theme-toggle svg{width:18px;height:18px;display:block}
+  .theme-toggle .i-sun{display:none}
+  .theme-toggle.is-dark .i-sun{display:block}
+  .theme-toggle.is-dark .i-moon{display:none}
+  article{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--brand);font-weight:600;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px}
+  .lead{margin-top:18px;font-size:18px;color:var(--ink-soft);max-width:56ch}
+  .privacy-note{margin-top:22px;font-size:14.5px;color:var(--ink-soft);border-left:2px solid var(--clean);padding:4px 0 4px 15px;max-width:60ch}
+  .privacy-note strong{color:var(--ink)}
+  .contact-form{margin-top:30px;display:flex;flex-direction:column;gap:18px;max-width:540px}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field label{font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--ink-soft)}
+  .field label .opt{font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-faint)}
+  .field input,.field textarea{font-family:var(--sans);font-size:16px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;width:100%;transition:border-color .12s ease,box-shadow .12s ease}
+  .field textarea{min-height:140px;resize:vertical;line-height:1.55}
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px var(--focus-ring)}
+  .field input::placeholder,.field textarea::placeholder{color:var(--ink-faint)}
+  .send{align-self:flex-start;font-family:var(--brand);font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:8px;padding:12px 22px;cursor:pointer;transition:opacity .12s ease}
+  .send:hover{opacity:.9}
+  .send:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .form-note{margin-top:16px;font-size:14px;color:var(--ink-faint)}
+  .form-note a{color:var(--ink-soft)}
+  footer{border-top:1px solid var(--line);margin-top:50px}
+  .foot-in{padding:22px 20px 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<!-- Vercel Web Analytics: anonymous, cookieless page views, same-origin
+     (/_vercel/insights/*), no file data. Loaded only where that endpoint
+     exists (live site / Vercel); skipped on localhost & preview hosts so it
+     doesn't 404 there. See security.html / privacy.html. -->
+<script>(function(){var h=location.hostname;if(h==="localhost"||h==="127.0.0.1"||h===""||h.endsWith(".github.dev")||h.endsWith(".gitpod.io"))return;window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";document.head.appendChild(s);})();</script>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="24" height="30" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V64.75" stroke="currentColor" stroke-width="9.5"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="9.5"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <div class="head-right"><a class="head-cta" href="/">Open the tool</a><button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch between light and dark" title="Switch light / dark" aria-pressed="false"><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg></button></div>
+  </div>
+</header>
+
+<main class="wrap">
+<article>
+  <div class="eyebrow">Contact</div>
+  <h1>Get in touch</h1>
+  <p class="lead">Questions about cleaning a file, a bug, or your Pro licence — send a message and we'll get back to you.</p>
+
+  <p class="privacy-note">This form opens the message in <strong>your own email app</strong>. Nothing is submitted to a Barecopy server — the same no-upload principle the tool itself runs on. If your device has no email app set up, write to us directly at the address below.</p>
+
+  <form class="contact-form" id="contactForm" novalidate>
+    <div class="field">
+      <label for="cf-name">Name <span class="opt">— optional</span></label>
+      <input type="text" id="cf-name" name="name" autocomplete="name" placeholder="Your name">
+    </div>
+    <div class="field">
+      <label for="cf-email">Your email <span class="opt">— so we can reply</span></label>
+      <input type="email" id="cf-email" name="email" autocomplete="email" placeholder="you@example.com" required>
+    </div>
+    <div class="field">
+      <label for="cf-msg">Message</label>
+      <textarea id="cf-msg" name="message" placeholder="How can we help?" required></textarea>
+    </div>
+    <button type="submit" class="send">Open email to send →</button>
+  </form>
+
+  <p class="form-note">Prefer to write directly? <a href="mailto:support@barecopy.com">support@barecopy.com</a></p>
+</article>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — clean documents before you send them.</span>
+    <span><a href="/">Home</a> &middot; <a href="/security.html">Security</a> &middot; <a href="/privacy.html">Privacy</a> &middot; <a href="/terms.html">Terms</a></span>
+  </div>
+</footer>
+
+<script>
+/* Build a mailto: from the form and hand off to the user's email client.
+   The site CSP is form-action 'none' (no native submit target), so we
+   preventDefault and navigate to the mailto: URL instead — no server, no
+   upload, consistent with the tool's client-only guarantee. */
+(function(){
+  var form=document.getElementById("contactForm");
+  if(!form) return;
+  form.addEventListener("submit",function(e){
+    e.preventDefault();
+    var name=(document.getElementById("cf-name").value||"").trim();
+    var email=(document.getElementById("cf-email").value||"").trim();
+    var msg=(document.getElementById("cf-msg").value||"").trim();
+    if(!email||!msg){ (email?document.getElementById("cf-msg"):document.getElementById("cf-email")).focus(); return; }
+    var subject="Barecopy — message from "+(name||email);
+    var body=msg+"\n\n— "+(name?name+" ":"")+"<"+email+">";
+    window.location.href="mailto:support@barecopy.com?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+  });
+})();
+</script>
+<script>(function(){var root=document.documentElement,btn=document.getElementById("themeToggle");if(!btn)return;var mq=window.matchMedia("(prefers-color-scheme: dark)");function effective(){var s=root.getAttribute("data-theme");return s||(mq.matches?"dark":"light");}function sync(){var d=effective()==="dark";btn.classList.toggle("is-dark",d);btn.setAttribute("aria-pressed",String(d));var c=getComputedStyle(root).getPropertyValue("--paper").trim()||(d?"#14181D":"#F6F5F0");var metas=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<metas.length;i++)metas[i].setAttribute("content",c);}sync();btn.addEventListener("click",function(){var next=effective()==="dark"?"light":"dark";root.setAttribute("data-theme",next);try{localStorage.setItem("bc_theme",next);}catch(e){}sync();});if(mq.addEventListener)mq.addEventListener("change",function(){if(!root.getAttribute("data-theme"))sync();});})();</script>
+</body>
+</html>
