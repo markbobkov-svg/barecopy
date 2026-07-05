@@ -1,0 +1,19 @@
+#!/bin/sh
+# Guard: refuse to push if the committed sample-report.pdf prints a version
+# other than index.html's BC_CONFIG.version. Regenerate with:
+#   node tools/gen-sample-report.mjs   (see DEPLOY.md)
+#
+# Enable this hook once per clone:  git config core.hooksPath tools/hooks
+ROOT="$(git rev-parse --show-toplevel)"
+CHECK="$ROOT/tools/hooks/check-sample-version.mjs"
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-push: node not found — skipping sample-report version check." >&2
+  exit 0
+fi
+if [ ! -f "$CHECK" ]; then
+  echo "pre-push: $CHECK missing — skipping sample-report version check." >&2
+  exit 0
+fi
+node "$CHECK" || exit 1
+exit 0
