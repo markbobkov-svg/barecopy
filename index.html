@@ -103,6 +103,11 @@
   header{
     border-bottom:1px solid var(--line);
     background:var(--paper);
+    /* Sticky on desktop: keeps the brand, Pricing, the theme toggle and the
+       trust chip in view on this long page. Unstuck on mobile (below) so the
+       wrapped two-row header doesn't eat the viewport. Flat — the hairline
+       border does the separating, no shadow, no motion. */
+    position:sticky;top:0;z-index:50;
   }
   .head-in{
     display:flex;align-items:center;justify-content:space-between;
@@ -117,8 +122,11 @@
   .local-badge{
     font-family:var(--mono);font-size:11px;font-weight:500;
     letter-spacing:.08em;text-transform:uppercase;
-    border:1px solid var(--ink);border-radius:3px;
-    padding:5px 9px;display:inline-flex;align-items:center;gap:7px;
+    /* Status chip, not a button: pill radius + hairline border matches the card
+       .stamp language, so this non-interactive badge no longer out-borders the
+       real theme-toggle button beside it. */
+    border:1px solid var(--line);border-radius:100px;
+    padding:5px 11px;display:inline-flex;align-items:center;gap:7px;
     white-space:nowrap;
   }
   .local-badge .pulse{
@@ -408,6 +416,10 @@
     /* balance helps the wide column (kills the orphan last format); on narrow
        screens the natural wrap keeps separators at line ends, so let it be. */
     .dz-formats{text-wrap:wrap}
+    /* the header wraps to two rows on mobile — keep it static so it doesn't eat
+       the viewport, with a smaller anchor offset (no sticky bar to clear). */
+    header{position:static}
+    .sample,.pro{scroll-margin-top:24px}
   }
 
   footer{
@@ -420,7 +432,7 @@
   .foot-in a{color:var(--ink-soft)}
 
   /* ---------- sample report ---------- */
-  .sample{margin-top:64px;border-top:1px solid var(--line);padding-top:36px;scroll-margin-top:28px}
+  .sample{margin-top:64px;border-top:1px solid var(--line);padding-top:36px;scroll-margin-top:76px}
   .sample-grid{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
   .sample-copy p{font-size:15px;color:var(--ink-soft);margin-top:12px}
   .sample-copy p:first-child{margin-top:0}
@@ -430,7 +442,7 @@
   .sample-shot:hover{box-shadow:0 6px 20px var(--shadow-md)}
   .sample-shot img{display:block;width:100%;height:auto}
   @media (max-width:640px){.sample-grid{grid-template-columns:1fr}}
-  .pro{margin-top:64px;border-top:1px solid var(--line);padding-top:36px;scroll-margin-top:28px}
+  .pro{margin-top:64px;border-top:1px solid var(--line);padding-top:36px;scroll-margin-top:76px}
   .tiers{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .tier{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column}
   .tier.highlight{border-color:var(--ink);border-width:1.5px}
@@ -480,13 +492,13 @@
     <div class="wordmark"><svg width="18" height="22" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V60" stroke="currentColor" stroke-width="7"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</div>
     <div class="head-right">
       <a class="nav-link" href="#pro">Pricing</a>
+      <div class="local-badge" aria-label="Runs locally — nothing uploaded" title="All processing happens in this browser tab. You can disconnect from the internet and it still works.">
+        <span class="pulse" aria-hidden="true"></span>Runs locally<span class="lb-more"> · nothing uploaded</span>
+      </div>
       <button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch between light and dark" title="Switch light / dark" aria-pressed="false">
         <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
         <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg>
       </button>
-      <div class="local-badge" aria-label="Runs locally — nothing uploaded" title="All processing happens in this browser tab. You can disconnect from the internet and it still works.">
-        <span class="pulse" aria-hidden="true"></span>Runs locally<span class="lb-more"> · nothing uploaded</span>
-      </div>
     </div>
   </div>
 </header>
