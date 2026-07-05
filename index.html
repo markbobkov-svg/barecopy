@@ -183,9 +183,12 @@
   }
   .dropzone:hover,.dropzone:focus-visible{border-color:var(--ink)}
   .dropzone:focus-visible{box-shadow:0 0 0 3px var(--focus-ring)}
-  .dropzone:active{border-color:var(--ink);background:var(--drag-bg)}
+  /* Drag/active feedback is the border + focus ring + a hair of scale. The fill
+     deliberately stays --card (no lighter "flash") so the box keeps its own
+     colour while a file is dragged over it. */
+  .dropzone:active{border-color:var(--ink)}
   .dropzone.dragover{
-    border-color:var(--ink);background:var(--drag-bg);transform:scale(1.006);
+    border-color:var(--ink);transform:scale(1.006);
     box-shadow:0 0 0 3px var(--focus-ring);
   }
   .dz-glyph{
