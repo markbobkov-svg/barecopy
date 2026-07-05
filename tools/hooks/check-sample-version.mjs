@@ -4,10 +4,34 @@
 import fs from "fs";
 import zlib from "zlib";
 import path from "path";
+import { execFileSync } from "child_process";
 import { fileURLToPath } from "url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const PDF = path.join(ROOT, "sample-report.pdf");
+const PNG = path.join(ROOT, "sample-report-preview.png");
+
+// Cheap staleness heuristic: the PDF and its preview should always be committed
+// together. If the PDF was last touched in a LATER commit than the PNG, the
+// preview is probably out of date. Uses commit timestamps (not file mtimes) so a
+// fresh clone/checkout never trips it. Warns only — never blocks the push.
+function lastCommitTime(file){
+  try {
+    const out = execFileSync("git", ["log", "-1", "--format=%ct", "--", file], { cwd: ROOT }).toString().trim();
+    return out ? parseInt(out, 10) : null;
+  } catch { return null; }
+}
+function warnIfPreviewStale(){
+  if(!fs.existsSync(PNG)){ console.error("pre-push: NOTE — sample-report-preview.png is missing."); return; }
+  const pdfT = lastCommitTime("sample-report.pdf"), pngT = lastCommitTime("sample-report-preview.png");
+  if(pdfT != null && pngT != null && pdfT > pngT){
+    console.error(
+      "pre-push: NOTE — sample-report.pdf was updated in a later commit than its preview; " +
+      "the PNG may be stale. Refresh it with:\n" +
+      "  npm i --no-save pdf-to-img @napi-rs/canvas && node tools/gen-sample-report.mjs"
+    );
+  }
+}
 
 function appVersion(){
   const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
@@ -63,4 +87,5 @@ if(printed.version !== app){
   process.exit(1);
 }
 console.error("pre-push: sample-report.pdf matches app version v" + app + " — OK.");
+warnIfPreviewStale();
 process.exit(0);
