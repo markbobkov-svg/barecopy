@@ -187,10 +187,10 @@
     user-select:none;
   }
   .dz-glyph svg{display:block;margin:0 auto}
-  .dz-title{font-family:var(--brand);font-weight:600;font-size:17px}
+  .dz-title{font-family:var(--brand);font-weight:600;font-size:17px;text-wrap:balance}
   .dz-formats{
     margin-top:10px;font-family:var(--mono);font-size:12px;
-    color:var(--ink-soft);letter-spacing:.03em;
+    color:var(--ink-soft);letter-spacing:.03em;text-wrap:balance;
   }
   .dz-note{
     margin-top:14px;font-size:13px;color:var(--ink-soft);
@@ -277,7 +277,8 @@
   .stamp.cleaned{color:var(--clean)}
   .stamp.working{color:var(--ink-faint)}
   .stamp.failed{color:var(--warn)}
-  .head-right{flex:0 0 auto;display:flex;align-items:center;gap:8px}
+  /* scoped to the card header so it doesn't override the page header's .head-right */
+  .card-head .head-right{flex:0 0 auto;display:flex;align-items:center;gap:8px}
   /* remove control: quiet by default, no fill — matches the restrained card language */
   .card-remove{
     display:inline-flex;align-items:center;justify-content:center;
@@ -404,6 +405,9 @@
   @media (max-width:640px){
     .how-grid{grid-template-columns:1fr;gap:20px}
     .row .k{flex-basis:118px}
+    /* balance helps the wide column (kills the orphan last format); on narrow
+       screens the natural wrap keeps separators at line ends, so let it be. */
+    .dz-formats{text-wrap:wrap}
   }
 
   footer{
@@ -416,7 +420,7 @@
   .foot-in a{color:var(--ink-soft)}
 
   /* ---------- sample report ---------- */
-  .sample{margin-top:64px;border-top:1px solid var(--line);padding-top:36px}
+  .sample{margin-top:64px;border-top:1px solid var(--line);padding-top:36px;scroll-margin-top:28px}
   .sample-grid{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
   .sample-copy p{font-size:15px;color:var(--ink-soft);margin-top:12px}
   .sample-copy p:first-child{margin-top:0}
@@ -426,9 +430,9 @@
   .sample-shot:hover{box-shadow:0 6px 20px var(--shadow-md)}
   .sample-shot img{display:block;width:100%;height:auto}
   @media (max-width:640px){.sample-grid{grid-template-columns:1fr}}
-  .pro{margin-top:64px;border-top:1px solid var(--line);padding-top:36px}
+  .pro{margin-top:64px;border-top:1px solid var(--line);padding-top:36px;scroll-margin-top:28px}
   .tiers{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .tier{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
+  .tier{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column}
   .tier.highlight{border-color:var(--ink);border-width:1.5px}
   .tier h3{font-family:var(--brand);font-size:16px;font-weight:600}
   .tier .price{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:6px}
@@ -436,6 +440,9 @@
   .tier ul{margin:14px 0 0 0;padding:0;list-style:none}
   .tier li{font-size:13.5px;color:var(--ink-soft);padding:5px 0;border-top:1px solid var(--line-soft)}
   .tier li::before{content:"— ";color:var(--ink-faint)}
+  /* Free tier has no CTA, so a quiet closing line anchors the bottom edge —
+     keeps it visually balanced against the taller, button-bearing Pro card. */
+  .tier-foot{margin-top:auto;padding-top:18px;font-size:12.5px;color:var(--ink-soft);line-height:1.5}
   .tier .btn{margin-top:16px;width:100%}
   .license-row{margin-top:14px;display:flex;gap:8px}
   .license-row input{flex:1;min-width:0;font-family:var(--mono);font-size:13px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
@@ -576,10 +583,10 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=6f83fb2d3a" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=0ade334301" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=6f83fb2d3a" target="_blank" rel="noopener" aria-label="Open the sample verification report">
-        <img src="/sample-report-preview.png?v=2de9d4aba8" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
+      <a class="sample-shot" href="/sample-report.pdf?v=0ade334301" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+        <img src="/sample-report-preview.png?v=d0a2b265b0" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
   </section>
@@ -596,6 +603,7 @@
           <li>Batch actions up to 3 files</li>
           <li>Runs locally — nothing uploaded</li>
         </ul>
+        <p class="tier-foot">No account needed — just drop a file above.</p>
       </div>
       <div class="tier highlight">
         <h3>Pro</h3>
@@ -667,7 +675,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.7.7",
+  version: "1.7.8",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
