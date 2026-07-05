@@ -103,11 +103,6 @@
   header{
     border-bottom:1px solid var(--line);
     background:var(--paper);
-    /* Sticky on desktop: keeps the brand, Pricing, the theme toggle and the
-       trust chip in view on this long page. Unstuck on mobile (below) so the
-       wrapped two-row header doesn't eat the viewport. Flat — the hairline
-       border does the separating, no shadow, no motion. */
-    position:sticky;top:0;z-index:50;
   }
   .head-in{
     display:flex;align-items:center;justify-content:space-between;
@@ -416,10 +411,6 @@
     /* balance helps the wide column (kills the orphan last format); on narrow
        screens the natural wrap keeps separators at line ends, so let it be. */
     .dz-formats{text-wrap:wrap}
-    /* the header wraps to two rows on mobile — keep it static so it doesn't eat
-       the viewport, with a smaller anchor offset (no sticky bar to clear). */
-    header{position:static}
-    .sample,.pro{scroll-margin-top:24px}
   }
 
   footer{
@@ -432,7 +423,7 @@
   .foot-in a{color:var(--ink-soft)}
 
   /* ---------- sample report ---------- */
-  .sample{margin-top:64px;border-top:1px solid var(--line);padding-top:36px;scroll-margin-top:76px}
+  .sample{margin-top:64px;border-top:1px solid var(--line);padding-top:36px;scroll-margin-top:28px}
   .sample-grid{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
   .sample-copy p{font-size:15px;color:var(--ink-soft);margin-top:12px}
   .sample-copy p:first-child{margin-top:0}
@@ -442,7 +433,7 @@
   .sample-shot:hover{box-shadow:0 6px 20px var(--shadow-md)}
   .sample-shot img{display:block;width:100%;height:auto}
   @media (max-width:640px){.sample-grid{grid-template-columns:1fr}}
-  .pro{margin-top:64px;border-top:1px solid var(--line);padding-top:36px;scroll-margin-top:76px}
+  .pro{margin-top:64px;border-top:1px solid var(--line);padding-top:36px;scroll-margin-top:28px}
   .tiers{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .tier{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column}
   .tier.highlight{border-color:var(--ink);border-width:1.5px}
