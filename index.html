@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Mobile browser chrome follows the theme. Values mirror --paper (light/dark);
+     keep in sync if that token changes. The toggle overwrites content in JS. -->
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F6F5F0">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14181D">
 <title>Remove Metadata from Word, PDF &amp; Photos — Online, 100% Local | Barecopy</title>
 <meta name="description" content="See the hidden author, company, edit history and GPS location inside your files — then remove it. Works with DOCX, XLSX, PPTX, PDF, JPG, PNG, WebP. Runs entirely in your browser: nothing is uploaded.">
 <link rel="canonical" href="https://barecopy.com/">
@@ -469,7 +473,14 @@
   if(!btn) return;
   var mq=window.matchMedia("(prefers-color-scheme: dark)");
   function effective(){ var s=root.getAttribute("data-theme"); return s||(mq.matches?"dark":"light"); }
-  function sync(){ var d=effective()==="dark"; btn.classList.toggle("is-dark",d); btn.setAttribute("aria-pressed",String(d)); }
+  function sync(){
+    var d=effective()==="dark"; btn.classList.toggle("is-dark",d); btn.setAttribute("aria-pressed",String(d));
+    // Keep the mobile URL-bar colour on the effective theme, overriding the
+    // media-matched metas so an explicit toggle wins.
+    var c=getComputedStyle(root).getPropertyValue("--paper").trim()||(d?"#14181D":"#F6F5F0");
+    var metas=document.querySelectorAll('meta[name="theme-color"]');
+    for(var i=0;i<metas.length;i++) metas[i].setAttribute("content",c);
+  }
   sync();
   btn.addEventListener("click",function(){
     var next=effective()==="dark"?"light":"dark";
