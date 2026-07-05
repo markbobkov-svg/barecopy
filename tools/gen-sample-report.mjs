@@ -17,6 +17,7 @@
 
 import { createRequire } from "module";
 import { fileURLToPath } from "url";
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
@@ -53,6 +54,10 @@ async function buildReportPDF(data){
   doc.setTitle("Barecopy Verification Report");
   doc.setProducer("Barecopy");
   doc.setCreator("Barecopy");
+  // Fixed dates make the PDF byte-deterministic (pdf-lib otherwise stamps "now"),
+  // so its content hash is stable across regenerations with unchanged data.
+  doc.setCreationDate(new Date(data.generated));
+  doc.setModificationDate(new Date(data.generated));
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const mono = await doc.embedFont(StandardFonts.Courier);
@@ -226,3 +231,19 @@ try {
   console.log("\nPDF done. To also refresh the preview PNG, install the one-off renderer and re-run:");
   console.log("  npm i --no-save pdf-to-img @napi-rs/canvas && node tools/gen-sample-report.mjs");
 }
+
+// --- cache-bust by content hash so the ?v= changes exactly when a file does ---
+// (version-based busting never changed on sample-only edits -> browsers/CDN
+// served a stale preview). Hashes are read from whatever is on disk now.
+const indexPath = path.join(ROOT, "index.html");
+const shortHash = f => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex").slice(0, 10);
+let idx = fs.readFileSync(indexPath, "utf8");
+const pdfHash = shortHash(path.join(ROOT, "sample-report.pdf"));
+idx = idx.replace(/\/sample-report\.pdf\?v=[^"'\s]*/g, "/sample-report.pdf?v=" + pdfHash);
+let pngHash = null;
+if(fs.existsSync(path.join(ROOT, "sample-report-preview.png"))){
+  pngHash = shortHash(path.join(ROOT, "sample-report-preview.png"));
+  idx = idx.replace(/\/sample-report-preview\.png\?v=[^"'\s]*/g, "/sample-report-preview.png?v=" + pngHash);
+}
+fs.writeFileSync(indexPath, idx);
+console.log("cache-busters -> pdf ?v=" + pdfHash + (pngHash ? "  png ?v=" + pngHash : "  (png unchanged)"));

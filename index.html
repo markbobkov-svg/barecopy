@@ -564,10 +564,10 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=1.7.6" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=d063b32205" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=1.7.6" target="_blank" rel="noopener" aria-label="Open the sample verification report">
-        <img src="/sample-report-preview.png?v=1.7.6" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
+      <a class="sample-shot" href="/sample-report.pdf?v=d063b32205" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+        <img src="/sample-report-preview.png?v=d11a01c333" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
   </section>
@@ -675,15 +675,12 @@ const $bar = document.getElementById("actionsBar");
 const $count = document.getElementById("filesCount");
 const $cleanAll = document.getElementById("cleanAllBtn");
 
-// Single source of truth for the on-page version marker + sample-report
-// cache-busters, so they never drift from BC_CONFIG.version again.
+// Single source of truth for the on-page version marker. (The sample-report
+// PDF/PNG are cache-busted by a content hash baked into their ?v= by
+// tools/gen-sample-report.mjs, so the URL changes exactly when the file does.)
 (function(){
   const el = document.getElementById("footVer");
   if(el) el.textContent = "Barecopy v" + BC_CONFIG.version + " — clean documents before you send them.";
-  const v = "?v=" + encodeURIComponent(BC_CONFIG.version);
-  document.querySelectorAll('a[href^="/sample-report.pdf"]').forEach(a => a.setAttribute("href", "/sample-report.pdf" + v));
-  const img = document.querySelector('img[src^="/sample-report-preview.png"]');
-  if(img) img.setAttribute("src", "/sample-report-preview.png" + v);
 })();
 
 /* ---------------- helpers ---------------- */
