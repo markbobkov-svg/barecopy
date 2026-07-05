@@ -82,7 +82,7 @@
     --drag-bg:#232B34; --shadow-sm:rgba(0,0,0,.40); --shadow-md:rgba(0,0,0,.55);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html{-webkit-text-size-adjust:100%}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
   body{
     background:var(--paper);
     color:var(--ink);
@@ -90,7 +90,9 @@
     font-size:16px;
     line-height:1.55;
     min-height:100vh;
+    -webkit-tap-highlight-color:transparent;
   }
+  ::selection{background:var(--ink);color:var(--paper)}
   .wrap{max-width:780px;margin:0 auto;padding:0 20px}
 
   /* ---------- header ---------- */
@@ -167,8 +169,10 @@
   }
   .dropzone:hover,.dropzone:focus-visible{border-color:var(--ink)}
   .dropzone:focus-visible{box-shadow:0 0 0 3px var(--focus-ring)}
+  .dropzone:active{border-color:var(--ink);background:var(--drag-bg)}
   .dropzone.dragover{
     border-color:var(--ink);background:var(--drag-bg);transform:scale(1.006);
+    box-shadow:0 0 0 3px var(--focus-ring);
   }
   .dz-glyph{
     color:var(--ink-faint);display:block;margin-bottom:14px;
@@ -426,12 +430,14 @@
   .faq summary{font-weight:600;font-size:15px;cursor:pointer;list-style:none}
   .faq summary::-webkit-details-marker{display:none}
   .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq summary:hover::before{color:var(--ink)}
   .faq details[open] summary::before{content:"–"}
   .faq p{margin-top:8px;font-size:14px;color:var(--ink-soft);line-height:1.6}
   @media (max-width:640px){.tiers{grid-template-columns:1fr}}
 
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation:none!important;transition:none!important}
+    html{scroll-behavior:auto}
   }
 </style>
 <!-- Vercel Web Analytics: anonymous, cookieless page views, same-origin
