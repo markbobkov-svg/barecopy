@@ -2344,12 +2344,11 @@ function renderCard(rec){
     body = '<div class="card-body"><div class="errbox">' + esc(rec.error) + '</div></div>';
   } else {
     let rows = "";
-    rec.fields.forEach((f, i) => {
+    rec.fields.forEach(f => {
       const removed = rec.status === "cleaned" && wasRemoved(rec, f);
       const kept = rec.status === "cleaned" && f.leak && f.value && !!f.deep &&
         !(rec.deepSelected && rec.deepSelected.has(f.deep));
-      rows += '<div class="row' + (f.leak ? ' leak' : '') + (removed ? ' removed' : '') + (kept ? ' kept' : '') +
-        '" style="animation-delay:' + Math.min(i * 45, 400) + 'ms">' +
+      rows += '<div class="row' + (f.leak ? ' leak' : '') + (removed ? ' removed' : '') + (kept ? ' kept' : '') + '">' +
         '<span class="k">' + esc(f.label) + '</span>' +
         '<span class="v">' + esc(f.value) + '</span></div>';
     });
