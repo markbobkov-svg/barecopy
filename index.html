@@ -139,13 +139,15 @@
   .theme-toggle{
     width:34px;height:34px;flex:0 0 auto;cursor:pointer;
     display:inline-flex;align-items:center;justify-content:center;
-    border:1px solid var(--line);border-radius:6px;
-    background:var(--card);color:var(--ink-soft);
-    transition:border-color .12s ease, color .12s ease;
+    /* Bare icon — no box: transparent, no border. The 34px keeps a comfortable
+       click/tap target; border-radius only rounds the keyboard focus ring. */
+    border:none;background:none;border-radius:6px;padding:0;
+    color:var(--ink-soft);
+    transition:color .12s ease;
   }
-  .theme-toggle:hover{border-color:var(--ink);color:var(--ink)}
+  .theme-toggle:hover{color:var(--ink)}
   .theme-toggle:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  .theme-toggle svg{width:16px;height:16px;display:block}
+  .theme-toggle svg{width:18px;height:18px;display:block}
   .theme-toggle .i-sun{display:none}
   .theme-toggle.is-dark .i-sun{display:block}
   .theme-toggle.is-dark .i-moon{display:none}
