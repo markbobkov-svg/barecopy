@@ -174,7 +174,7 @@ const data = {
       hashBefore: "11aa22bb33cc44dd55ee66ff77008899aabbccddeeff00112233445566778899",
       hashAfter:  "99887766554433221100ffeeddccbbaa99887766554433221100ffeeddccbbaa",
       removed: [
-        { label: "GPS location", value: "60.320000, 24.958333" },
+        { label: "GPS location", value: "37.000000, -122.000000" },
         { label: "Camera", value: "Apple iPhone 15 Pro" }
       ],
       deepActions: [], kept: [], warnings: [],
