@@ -189,7 +189,10 @@ fs.writeFileSync(path.join(ROOT, "sample-report.pdf"), Buffer.from(pdfBytes));
 console.log("wrote sample-report.pdf  (v" + VERSION + ")");
 
 // --- render the preview PNG (best effort; needs the one-off renderer) ---
-const TARGET_W = 1191, TARGET_H = 1044, PAGE_W = 595.28;
+// Render page 1, then crop off ONLY the letter page's empty tail so the preview
+// shows the whole report (both files + footer), matching the PDF — never cutting
+// content mid-item as a fixed-height crop would.
+const TARGET_W = 1191, PAGE_W = 595.28, BOTTOM_MARGIN = 36;
 try {
   const { pdf } = await import("pdf-to-img");
   const { createCanvas, loadImage } = await import("@napi-rs/canvas");
@@ -197,11 +200,26 @@ try {
   let first;
   for await (const p of doc) { first = p; break; }
   const img = await loadImage(first);
+
+  // find the last row with any non-near-white pixel = bottom of the content
+  const meas = createCanvas(img.width, img.height);
+  const mctx = meas.getContext("2d");
+  mctx.drawImage(img, 0, 0);
+  const px = mctx.getImageData(0, 0, img.width, img.height).data;
+  let lastContent = 0;
+  for(let y = 0; y < img.height; y++){
+    for(let x = 0; x < img.width; x++){
+      const i = (y * img.width + x) * 4;
+      if(px[i] < 245 || px[i+1] < 245 || px[i+2] < 245){ lastContent = y; break; }
+    }
+  }
+  const TARGET_H = Math.min(img.height, lastContent + BOTTOM_MARGIN);
+
   const canvas = createCanvas(TARGET_W, TARGET_H);
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, TARGET_W, TARGET_H);
-  ctx.drawImage(img, 0, 0); // top-left; smaller canvas crops the letter page's tail
+  ctx.drawImage(img, 0, 0); // top-left; the shorter canvas trims the empty tail only
   fs.writeFileSync(path.join(ROOT, "sample-report-preview.png"), canvas.toBuffer("image/png"));
   console.log("wrote sample-report-preview.png  (" + TARGET_W + "x" + TARGET_H + ")");
 } catch (e) {
