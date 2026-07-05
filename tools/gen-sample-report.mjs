@@ -157,8 +157,8 @@ const data = {
       hashBefore: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
       hashAfter:  "f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9",
       removed: [
-        { label: "Author", value: "Ivan Petrov" },
-        { label: "Company", value: "Finnair Technical" },
+        { label: "Author", value: "Michael Bennett" },
+        { label: "Company", value: "Northwind Advisory" },
         { label: "Manager", value: "Chief Engineer" },
         { label: "Total editing time", value: "4 h 5 min" },
         { label: "Custom · ClientCode", value: "SECRET-CLIENT-7" }
