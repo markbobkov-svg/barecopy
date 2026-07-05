@@ -76,13 +76,13 @@ async function buildReportPDF(data){
     for(let i=0;i<s.length;i+=maxChars){ ensure(12); text(s.slice(i,i+maxChars), x, size, mono, color); nl(1); }
   };
 
-  const mk = 11 / 52.5;
-  const mkS = 7 * mk;
-  const gX = gx => M + (gx - 15.5) * mk;
-  const gY = gy => y + (60 - gy) * mk;
-  page.drawLine({ start:{x:gX(19),y:gY(11)}, end:{x:gX(19),y:gY(60)}, thickness:mkS, color:ink });
+  const mk = 11 / 53.75;
+  const mkS = 9.5 * mk;
+  const gX = gx => M + (gx - 14.25) * mk;
+  const gY = gy => y + (64.75 - gy) * mk;
+  page.drawLine({ start:{x:gX(19),y:gY(11)}, end:{x:gX(19),y:gY(64.75)}, thickness:mkS, color:ink });
   page.drawCircle({ x:gX(37), y:gY(43), size:17*mk, borderColor:ink, borderWidth:mkS });
-  const divX = M + (57.5 - 15.5) * mk + 7;
+  const divX = M + (58.75 - 14.25) * mk + 7;
   page.drawLine({ start:{x:divX,y:y-2}, end:{x:divX,y:y+12}, thickness:0.75, color:line });
   const wordX = divX + 7;
   text("barecopy", wordX, 15, bold, ink);

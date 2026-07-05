@@ -594,10 +594,10 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=0ade334301" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=dfed95fc36" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=0ade334301" target="_blank" rel="noopener" aria-label="Open the sample verification report">
-        <img src="/sample-report-preview.png?v=d0a2b265b0" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
+      <a class="sample-shot" href="/sample-report.pdf?v=dfed95fc36" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+        <img src="/sample-report-preview.png?v=735bbbe89f" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
   </section>
@@ -2689,13 +2689,13 @@ async function buildReportPDF(data){
 
   // header — draw the "b" mark from the logo geometry (stem + bowl ring) so the
   // report matches the brand. Glyph units come from the source SVG; baseline at y.
-  const mk = 11 / 52.5;                     // scale a ~11pt-tall glyph
-  const mkS = 7 * mk;                        // brand stroke width
-  const gX = gx => M + (gx - 15.5) * mk;     // glyph x -> pdf x
-  const gY = gy => y + (60 - gy) * mk;       // glyph y -> pdf y (flip; baseline y)
-  page.drawLine({ start:{x:gX(19),y:gY(11)}, end:{x:gX(19),y:gY(60)}, thickness:mkS, color:ink });
+  const mk = 11 / 53.75;                    // scale the ~11pt-tall glyph
+  const mkS = 9.5 * mk;                      // brand stroke width (bolder mark)
+  const gX = gx => M + (gx - 14.25) * mk;    // glyph x -> pdf x (left stroke edge at margin)
+  const gY = gy => y + (64.75 - gy) * mk;    // glyph y -> pdf y (flip; mark bottom on baseline)
+  page.drawLine({ start:{x:gX(19),y:gY(11)}, end:{x:gX(19),y:gY(64.75)}, thickness:mkS, color:ink });
   page.drawCircle({ x:gX(37), y:gY(43), size:17*mk, borderColor:ink, borderWidth:mkS });
-  const divX = M + (57.5 - 15.5) * mk + 7;   // subtle divider after the mark
+  const divX = M + (58.75 - 14.25) * mk + 7; // subtle divider after the mark's right edge
   page.drawLine({ start:{x:divX,y:y-2}, end:{x:divX,y:y+12}, thickness:0.75, color:line });
   const wordX = divX + 7;                      // lowercase wordmark, matching the site
   text("barecopy", wordX, 15, bold, ink);
