@@ -806,6 +806,17 @@ document.addEventListener("drop", e => {
 });
 $input.addEventListener("change", () => { handleFiles($input.files); $input.value = ""; });
 
+// Paste a copied file or a screenshot (Ctrl/Cmd+V) into the same intake. Never
+// hijack a real text field (e.g. the licence key box) — only act on file items.
+window.addEventListener("paste", e => {
+  const fl = e.clipboardData && e.clipboardData.files;
+  if(!fl || !fl.length) return;
+  const t = e.target;
+  if(t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+  e.preventDefault();
+  handleFiles(fl);
+});
+
 const SUPPORTED = { docx:1, xlsx:1, pptx:1, odt:1, ods:1, odp:1, pdf:1, jpg:1, jpeg:1, png:1, webp:1, gif:1, heic:1, heif:1, avif:1, svg:1, mp4:1, mov:1, m4v:1 };
 
 // Drop can contain folders. The DataTransferItem entry API lets us walk the
