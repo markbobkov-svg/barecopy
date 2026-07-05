@@ -206,6 +206,8 @@
     font-family:var(--mono);font-size:12px;letter-spacing:.06em;
     text-transform:uppercase;color:var(--ink-soft);
   }
+  .actions-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  [hidden]{display:none!important}
 
   /* ---------- buttons ---------- */
   .btn{
@@ -221,6 +223,7 @@
   .btn.ghost{background:transparent;color:var(--ink)}
   .btn:disabled{opacity:.45;cursor:default;transform:none}
   .btn.done{background:var(--clean);border-color:var(--clean)}
+  a.btn{display:inline-block;text-decoration:none}
 
   /* ---------- file cards ---------- */
   .cards{margin-top:8px}
@@ -364,7 +367,7 @@
   .how{
     margin-top:64px;border-top:1px solid var(--line);padding-top:36px;
   }
-  .how h2{
+  .how h2,.sample h2,.pro h2,.faq h2{
     font-family:var(--brand);font-weight:600;font-size:14px;
     letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);
   }
@@ -389,18 +392,17 @@
   .foot-in a{color:var(--ink-soft)}
 
   /* ---------- sample report ---------- */
+  .sample{margin-top:64px;border-top:1px solid var(--line);padding-top:36px}
   .sample-grid{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
   .sample-copy p{font-size:15px;color:var(--ink-soft);margin-top:12px}
   .sample-copy p:first-child{margin-top:0}
   .sample-copy strong,.sample-copy em{color:var(--ink)}
-  .btn-sample{display:inline-block;margin-top:16px;font-weight:600;font-size:14.5px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
-  .btn-sample:hover{opacity:.88}
+  .btn-sample{margin-top:16px}
   .sample-shot{display:block;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card);box-shadow:0 1px 3px var(--shadow-sm);transition:box-shadow .15s ease}
   .sample-shot:hover{box-shadow:0 6px 20px var(--shadow-md)}
   .sample-shot img{display:block;width:100%;height:auto}
   @media (max-width:640px){.sample-grid{grid-template-columns:1fr}}
   .pro{margin-top:64px;border-top:1px solid var(--line);padding-top:36px}
-  .pro h2{font-family:var(--brand);font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
   .tiers{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .tier{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
   .tier.highlight{border-color:var(--ink);border-width:1.5px}
@@ -420,7 +422,6 @@
   .pro-chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--clean);color:var(--clean);border-radius:3px;padding:3px 7px}
   /* ---------- faq ---------- */
   .faq{margin-top:64px;border-top:1px solid var(--line);padding-top:36px}
-  .faq h2{font-family:var(--brand);font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
   .faq details{border-bottom:1px solid var(--line-soft);padding:14px 0}
   .faq summary{font-weight:600;font-size:15px;cursor:pointer;list-style:none}
   .faq summary::-webkit-details-marker{display:none}
@@ -496,9 +497,9 @@
 
   <div class="actions" id="actionsBar">
     <span class="files-count" id="filesCount"></span>
-    <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <span class="pro-chip" id="proChip" style="display:none">Pro active</span>
-      <button class="btn ghost" id="zipBtn" style="display:none">ZIP + report</button>
+    <span class="actions-right">
+      <span class="pro-chip" id="proChip" hidden>Pro active</span>
+      <button class="btn ghost" id="zipBtn" hidden>ZIP + report</button>
       <button class="btn" id="cleanAllBtn">Clean all &amp; download</button>
     </span>
   </div>
@@ -520,8 +521,6 @@
         <h3>Photos</h3>
         <p>All EXIF data: GPS coordinates, camera make and model, capture date, editing software. Metadata segments are cut out at byte level — pixels are copied untouched, so the clean copy is lossless. Works with full-size phone photos.</p>
       </div>
-    </div>
-    <div class="how-grid" style="margin-top:26px">
       <div class="how-item">
         <h3>Honest limits</h3>
         <p>Tracked changes and comments in Word are content, not metadata — Barecopy detects them and warns you, but you should accept or reject them in Word before sending.</p>
@@ -535,14 +534,15 @@
         <p>This page has no backend and never sends your files anywhere. Open DevTools → Network while cleaning a file: no file data leaves — just an anonymous page-view ping.</p>
       </div>
     </div>
+  </section>
 
   <section class="sample" id="sample">
-    <h2 style="font-family:var(--brand);font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:36px;margin-top:64px">Prove what you removed</h2>
+    <h2>Prove what you removed</h2>
     <div class="sample-grid">
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn-sample" href="/sample-report.pdf?v=1.5.4" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=1.5.4" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
       <a class="sample-shot" href="/sample-report.pdf?v=1.5.4" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=1.5.4" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
@@ -2366,10 +2366,10 @@ function refreshBar(){
   if(files.size > 0){
     $bar.classList.add("show");
     $count.textContent = files.size + " file" + (files.size > 1 ? "s" : "") + " · processed on this device";
-    $cleanAll.style.display = ready > 1 ? "" : "none";
-    $zip.style.display = ready > 1 ? "" : "none";
+    $cleanAll.hidden = ready <= 1;
+    $zip.hidden = ready <= 1;
   }
-  $chip.style.display = isPro() ? "" : "none";
+  $chip.hidden = !isPro();
 }
 
 /* ---------------- Pro: license, ZIP export, verification report ---------------- */
