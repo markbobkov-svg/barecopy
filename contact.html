@@ -7,7 +7,7 @@
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14181D">
 <script>(function(){try{var t=localStorage.getItem("bc_theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
 <title>Contact — Barecopy</title>
-<meta name="description" content="Questions, bug reports or licensing help for Barecopy. Send a message — it opens in your own email app; nothing is submitted to a server, in keeping with Barecopy's no-upload design.">
+<meta name="description" content="Questions, bug reports or licensing help for Barecopy. Send a message straight from the site — it goes to our support mailbox, no third-party form service, and your files never leave your browser.">
 <link rel="canonical" href="https://barecopy.com/contact.html">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Contact Barecopy">
-<meta property="og:description" content="Send a message — it opens in your own email app; nothing is submitted to a server.">
+<meta property="og:description" content="Send a message straight from the site — it reaches our support mailbox, and your files never leave your browser.">
 <meta property="og:url" content="https://barecopy.com/contact.html">
 <meta property="og:image" content="https://barecopy.com/og.png">
 <style>
@@ -23,15 +23,15 @@
   :root{
     --paper:#F6F5F0; --card:#FCFBF6; --ink:#1C2430; --ink-soft:#5B6472;
     --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE; --divider:rgba(28,36,48,.22);
-    --clean:#1E7F4F; --clean-bg:#E9F4EE; --clean-line:#C4E0D0; --focus-ring:rgba(28,36,48,.18);
+    --clean:#1E7F4F; --clean-bg:#E9F4EE; --clean-line:#C4E0D0; --focus-ring:rgba(28,36,48,.18); --leak:#C2273A;
     --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
     --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
     --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
   }
   /* Dark palette — follows the OS preference, overridden by the in-page toggle
      (data-theme) so an explicit choice wins both ways. Tokens only. */
-  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#14181D;--card:#1B2128;--ink:#E7E9EC;--ink-soft:#A3ABB5;--ink-faint:#6E7681;--line:#2C333B;--line-soft:#232A31;--clean:#54B383;--clean-bg:#16241C;--clean-line:#26382C;--divider:rgba(231,233,236,.20);--focus-ring:rgba(231,233,236,.24)}}
-  :root[data-theme="dark"]{--paper:#14181D;--card:#1B2128;--ink:#E7E9EC;--ink-soft:#A3ABB5;--ink-faint:#6E7681;--line:#2C333B;--line-soft:#232A31;--clean:#54B383;--clean-bg:#16241C;--clean-line:#26382C;--divider:rgba(231,233,236,.20);--focus-ring:rgba(231,233,236,.24)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#14181D;--card:#1B2128;--ink:#E7E9EC;--ink-soft:#A3ABB5;--ink-faint:#6E7681;--line:#2C333B;--line-soft:#232A31;--clean:#54B383;--clean-bg:#16241C;--clean-line:#26382C;--divider:rgba(231,233,236,.20);--focus-ring:rgba(231,233,236,.24);--leak:#E8677A}}
+  :root[data-theme="dark"]{--paper:#14181D;--card:#1B2128;--ink:#E7E9EC;--ink-soft:#A3ABB5;--ink-faint:#6E7681;--line:#2C333B;--line-soft:#232A31;--clean:#54B383;--clean-bg:#16241C;--clean-line:#26382C;--divider:rgba(231,233,236,.20);--focus-ring:rgba(231,233,236,.24);--leak:#E8677A}
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%}
   body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
@@ -69,6 +69,12 @@
   .send:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   .form-note{margin-top:16px;font-size:14px;color:var(--ink-faint)}
   .form-note a{color:var(--ink-soft)}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  .form-status{margin-top:2px;font-size:14.5px;line-height:1.5}
+  .form-status a{color:inherit;text-decoration:underline}
+  .form-status.is-ok{color:var(--clean)}
+  .form-status.is-err{color:var(--leak)}
+  .form-status.is-wait{color:var(--ink-soft)}
   footer{border-top:1px solid var(--line);margin-top:50px}
   .foot-in{padding:22px 20px 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
   .foot-in a{color:var(--ink-soft)}
@@ -94,7 +100,7 @@
   <h1>Get in touch</h1>
   <p class="lead">Questions about cleaning a file, a bug, or your Pro licence — send a message and we'll get back to you.</p>
 
-  <p class="privacy-note">This form opens the message in <strong>your own email app</strong>. Nothing is submitted to a Barecopy server — the same no-upload principle the tool itself runs on. If your device has no email app set up, write to us directly at the address below.</p>
+  <p class="privacy-note">Your message goes straight to our support mailbox from <strong>Barecopy's own server</strong> — no third-party form service in between. And as always, <strong>your files never leave your browser</strong>; only what you type here is sent.</p>
 
   <form class="contact-form" id="contactForm" novalidate>
     <div class="field">
@@ -109,7 +115,10 @@
       <label for="cf-msg">Message</label>
       <textarea id="cf-msg" name="message" placeholder="How can we help?" required></textarea>
     </div>
-    <button type="submit" class="send">Open email to send →</button>
+    <!-- Honeypot: hidden from people, tempting to bots. Real submits leave it empty. -->
+    <div class="hp" aria-hidden="true"><label>Company<input type="text" name="company" tabindex="-1" autocomplete="off"></label></div>
+    <button type="submit" class="send" id="cf-send">Send message →</button>
+    <p class="form-status" id="cf-status" role="status" aria-live="polite" hidden></p>
   </form>
 
   <p class="form-note">Prefer to write directly? <a href="mailto:support@barecopy.com">support@barecopy.com</a></p>
@@ -124,22 +133,37 @@
 </footer>
 
 <script>
-/* Build a mailto: from the form and hand off to the user's email client.
-   The site CSP is form-action 'none' (no native submit target), so we
-   preventDefault and navigate to the mailto: URL instead — no server, no
-   upload, consistent with the tool's client-only guarantee. */
+/* Post the message to our own /api/contact endpoint, which relays it over SMTP
+   server-side. Same-origin fetch, so the site CSP (connect-src 'self') allows it
+   with no third party. Files are never involved — only these form fields. */
 (function(){
   var form=document.getElementById("contactForm");
   if(!form) return;
+  var btn=document.getElementById("cf-send");
+  var status=document.getElementById("cf-status");
+  var EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  function show(kind,msg){ status.hidden=false; status.className="form-status is-"+kind; status.innerHTML=msg; }
   form.addEventListener("submit",function(e){
     e.preventDefault();
     var name=(document.getElementById("cf-name").value||"").trim();
     var email=(document.getElementById("cf-email").value||"").trim();
     var msg=(document.getElementById("cf-msg").value||"").trim();
-    if(!email||!msg){ (email?document.getElementById("cf-msg"):document.getElementById("cf-email")).focus(); return; }
-    var subject="Barecopy — message from "+(name||email);
-    var body=msg+"\n\n— "+(name?name+" ":"")+"<"+email+">";
-    window.location.href="mailto:support@barecopy.com?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+    if(!EMAIL.test(email)){ document.getElementById("cf-email").focus(); show("err","Please enter a valid email so we can reply."); return; }
+    if(!msg){ document.getElementById("cf-msg").focus(); show("err","Please add a message."); return; }
+    var company=(form.querySelector('[name="company"]')||{}).value||"";
+    btn.disabled=true; var label=btn.textContent; btn.textContent="Sending…";
+    show("wait","Sending…");
+    fetch("/api/contact",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name:name,email:email,message:msg,company:company})
+    }).then(function(r){ return r.json().catch(function(){return {ok:r.ok};}); })
+      .then(function(d){
+        if(d&&d.ok){ form.reset(); show("ok","Thanks — your message is on its way. We'll reply to "+email.replace(/[<>&]/g,"")+"."); }
+        else { show("err",(d&&d.error?d.error:"Something went wrong.")+" You can also email <a href='mailto:support@barecopy.com'>support@barecopy.com</a>."); }
+      })
+      .catch(function(){ show("err","Couldn't reach the server. Please email <a href='mailto:support@barecopy.com'>support@barecopy.com</a> directly."); })
+      .then(function(){ btn.disabled=false; btn.textContent=label; });
   });
 })();
 </script>

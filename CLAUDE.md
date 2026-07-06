@@ -28,7 +28,16 @@ Deployed on Vercel (static hosting). Payments via Polar (Pro subscription, €4/
   It is intentionally never regenerated so settings survive every code update.
 - **SEO / trust pages** (standalone HTML): `remove-author-name-word-document.html`,
   `word-to-pdf-metadata.html`, `remove-exif-gps-from-photos.html`, `security.html`,
-  plus `privacy.html` and `terms.html`. `sitemap.xml` / `robots.txt` list them.
+  plus `privacy.html`, `terms.html` and `contact.html`. `sitemap.xml` / `robots.txt` list them.
+- **One serverless function — `/api/contact.js`.** The single exception to "static
+  site." It relays the contact-form fields (name/email/message) to the support
+  mailbox over SMTP via `nodemailer` (the only npm `dependency`; that's why a
+  `package.json` exists — there is still **no build step**, Vercel just serves the
+  root statically and builds this function). The browser reaches it with a
+  same-origin `fetch('/api/contact')`, so the CSP is untouched. **It never touches
+  file data** — only the form's own fields. Config via env vars (see `.env.example`):
+  `SMTP_HOST/PORT/SECURE/USER/PASS`, `CONTACT_TO`, `CONTACT_FROM`. Run it locally
+  with `vercel dev` (the plain static server does not execute functions).
 
 ## Supported formats & how cleaning works
 - **DOCX, XLSX, PPTX** (OOXML) — unzip with jszip, strip `docProps/` core, app &

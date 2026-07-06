@@ -3,6 +3,12 @@
 node_modules/
 *.log
 
+# local env for `vercel dev` (SMTP creds for /api/contact) — never commit
+.env
+.env.local
+.env*.local
+.vercel
+
 # local test fixtures (not part of the site)
 demo-*.docx
 demo-*.xlsx

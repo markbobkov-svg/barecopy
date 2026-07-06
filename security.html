@@ -98,6 +98,7 @@
     <tr><td>Verification report (Pro)</td><td><strong>No.</strong> Generated in-browser; downloaded directly by the user.</td></tr>
     <tr><td>Pro licence key</td><td>Yes — sent only to the payment provider (Polar) to confirm subscription status. No file data accompanies it.</td></tr>
     <tr><td>Page-view analytics</td><td>Yes — an anonymous, cookieless page-view count (which page, referrer, country, device type) is recorded by Vercel Web Analytics from the site's own origin. No file data, file names or metadata are included.</td></tr>
+    <tr><td>Contact form message</td><td>Only if you use the contact page: the name, email and message you type are sent to Barecopy's own origin and relayed to the support mailbox over SMTP. No file data is involved, and it passes through no third-party form service.</td></tr>
   </table>
   <p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">Two things leave the device, and neither is file data: the licence check to the payment provider (a key), and an anonymous page-view ping used to count visits. File contents, the metadata found in them, and the cleaned copies are all blocked from leaving by the Content-Security-Policy above.</p>
 
