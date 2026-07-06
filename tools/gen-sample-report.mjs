@@ -80,20 +80,21 @@ async function buildReportPDF(data){
     for(let i=0;i<s.length;i+=maxChars){ ensure(12); text(s.slice(i,i+maxChars), x, size, mono, color); nl(1); }
   };
 
-  const mk = 11 / 53.75;
+  // Mark + wordmark in the same size ratio as the site header (svg 30px : 21px text).
+  const WM = 15;                                 // wordmark size (pt)
+  const mk = WM * 30 / (21 * 58);                // mark glyph ~19.9pt tall (header ratio)
   const mkS = 9.5 * mk;
   const gX = gx => M + (gx - 14.25) * mk;
   const gY = gy => y + (64.75 - gy) * mk;
   page.drawLine({ start:{x:gX(19),y:gY(11)}, end:{x:gX(19),y:gY(64.75)}, thickness:mkS, color:ink });
   page.drawCircle({ x:gX(37), y:gY(43), size:17*mk, borderColor:ink, borderWidth:mkS });
   const divX = M + (58.75 - 14.25) * mk + 7;
-  page.drawLine({ start:{x:divX,y:y-2}, end:{x:divX,y:y+12}, thickness:0.75, color:line });
+  page.drawLine({ start:{x:divX,y:y-3}, end:{x:divX,y:gY(15)}, thickness:0.75, color:line });
   const wordX = divX + 7;
-  // Brand wordmark as a vector outline (Space Grotesk 600) so it matches the
-  // site header. Baseline on y, like the "b" mark and the adjacent text.
-  page.drawSvgPath(BARECOPY_PATH, { x: wordX, y, scale: 15, color: ink });
-  const markW = 4.628 * 15;                    // advance width of the outline
-  text("verification report", wordX+markW+10, 15, font, soft);
+  // Brand wordmark as a vector outline (Space Grotesk 600) so it matches the site header.
+  page.drawSvgPath(BARECOPY_PATH, { x: wordX, y, scale: WM, color: ink });
+  const markW = 4.628 * WM;                      // advance width of the outline
+  text("verification report", wordX+markW+10, WM, font, soft);
   nl(1.4);
   text("Generated " + data.generated + "   |   v" + data.version, M, 9, font, soft); nl(1.1);
   text("All processing performed locally in the browser. No file was transmitted.", M, 9, font, soft);

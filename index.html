@@ -594,10 +594,10 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=d462281df9" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=a259a86492" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=d462281df9" target="_blank" rel="noopener" aria-label="Open the sample verification report">
-        <img src="/sample-report-preview.png?v=1b0d64167f" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
+      <a class="sample-shot" href="/sample-report.pdf?v=a259a86492" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+        <img src="/sample-report-preview.png?v=91df01ebab" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
   </section>
@@ -2691,22 +2691,23 @@ async function buildReportPDF(data){
     for(let i=0;i<s.length;i+=maxChars){ ensure(12); text(s.slice(i,i+maxChars), x, size, mono, color); nl(1); }
   };
 
-  // header — draw the "b" mark from the logo geometry (stem + bowl ring) so the
-  // report matches the brand. Glyph units come from the source SVG; baseline at y.
-  const mk = 11 / 53.75;                    // scale the ~11pt-tall glyph
-  const mkS = 9.5 * mk;                      // brand stroke width (bolder mark)
-  const gX = gx => M + (gx - 14.25) * mk;    // glyph x -> pdf x (left stroke edge at margin)
-  const gY = gy => y + (64.75 - gy) * mk;    // glyph y -> pdf y (flip; mark bottom on baseline)
+  // header — brand "b" mark + wordmark, kept in the SAME size ratio as the site
+  // header (there the mark svg is 30px tall next to 21px text). WM is the wordmark
+  // size; the mark glyph (53.75 units) is scaled so mark:wordmark matches. y = baseline.
+  const WM = 15;                                 // wordmark size (pt)
+  const mk = WM * 30 / (21 * 58);                // mark glyph ~19.9pt tall (30:21 header ratio)
+  const mkS = 9.5 * mk;                          // brand stroke width, scales with the mark
+  const gX = gx => M + (gx - 14.25) * mk;        // glyph x -> pdf x (left stroke edge at margin)
+  const gY = gy => y + (64.75 - gy) * mk;        // glyph y -> pdf y (flip; bowl bottom on baseline)
   page.drawLine({ start:{x:gX(19),y:gY(11)}, end:{x:gX(19),y:gY(64.75)}, thickness:mkS, color:ink });
   page.drawCircle({ x:gX(37), y:gY(43), size:17*mk, borderColor:ink, borderWidth:mkS });
-  const divX = M + (58.75 - 14.25) * mk + 7; // subtle divider after the mark's right edge
-  page.drawLine({ start:{x:divX,y:y-2}, end:{x:divX,y:y+12}, thickness:0.75, color:line });
-  const wordX = divX + 7;                      // lowercase wordmark, matching the site
-  // Brand wordmark as a vector outline (Space Grotesk 600) so it matches the
-  // site header. Baseline on y, like the "b" mark and the adjacent text.
-  page.drawSvgPath(BARECOPY_PATH, { x: wordX, y, scale: 15, color: ink });
-  const markW = 4.628 * 15;                    // advance width of the outline
-  text("verification report", wordX+markW+10, 15, font, soft);
+  const divX = M + (58.75 - 14.25) * mk + 7;     // subtle divider after the mark's right edge
+  page.drawLine({ start:{x:divX,y:y-3}, end:{x:divX,y:gY(15)}, thickness:0.75, color:line });
+  const wordX = divX + 7;                        // lowercase wordmark, matching the site
+  // Brand wordmark as a Space Grotesk 600 vector outline (matches the site header).
+  page.drawSvgPath(BARECOPY_PATH, { x: wordX, y, scale: WM, color: ink });
+  const markW = 4.628 * WM;                      // advance width of the outline
+  text("verification report", wordX+markW+10, WM, font, soft);
   nl(1.4);
   text("Generated " + data.generated + "   |   v" + data.version, M, 9, font, soft); nl(1.1);
   text("All processing performed locally in the browser. No file was transmitted.", M, 9, font, soft);
