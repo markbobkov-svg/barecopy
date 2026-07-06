@@ -1,18 +1,97 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Terms — Barecopy</title><link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F6F5F0">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14181D">
+<script>(function(){try{var t=localStorage.getItem("bc_theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<title>Terms — Barecopy</title>
+<meta name="description" content="Terms of use for Barecopy, the browser-based tool for inspecting and removing metadata from documents and images.">
+<link rel="canonical" href="https://barecopy.com/terms.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
 <link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
-<style>body{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;max-width:680px;margin:0 auto;padding:40px 20px;color:#1C2430;background:#F6F5F0;line-height:1.6}h1{font-size:24px}h2{font-size:17px;margin-top:28px}a{color:#1C2430}</style><!-- Vercel Web Analytics: anonymous, cookieless page views, same-origin
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{
+    --paper:#F6F5F0; --card:#FCFBF6; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE; --divider:rgba(28,36,48,.22);
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#14181D;--card:#1B2128;--ink:#E7E9EC;--ink-soft:#A3ABB5;--ink-faint:#6E7681;--line:#2C333B;--line-soft:#232A31;--divider:rgba(231,233,236,.20)}}
+  :root[data-theme="dark"]{--paper:#14181D;--card:#1B2128;--ink:#E7E9EC;--ink-soft:#A3ABB5;--ink-faint:#6E7681;--line:#2C333B;--line-soft:#232A31;--divider:rgba(231,233,236,.20)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 20px}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .wordmark .wm-div{width:1px;height:24px;background:var(--divider);flex:0 0 auto}
+  .head-right{display:flex;align-items:center;gap:12px}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  .theme-toggle{width:34px;height:34px;flex:0 0 auto;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border:none;background:none;border-radius:6px;padding:0;color:var(--ink-soft);transition:color .12s ease}
+  .theme-toggle:hover{color:var(--ink)}
+  .theme-toggle:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .theme-toggle svg{width:18px;height:18px;display:block}
+  .theme-toggle .i-sun{display:none}
+  .theme-toggle.is-dark .i-sun{display:block}
+  .theme-toggle.is-dark .i-moon{display:none}
+  main{padding:40px 0 16px}
+  h1{font-family:var(--brand);font-weight:600;font-size:28px;letter-spacing:-.01em}
+  h2{font-family:var(--brand);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin:30px 0 4px;padding-top:22px;border-top:1px solid var(--line-soft)}
+  p{margin-top:10px}
+  a{color:var(--ink)}
+  .back{display:inline-block;margin-top:30px;color:var(--ink-soft);text-decoration:none;font-size:15px}
+  .back:hover{color:var(--ink)}
+  footer{border-top:1px solid var(--line);margin-top:44px}
+  .foot-in{padding:22px 20px 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+</style>
+<!-- Vercel Web Analytics: anonymous, cookieless page views, same-origin
      (/_vercel/insights/*), no file data. Loaded only where that endpoint
      exists (live site / Vercel); skipped on localhost & preview hosts so it
      doesn't 404 there. See security.html / privacy.html. -->
 <script>(function(){var h=location.hostname;if(h==="localhost"||h==="127.0.0.1"||h===""||h.endsWith(".github.dev")||h.endsWith(".gitpod.io"))return;window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";document.head.appendChild(s);})();</script>
-</head><body>
-<h1>Terms of Use</h1>
-<p>Barecopy is a browser-based tool for inspecting and removing metadata from documents and images.</p>
-<h2>Your responsibility</h2><p>Always review cleaned files before sharing them. Barecopy removes metadata fields as described on the main page; it does not remove document content such as tracked changes, comments, or visible text (it warns where it detects them). You are responsible for verifying that a file is safe to share for your specific purpose.</p>
-<h2>No warranty</h2><p>The tool is provided "as is", without warranty of any kind. To the maximum extent permitted by law, we are not liable for any damages arising from its use, including disclosure of information that remained in a file.</p>
-<h2>Pro license</h2><p>An active Pro subscription grants a personal, non-transferable license to the Pro features. When the subscription ends, Pro features pause; your files and free features are unaffected. Billing, cancellation and refunds are handled by Polar as merchant of record; if something doesn't work, get in touch and we'll fix it or refund you.</p>
-<h2>Acceptable use</h2><p>Don't use Barecopy to violate the law, including tampering with documents where metadata integrity is legally required.</p>
-<p><a href="/">← Back to Barecopy</a></p></body></html>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="24" height="30" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V64.75" stroke="currentColor" stroke-width="9.5"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="9.5"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <div class="head-right"><a class="head-cta" href="/">Open the tool</a><button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch between light and dark" title="Switch light / dark" aria-pressed="false"><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg></button></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>Terms of Use</h1>
+  <p>Barecopy is a browser-based tool for inspecting and removing metadata from documents and images.</p>
+
+  <h2>Your responsibility</h2>
+  <p>Always review cleaned files before sharing them. Barecopy removes metadata fields as described on the main page; it does not remove document content such as tracked changes, comments, or visible text (it warns where it detects them). You are responsible for verifying that a file is safe to share for your specific purpose.</p>
+
+  <h2>No warranty</h2>
+  <p>The tool is provided "as is", without warranty of any kind. To the maximum extent permitted by law, we are not liable for any damages arising from its use, including disclosure of information that remained in a file.</p>
+
+  <h2>Pro license</h2>
+  <p>An active Pro subscription grants a personal, non-transferable license to the Pro features. When the subscription ends, Pro features pause; your files and free features are unaffected. Billing, cancellation and refunds are handled by Polar as merchant of record; if something doesn't work, <a href="/contact.html">get in touch</a> and we'll fix it or refund you.</p>
+
+  <h2>Acceptable use</h2>
+  <p>Don't use Barecopy to violate the law, including tampering with documents where metadata integrity is legally required.</p>
+
+  <a class="back" href="/">← Back to Barecopy</a>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — clean documents before you send them.</span>
+    <span><a href="/">Home</a> &middot; <a href="/security.html">Security</a> &middot; <a href="/privacy.html">Privacy</a> &middot; <a href="/contact.html">Contact</a></span>
+  </div>
+</footer>
+
+<script>(function(){var root=document.documentElement,btn=document.getElementById("themeToggle");if(!btn)return;var mq=window.matchMedia("(prefers-color-scheme: dark)");function effective(){var s=root.getAttribute("data-theme");return s||(mq.matches?"dark":"light");}function sync(){var d=effective()==="dark";btn.classList.toggle("is-dark",d);btn.setAttribute("aria-pressed",String(d));var c=getComputedStyle(root).getPropertyValue("--paper").trim()||(d?"#14181D":"#F6F5F0");var metas=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<metas.length;i++)metas[i].setAttribute("content",c);}sync();btn.addEventListener("click",function(){var next=effective()==="dark"?"light":"dark";root.setAttribute("data-theme",next);try{localStorage.setItem("bc_theme",next);}catch(e){}sync();});if(mq.addEventListener)mq.addEventListener("change",function(){if(!root.getAttribute("data-theme"))sync();});})();</script>
+</body>
+</html>

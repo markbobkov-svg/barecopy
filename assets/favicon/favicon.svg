@@ -1,7 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
   <rect width="48" height="48" rx="10.5" fill="#1a1a1a"></rect>
-  <svg x="14" y="11" width="20" height="26" viewBox="16.5 11 40 51.5" fill="none">
-    <path d="M19 11 V60" stroke="#f4f2ec" stroke-width="7" stroke-linecap="butt"></path>
-    <circle cx="37" cy="43" r="17" stroke="#f4f2ec" stroke-width="7"></circle>
-  </svg>
+  <!-- "b" mark, centered: same geometry as the site header (stem + bowl share one
+       baseline, stroke 9.5). translate->scale->translate centers the glyph
+       (center 36.5,37.875) in the badge and sizes it to ~30/48 of the badge. -->
+  <g transform="translate(24 24) scale(0.558) translate(-36.5 -37.875)" fill="none" stroke="#f4f2ec" stroke-width="9.5" stroke-linecap="butt">
+    <path d="M19 11V64.75"></path>
+    <circle cx="37" cy="43" r="17"></circle>
+  </g>
 </svg>
