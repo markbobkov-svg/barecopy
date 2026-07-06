@@ -108,7 +108,11 @@
     background:var(--paper);
   }
   .head-in{
-    display:flex;align-items:center;justify-content:space-between;
+    /* baseline (not center): the wordmark box is taller than its text because
+       the b-mark rises above the cap line, so centering the box dropped the
+       "barecopy" text baseline below Pricing / the chip / the toggle. Aligning
+       the row by baseline puts the wordmark text on the same line as them. */
+    display:flex;align-items:baseline;justify-content:space-between;
     padding:18px 20px;gap:12px;flex-wrap:wrap;
   }
   .wordmark{
