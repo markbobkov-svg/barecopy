@@ -132,7 +132,25 @@
     flex:0 0 auto;animation:pulseSoft 2.6s ease-in-out infinite;
   }
   @keyframes pulseSoft{0%,100%{opacity:1}50%{opacity:.45}}
-  @media (max-width:480px){.local-badge .lb-more{display:none}}
+  /* Keep the header on ONE line at phone widths — no wrap to a second row.
+     Tighten padding, gaps, wordmark and the trust-chip so it all fits. */
+  @media (max-width:480px){
+    .local-badge .lb-more{display:none}
+    .head-in{flex-wrap:nowrap;padding:14px 15px;gap:10px}
+    .wordmark{font-size:18px;gap:8px;flex:0 0 auto}
+    .wordmark svg{width:20px;height:25px}
+    .wordmark .wm-div{height:21px}
+    .head-right{gap:10px;flex:0 0 auto}
+    .nav-link{font-size:13px}
+    .local-badge{font-size:10px;letter-spacing:.05em;padding:4px 9px;gap:6px}
+    .local-badge .pulse{width:6px;height:6px}
+    .theme-toggle{width:30px;height:30px}
+  }
+  @media (max-width:360px){
+    .head-in{padding:14px 12px}
+    .wordmark{font-size:17px}
+    .local-badge{font-size:9.5px;letter-spacing:.03em;padding:4px 8px}
+  }
   .head-right{display:flex;align-items:center;gap:12px}
   .nav-link{font-size:13.5px;font-weight:500;color:var(--ink-soft);text-decoration:none}
   .nav-link:hover{color:var(--ink);text-decoration:underline}
@@ -594,10 +612,10 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=a259a86492" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=4fedc44ff4" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=a259a86492" target="_blank" rel="noopener" aria-label="Open the sample verification report">
-        <img src="/sample-report-preview.png?v=91df01ebab" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
+      <a class="sample-shot" href="/sample-report.pdf?v=4fedc44ff4" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+        <img src="/sample-report-preview.png?v=2deee94c8b" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
   </section>
@@ -686,7 +704,7 @@
    file you edit by hand. It's never regenerated, so your values persist
    across every code update here. Do not put them in this file. */
 const BC_CONFIG = {
-  version: "1.7.9",
+  version: "1.7.10",
   freeBatchLimit: 3,
   polarApi: "https://api.polar.sh",
   polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
