@@ -3,10 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Mobile browser chrome follows the theme. Values mirror --paper (light/dark);
-     keep in sync if that token changes. The toggle overwrites content in JS. -->
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F6F5F0">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14181D">
+<!-- Mobile browser chrome colour. Mirrors --paper; keep in sync if that token changes. -->
+<meta name="theme-color" content="#F6F5F0">
 <title>Remove Metadata from Word, PDF &amp; Photos — Online, 100% Local | Barecopy</title>
 <meta name="description" content="See the hidden author, company, edit history and GPS location inside your files — then remove it. Works with DOCX, XLSX, PPTX, PDF, JPG, PNG, WebP. Runs entirely in your browser: nothing is uploaded.">
 <link rel="canonical" href="https://www.barecopy.com/">
@@ -30,15 +28,10 @@
 <!-- Fonts self-hosted from same origin (see fonts.css + /fonts/). No external
      requests: corporate networks that block CDNs must still render correctly. -->
 <link href="/fonts.css" rel="stylesheet">
-<script>
-/* Apply a saved light/dark choice before first paint to avoid a flash.
-   No preference = follow the OS via the CSS prefers-color-scheme rules. */
-(function(){try{var t=localStorage.getItem("bc_theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();
-</script>
 <style>
   :root{
     --paper:#F6F5F0;
-    /* Surfaces (cards, dropzone, theme toggle, stamps) sit a few tones ABOVE
+    /* Surfaces (cards, dropzone, stamps) sit a few tones ABOVE
        paper — a warm off-white, deliberately NOT pure #FFF, so fills read as the
        same material as the page instead of glaring white. Borders do the edges. */
     --card:#FCFBF6;
@@ -65,29 +58,6 @@
     --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
     --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   }
-  /* Dark palette — applied by the OS preference, and overridden by the
-     in-page toggle (data-theme) below so the toggle wins both directions.
-     Only tokens change; every component is styled through the tokens. */
-  @media (prefers-color-scheme:dark){
-    :root:not([data-theme="light"]){
-      --paper:#14181D; --card:#1B2128; --ink:#E7E9EC; --ink-soft:#A3ABB5;
-      --ink-faint:#6E7681; --line:#2C333B; --line-soft:#232A31;
-      --leak:#E8677A; --leak-bg:#2A1C20; --leak-line:#3E2A2F;
-      --clean:#54B383; --clean-bg:#16241C; --clean-line:#26382C;
-      --warn:#D6A34A; --warn-bg:#26200F; --warn-line:#3A3018;
-      --divider:rgba(231,233,236,.20); --focus-ring:rgba(231,233,236,.24);
-      --drag-bg:#232B34; --shadow-sm:rgba(0,0,0,.40); --shadow-md:rgba(0,0,0,.55);
-    }
-  }
-  :root[data-theme="dark"]{
-    --paper:#14181D; --card:#1B2128; --ink:#E7E9EC; --ink-soft:#A3ABB5;
-    --ink-faint:#6E7681; --line:#2C333B; --line-soft:#232A31;
-    --leak:#E8677A; --leak-bg:#2A1C20; --leak-line:#3E2A2F;
-    --clean:#54B383; --clean-bg:#16241C; --clean-line:#26382C;
-    --warn:#D6A34A; --warn-bg:#26200F; --warn-line:#3A3018;
-    --divider:rgba(231,233,236,.20); --focus-ring:rgba(231,233,236,.24);
-    --drag-bg:#232B34; --shadow-sm:rgba(0,0,0,.40); --shadow-md:rgba(0,0,0,.55);
-  }
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
   body{
@@ -110,7 +80,7 @@
   .head-in{
     /* baseline (not center): the wordmark box is taller than its text because
        the b-mark rises above the cap line, so centering the box dropped the
-       "barecopy" text baseline below Pricing / the chip / the toggle. Aligning
+       "barecopy" text baseline below Pricing / the chip. Aligning
        the row by baseline puts the wordmark text on the same line as them. */
     display:flex;align-items:baseline;justify-content:space-between;
     padding:18px 20px;gap:12px;flex-wrap:wrap;
@@ -125,8 +95,8 @@
     font-family:var(--mono);font-size:11px;font-weight:500;
     letter-spacing:.08em;text-transform:uppercase;
     /* Status chip, not a button: pill radius + hairline border matches the card
-       .stamp language, so this non-interactive badge no longer out-borders the
-       real theme-toggle button beside it. */
+       .stamp language, so this non-interactive badge reads as a status chip
+       rather than a control. */
     border:1px solid var(--line);border-radius:100px;
     padding:5px 11px;display:inline-flex;align-items:center;gap:7px;
     white-space:nowrap;
@@ -148,7 +118,6 @@
     .nav-link{font-size:13px}
     .local-badge{font-size:10px;letter-spacing:.05em;padding:4px 9px;gap:6px}
     .local-badge .pulse{width:6px;height:6px}
-    .theme-toggle{width:30px;height:30px}
   }
   @media (max-width:360px){
     .head-in{padding:14px 12px}
@@ -158,21 +127,6 @@
   .head-right{display:flex;align-items:center;gap:12px}
   .nav-link{font-size:13.5px;font-weight:500;color:var(--ink-soft);text-decoration:none}
   .nav-link:hover{color:var(--ink);text-decoration:underline}
-  .theme-toggle{
-    width:34px;height:34px;flex:0 0 auto;cursor:pointer;
-    display:inline-flex;align-items:center;justify-content:center;
-    /* Bare icon — no box: transparent, no border. The 34px keeps a comfortable
-       click/tap target; border-radius only rounds the keyboard focus ring. */
-    border:none;background:none;border-radius:6px;padding:0;
-    color:var(--ink-soft);
-    transition:color .12s ease;
-  }
-  .theme-toggle:hover{color:var(--ink)}
-  .theme-toggle:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  .theme-toggle svg{width:18px;height:18px;display:block}
-  .theme-toggle .i-sun{display:none}
-  .theme-toggle.is-dark .i-sun{display:block}
-  .theme-toggle.is-dark .i-moon{display:none}
 
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px}
@@ -520,38 +474,9 @@
       <div class="local-badge" aria-label="Runs locally — nothing uploaded" title="All processing happens in this browser tab. You can disconnect from the internet and it still works.">
         <span class="pulse" aria-hidden="true"></span>Runs locally<span class="lb-more"> · nothing uploaded</span>
       </div>
-      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch between light and dark" title="Switch light / dark" aria-pressed="false">
-        <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
-        <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg>
-      </button>
     </div>
   </div>
 </header>
-<script>
-/* Theme toggle. Early-applied in <head> to avoid a flash; this wires the button. */
-(function(){
-  var root=document.documentElement, btn=document.getElementById("themeToggle");
-  if(!btn) return;
-  var mq=window.matchMedia("(prefers-color-scheme: dark)");
-  function effective(){ var s=root.getAttribute("data-theme"); return s||(mq.matches?"dark":"light"); }
-  function sync(){
-    var d=effective()==="dark"; btn.classList.toggle("is-dark",d); btn.setAttribute("aria-pressed",String(d));
-    // Keep the mobile URL-bar colour on the effective theme, overriding the
-    // media-matched metas so an explicit toggle wins.
-    var c=getComputedStyle(root).getPropertyValue("--paper").trim()||(d?"#14181D":"#F6F5F0");
-    var metas=document.querySelectorAll('meta[name="theme-color"]');
-    for(var i=0;i<metas.length;i++) metas[i].setAttribute("content",c);
-  }
-  sync();
-  btn.addEventListener("click",function(){
-    var next=effective()==="dark"?"light":"dark";
-    root.setAttribute("data-theme",next);
-    try{ localStorage.setItem("bc_theme",next); }catch(e){}
-    sync();
-  });
-  if(mq.addEventListener) mq.addEventListener("change",function(){ if(!root.getAttribute("data-theme")) sync(); });
-})();
-</script>
 
 <main class="wrap">
   <section class="hero">
