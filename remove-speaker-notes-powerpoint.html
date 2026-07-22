@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F6F5F0">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14181D">
-<script>(function(){try{var t=localStorage.getItem("bc_theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<meta name="theme-color" content="#F6F5F0">
 <title>How to Remove Speaker Notes and Metadata from a PowerPoint (2026) | Barecopy</title>
 <meta name="description" content="Speaker notes are hidden in slideshow view but travel inside the .pptx file — anyone who opens it can read your talking points. Here's how to remove speaker notes and author metadata, without uploading the file.">
 <link rel="canonical" href="https://www.barecopy.com/remove-speaker-notes-powerpoint.html">
@@ -35,10 +33,6 @@
     --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
     --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
   }
-  /* Dark palette — follows the OS preference, overridden by the in-page toggle
-     (data-theme) so an explicit choice wins both ways. Tokens only. */
-  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#14181D;--card:#1B2128;--ink:#E7E9EC;--ink-soft:#A3ABB5;--ink-faint:#6E7681;--line:#2C333B;--line-soft:#232A31;--leak:#E8677A;--leak-bg:#2A1C20;--leak-line:#3E2A2F;--clean:#54B383;--clean-bg:#16241C;--clean-line:#26382C;--warn:#D6A34A;--warn-bg:#26200F;--warn-line:#3A3018;--divider:rgba(231,233,236,.20);--focus-ring:rgba(231,233,236,.24)}}
-  :root[data-theme="dark"]{--paper:#14181D;--card:#1B2128;--ink:#E7E9EC;--ink-soft:#A3ABB5;--ink-faint:#6E7681;--line:#2C333B;--line-soft:#232A31;--leak:#E8677A;--leak-bg:#2A1C20;--leak-line:#3E2A2F;--clean:#54B383;--clean-bg:#16241C;--clean-line:#26382C;--warn:#D6A34A;--warn-bg:#26200F;--warn-line:#3A3018;--divider:rgba(231,233,236,.20);--focus-ring:rgba(231,233,236,.24)}
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%}
   body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
@@ -48,13 +42,6 @@
   .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:baseline;gap:11px;color:var(--ink);text-decoration:none}
   .wordmark svg{flex:0 0 auto;display:block}
   .head-right{display:flex;align-items:center;gap:12px}
-  .theme-toggle{width:34px;height:34px;flex:0 0 auto;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border:none;background:none;border-radius:6px;padding:0;color:var(--ink-soft);transition:color .12s ease}
-  .theme-toggle:hover{color:var(--ink)}
-  .theme-toggle:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  .theme-toggle svg{width:18px;height:18px;display:block}
-  .theme-toggle .i-sun{display:none}
-  .theme-toggle.is-dark .i-sun{display:block}
-  .theme-toggle.is-dark .i-moon{display:none}
   .wordmark .wm-div{width:1px;height:24px;background:var(--divider);flex:0 0 auto}
   .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
   article{padding:44px 0 20px}
@@ -95,7 +82,7 @@
 <header>
   <div class="wrap head-in">
     <a class="wordmark" href="/"><svg width="24" height="30" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V64.75" stroke="currentColor" stroke-width="9.5"/><circle cx="37" cy="43" r="17" stroke="currentColor" stroke-width="9.5"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
-    <div class="head-right"><a class="head-cta" href="/">Open the tool</a><button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch between light and dark" title="Switch light / dark" aria-pressed="false"><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg></button></div>
+    <div class="head-right"><a class="head-cta" href="/">Open the tool</a></div>
   </div>
 </header>
 
@@ -164,6 +151,5 @@
     <span><a href="/">Home</a> · <a href="/privacy.html">Privacy</a> &middot; <a href="/contact.html">Contact</a></span>
   </div>
 </footer>
-<script>(function(){var root=document.documentElement,btn=document.getElementById("themeToggle");if(!btn)return;var mq=window.matchMedia("(prefers-color-scheme: dark)");function effective(){var s=root.getAttribute("data-theme");return s||(mq.matches?"dark":"light");}function sync(){var d=effective()==="dark";btn.classList.toggle("is-dark",d);btn.setAttribute("aria-pressed",String(d));var c=getComputedStyle(root).getPropertyValue("--paper").trim()||(d?"#14181D":"#F6F5F0");var metas=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<metas.length;i++)metas[i].setAttribute("content",c);}sync();btn.addEventListener("click",function(){var next=effective()==="dark"?"light":"dark";root.setAttribute("data-theme",next);try{localStorage.setItem("bc_theme",next);}catch(e){}sync();});if(mq.addEventListener)mq.addEventListener("change",function(){if(!root.getAttribute("data-theme"))sync();});})();</script>
 </body>
 </html>
