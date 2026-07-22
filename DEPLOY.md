@@ -36,10 +36,16 @@
    - Pricing: Subscription → Monthly, **€4/мес** → Save.
    - License Keys больше НЕ нужны — их можно не добавлять.
 3. Скопируй **Product ID** со страницы продукта — это `POLAR_PRODUCT_ID`.
-4. Settings → Developers → **New Access Token** (доступ на чтение продуктов /
-   подписок / заказов / клиентов и создание checkout + customer-session) →
-   скопируй `polar_oat_...`. Это `POLAR_ACCESS_TOKEN` — СЕКРЕТ, живёт только на
-   сервере, в браузер не попадает.
+4. Settings → Developers → **New Organization Access Token**. Отметь ровно эти
+   scope'ы (ничего больше код не дёргает):
+   - `checkouts:write`         — создать оплату (`/api/checkout`)
+   - `checkouts:read`          — проверить оплату (`/api/confirm`)
+   - `customers:read`          — найти клиента по e-mail при входе (`/api/login`)
+   - `subscriptions:read`      — проверить активную подписку (`/api/login`)
+   - `customer_sessions:write` — портал управления подпиской (`/api/portal`)
+   Expiration: без срока (это серверный секрет; с истечением токен молча умрёт).
+   Скопируй `polar_oat_...` — это `POLAR_ACCESS_TOKEN`, живёт ТОЛЬКО на сервере,
+   в браузер не попадает.
 5. Vercel → Project → Settings → Environment Variables (Production + Preview),
    добавь:
    - `POLAR_ACCESS_TOKEN` = токен из п.4
