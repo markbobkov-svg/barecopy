@@ -25,7 +25,7 @@
 "applicationCategory":"UtilitiesApplication","operatingSystem":"Any (browser)",
 "description":"Inspect and remove hidden metadata from Word, Excel, PowerPoint, PDF and image files. All processing happens locally in the browser.",
 "offers":[{"@type":"Offer","price":"0","priceCurrency":"EUR","name":"Free"},
-{"@type":"Offer","price":"4","priceCurrency":"EUR","name":"Pro — monthly subscription"}]}
+{"@type":"Offer","price":"2","priceCurrency":"EUR","name":"Pro — monthly subscription (50% launch discount)"}]}
 </script>
 <!-- Fonts self-hosted from same origin (see fonts.css + /fonts/). No external
      requests: corporate networks that block CDNs must still render correctly. -->
@@ -469,7 +469,9 @@
   .tier.highlight{border-color:var(--ink);border-width:1.5px}
   .tier h3{font-family:var(--brand);font-size:16px;font-weight:600}
   .tier .price{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:6px}
-  .tier .price small{font-size:12px;color:var(--ink-soft);font-weight:400}
+  .tier .price small{display:block;font-size:12px;color:var(--ink-soft);font-weight:400;margin-top:3px}
+  .tier .price .was{color:var(--ink-faint);text-decoration:line-through;font-weight:400;margin-right:3px}
+  .tier .tier-tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--clean);border:1px solid var(--clean);border-radius:20px;padding:2px 8px;margin-left:8px;vertical-align:middle;white-space:nowrap}
   .tier ul{margin:14px 0 0 0;padding:0;list-style:none}
   .tier li{font-size:13.5px;color:var(--ink-soft);padding:5px 0;border-top:1px solid var(--line-soft)}
   .tier li::before{content:"— ";color:var(--ink-faint)}
@@ -618,10 +620,10 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=8b83fbf978" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=2adbd459e3" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=8b83fbf978" target="_blank" rel="noopener" aria-label="Open the sample verification report">
-        <img src="/sample-report-preview.png?v=031741a6e8" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
+      <a class="sample-shot" href="/sample-report.pdf?v=2adbd459e3" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+        <img src="/sample-report-preview.png?v=aa52f17c18" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
   </section>
@@ -641,15 +643,15 @@
         <p class="tier-foot">No account needed — just drop a file above.</p>
       </div>
       <div class="tier highlight">
-        <h3>Pro</h3>
-        <div class="price">€4 <small>per month · cancel anytime from your receipt email</small></div>
+        <h3>Pro <span class="tier-tag">Launch · 50% off</span></h3>
+        <div class="price"><span class="was">€4</span> €2 <small>per month · this&nbsp;month only · cancel anytime</small></div>
         <ul>
           <li>Unlimited batch — clean a whole folder at once</li>
           <li>Everything as one ZIP download</li>
           <li>PDF verification report: every removed field, SHA-256 before &amp; after, and a re-scan confirming 0 fields remain</li>
           <li>Still 100% local — a lightweight subscription check is the only network call</li>
         </ul>
-        <button class="btn" id="buyBtn">Get Pro — €4/mo</button>
+        <button class="btn" id="buyBtn">Get Pro — €2/mo</button>
         <p class="pro-signin" id="signinRow">Already Pro? <a href="#" id="signinLink">Sign in with your email</a></p>
         <form class="signin-form" id="signinForm" hidden>
           <input id="signinEmail" type="email" placeholder="Email you used at checkout" autocomplete="email" spellcheck="false" required>
@@ -717,7 +719,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.8.0",
+  version: "1.8.1",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
