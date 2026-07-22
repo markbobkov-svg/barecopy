@@ -63,14 +63,14 @@
   <h2>Files</h2>
   <p>Barecopy runs entirely in your browser. Files you drop on the page are read and processed locally by JavaScript. They are never transmitted, uploaded, or stored by us. You can verify this: load the page, disconnect from the internet, and the tool keeps working.</p>
 
-  <h2>License keys (Pro)</h2>
-  <p>If you activate a Pro subscription, your license key is sent to our payment provider's license API (Polar Software Inc.) when you activate and then periodically (about once a day) to confirm the subscription is still active. The key is stored in your browser's local storage. No file data ever accompanies these requests.</p>
+  <h2>Pro subscriptions</h2>
+  <p>There is no license key to enter. When you subscribe — or later sign in by email on a new device — Barecopy's own server confirms your subscription with our payment provider (Polar Software Inc.) and sets a signed, http-only session cookie so the page can unlock Pro. On each load the page asks our own server (same origin) whether that cookie still maps to an active subscription; Polar is the source of truth. The only personal data involved is your email address, and no file data ever accompanies these requests.</p>
 
   <h2>Payments</h2>
   <p>Purchases are processed by Polar as merchant of record. Your payment details go to Polar and their payment processors, never to us. See Polar's privacy policy for details.</p>
 
   <h2>Cookies &amp; analytics</h2>
-  <p>Barecopy sets no cookies and runs no advertising or cross-site tracking scripts. To count visits we use Vercel Web Analytics, which is cookieless and privacy-friendly: it records only anonymous, aggregate page views (which page, referrer, approximate country, device type) and does not identify you, fingerprint your device, or follow you across sites. It never sees your files, file names, or their metadata.</p>
+  <p>The only cookie Barecopy sets is a single essential one: a signed, http-only session cookie for Pro subscribers that keeps you signed in to your subscription. It carries no file data and is never used for advertising or tracking, and free users who never sign in get no cookies at all. We run no advertising or cross-site tracking scripts. To count visits we use Vercel Web Analytics, which is cookieless and privacy-friendly: it records only anonymous, aggregate page views (which page, referrer, approximate country, device type) and does not identify you, fingerprint your device, or follow you across sites. It never sees your files, file names, or their metadata.</p>
 
   <h2>Contact</h2>
   <p>Questions? Use the <a href="/contact.html">contact form</a> or email <a href="mailto:support@barecopy.com">support@barecopy.com</a>.</p>

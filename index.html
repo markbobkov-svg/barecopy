@@ -805,7 +805,7 @@ document.addEventListener("drop", e => {
 $input.addEventListener("change", () => { handleFiles($input.files); $input.value = ""; });
 
 // Paste a copied file or a screenshot (Ctrl/Cmd+V) into the same intake. Never
-// hijack a real text field (e.g. the licence key box) — only act on file items.
+// hijack a real text field (e.g. the email sign-in box) — only act on file items.
 window.addEventListener("paste", e => {
   const fl = e.clipboardData && e.clipboardData.files;
   if(!fl || !fl.length) return;
@@ -2535,7 +2535,7 @@ async function startCheckout(){
 if($buy) $buy.addEventListener("click", startCheckout);
 
 // Sign in on a new browser without a key: reveal the email form, POST the
-// address, and Polar emails a 15-minute magic link (/api/login) that, when
+// address, and our server emails a 15-minute magic link (/api/login) that, when
 // opened, sets the session cookie and unlocks Pro.
 if($signinLink) $signinLink.addEventListener("click", (e) => {
   e.preventDefault();
