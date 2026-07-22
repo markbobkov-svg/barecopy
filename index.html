@@ -477,10 +477,12 @@
      keeps it visually balanced against the taller, button-bearing Pro card. */
   .tier-foot{margin-top:auto;padding-top:18px;font-size:12.5px;color:var(--ink-soft);line-height:1.5}
   .tier .btn{margin-top:16px;width:100%}
-  .license-row{margin-top:14px;display:flex;gap:8px}
-  .license-row input{flex:1;min-width:0;font-family:var(--mono);font-size:13px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
-  .license-row input:focus{outline:2px solid var(--ink);outline-offset:1px}
-  .license-row .btn{width:auto;margin-top:0;flex:0 0 auto}
+  .pro-signin,.pro-manage{margin-top:12px;font-size:13px;color:var(--ink-soft)}
+  .pro-signin a,.pro-manage a{color:inherit;text-decoration:underline;cursor:pointer}
+  .signin-form{margin-top:12px;display:flex;gap:8px}
+  .signin-form input{flex:1;min-width:0;font-family:var(--mono);font-size:13px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
+  .signin-form input:focus{outline:2px solid var(--ink);outline-offset:1px}
+  .signin-form .btn{width:auto;margin-top:0;flex:0 0 auto}
   .license-msg{margin-top:8px;font-size:12.5px;color:var(--ink-soft);min-height:1em}
   .license-msg.ok{color:var(--clean)} .license-msg.err{color:var(--leak)}
   .pro-chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--clean);color:var(--clean);border-radius:3px;padding:3px 7px}
@@ -616,10 +618,10 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=4fedc44ff4" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=8b83fbf978" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=4fedc44ff4" target="_blank" rel="noopener" aria-label="Open the sample verification report">
-        <img src="/sample-report-preview.png?v=2deee94c8b" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
+      <a class="sample-shot" href="/sample-report.pdf?v=8b83fbf978" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+        <img src="/sample-report-preview.png?v=031741a6e8" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
   </section>
@@ -648,11 +650,13 @@
           <li>Still 100% local — a lightweight subscription check is the only network call</li>
         </ul>
         <button class="btn" id="buyBtn">Get Pro — €4/mo</button>
-        <div class="license-row">
-          <input id="licenseInput" type="text" placeholder="Paste license key" autocomplete="off" spellcheck="false">
-          <button class="btn ghost" id="activateBtn">Activate</button>
-        </div>
-        <div class="license-msg" id="licenseMsg"></div>
+        <p class="pro-signin" id="signinRow">Already Pro? <a href="#" id="signinLink">Sign in with your email</a></p>
+        <form class="signin-form" id="signinForm" hidden>
+          <input id="signinEmail" type="email" placeholder="Email you used at checkout" autocomplete="email" spellcheck="false" required>
+          <button class="btn ghost" id="signinBtn" type="submit">Send sign-in link</button>
+        </form>
+        <p class="pro-manage" id="manageRow" hidden>✓ Pro is active on this device. <a href="/api/portal" id="manageLink">Manage subscription</a></p>
+        <div class="license-msg" id="proMsg" role="status" aria-live="polite"></div>
       </div>
     </div>
   </section>
@@ -698,23 +702,28 @@
 <script src="/vendor/jszip.min.js"></script>
 <script src="/vendor/pdf-lib.min.js"></script>
 <script src="/vendor/exif.min.js"></script>
+<!-- Polar embedded-checkout SDK, self-hosted (same origin). Exposes
+     window.Polar.EmbedCheckout; the checkout runs in an iframe from polar.sh. -->
+<script src="/vendor/polar-embed.min.js"></script>
 <script src="/config.js"></script>
 <script>
 (function(){
 "use strict";
 
 /* ---------------- deploy config ----------------
-   Polar values live in config.js (loaded before this script) — the only
-   file you edit by hand. It's never regenerated, so your values persist
-   across every code update here. Do not put them in this file. */
+   The live payment/Pro settings are SERVER env vars now (POLAR_ACCESS_TOKEN,
+   POLAR_PRODUCT_ID, JWT_SECRET, APP_ORIGIN — see .env.example / DEPLOY.md), read
+   only by the /api functions and never exposed here. config.js (loaded before
+   this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
+   redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.7.10",
+  version: "1.8.0",
   freeBatchLimit: 3,
-  polarApi: "https://api.polar.sh",
-  polarOrgId: (window.BARECOPY_ORG_ID || "TODO_POLAR_ORG_ID"),
-  checkoutUrl: (window.BARECOPY_CHECKOUT || "TODO_POLAR_CHECKOUT_URL"),
-  revalidateHours: 24, // how often an active subscription is re-checked
-  graceDays: 7         // offline grace before Pro pauses
+  // Entitlement is server-side now: a session cookie set by /api/confirm after
+  // payment, read back on every load via /api/me. No Polar org id or license
+  // polling lives in the browser anymore. checkoutUrl (from config.js) is kept
+  // only as a redirect fallback for when /api/checkout can't be reached.
+  checkoutUrl: (window.BARECOPY_CHECKOUT || "TODO_POLAR_CHECKOUT_URL")
 };
 
 /* ---------------- state & dom ---------------- */
@@ -2502,28 +2511,36 @@ function refreshBar(){
   $chip.hidden = !isPro();
 }
 
-/* ---------------- Pro: license, ZIP export, verification report ---------------- */
+/* ---------------- Pro: entitlement, checkout, sign-in, ZIP export, report ----------------
+   Entitlement is Polar-backed and server-side. After payment /api/confirm sets
+   an httpOnly session cookie; every page load reads /api/me to decide whether
+   Pro is unlocked. There is NO license key to paste — a returning user on a new
+   browser signs in by email (a magic link from /api/login). Only an email
+   address and the yes/no entitlement ever cross the wire; file data never does. */
 const $zip = document.getElementById("zipBtn");
 const $chip = document.getElementById("proChip");
 const $buy = document.getElementById("buyBtn");
-const $licInput = document.getElementById("licenseInput");
-const $licBtn = document.getElementById("activateBtn");
-const $licMsg = document.getElementById("licenseMsg");
+const $signinRow = document.getElementById("signinRow");
+const $signinLink = document.getElementById("signinLink");
+const $signinForm = document.getElementById("signinForm");
+const $signinEmail = document.getElementById("signinEmail");
+const $manageRow = document.getElementById("manageRow");
+const $proMsg = document.getElementById("proMsg");
 
 function readyFiles(){
   return [...files.values()].filter(r => r.status === "analyzed" || r.status === "cleaned");
 }
-function store(k, v){ try{ v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); }catch(e){} }
-function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 
-let proActive = load("bc_pro") === "1";
+let proActive = false;
 function isPro(){ return proActive; }
-function setPro(on, key){
+function setPro(on){
   proActive = !!on;
-  store("bc_pro", on ? "1" : null);
-  store("bc_key", on && key ? key : null);
-  if(on) store("bc_last_ok", String(Date.now()));
-  else store("bc_last_ok", null);
+  // Contextual controls in the Pro card: "buy + sign in" for free users,
+  // "manage subscription" for Pro users. The header chip mirrors the state.
+  if($buy) $buy.hidden = proActive;
+  if($signinRow) $signinRow.hidden = proActive;
+  if($signinForm && proActive) $signinForm.hidden = true;
+  if($manageRow) $manageRow.hidden = !proActive;
   refreshBar();
   // Re-render analyzed cards so the deep-clean block reflects the new Pro state
   // (and picks up safe defaults like rsid on upgrade).
@@ -2534,81 +2551,116 @@ function setPro(on, key){
   }catch(e){}
 }
 
-// Pure policy helpers (unit-tested)
-function revalidationDue(lastOkMs, nowMs){
-  return (nowMs - lastOkMs) > BC_CONFIG.revalidateHours * 3600 * 1000;
-}
-function graceExpired(lastOkMs, nowMs){
-  return (nowMs - lastOkMs) > BC_CONFIG.graceDays * 86400 * 1000;
+function proMsg(text, cls){
+  if(!$proMsg) return;
+  $proMsg.textContent = text || "";
+  $proMsg.className = "license-msg" + (cls ? " " + cls : "");
 }
 
-async function validateLicense(key){
-  // Public customer-portal endpoint — safe to call from the browser, no secret involved.
-  const res = await fetch(BC_CONFIG.polarApi + "/v1/customer-portal/license-keys/validate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ key: key, organization_id: BC_CONFIG.polarOrgId })
-  });
-  if(res.status === 404 || res.status === 403 || res.status === 422) return { valid: false };
-  if(!res.ok) throw new Error("license server unreachable");
-  const data = await res.json().catch(() => ({}));
-  const status = data && data.status;
-  return { valid: !status || status === "granted" };
-}
-
-function licMsg(text, cls){
-  $licMsg.textContent = text;
-  $licMsg.className = "license-msg" + (cls ? " " + cls : "");
-}
-
-if($licBtn) $licBtn.addEventListener("click", async () => {
-  const key = ($licInput.value || "").trim();
-  if(!key){ licMsg("Paste the license key from your purchase email.", "err"); return; }
-  $licBtn.disabled = true;
-  licMsg("Checking key…");
+// Entitlement from the server (Polar is the source of truth). A missing
+// endpoint (e.g. a plain static preview with no functions) → stay free, no error.
+async function refreshPro(){
   try{
-    const r = await validateLicense(key);
-    if(r.valid){ setPro(true, key); licMsg("Pro activated on this browser. Thank you!", "ok"); }
-    else { setPro(false); licMsg("This key wasn't recognized. Check for typos, or reply to your purchase email for help.", "err"); }
-  }catch(e){
-    licMsg("Couldn't reach the license server — check your connection and try again.", "err");
-  }
-  $licBtn.disabled = false;
-});
+    const r = await fetch("/api/me", { headers: { Accept: "application/json" } });
+    const d = r.ok ? await r.json() : {};
+    setPro(!!d.pro);
+  }catch(e){ /* dev / offline → stay free */ }
+}
 
-if($buy) $buy.addEventListener("click", () => {
-  if(BC_CONFIG.checkoutUrl.indexOf("TODO") === 0){
-    licMsg("Checkout isn't configured yet.", "err");
+// After payment: hit the confirm URL (which sets the session cookie), then
+// re-check entitlement and drop the locks in place — the loaded file survives.
+async function completeCheckout(confirmUrl){
+  try{ if(confirmUrl) await fetch(confirmUrl, { credentials: "same-origin" }); }catch(e){ /* cookie best-effort */ }
+  await refreshPro();
+}
+
+// Embedded Polar checkout: an overlay over the page, no navigation away. On
+// success we stay put and unlock in place. If the embed can't initialize (old
+// browser, blocker) or /api/checkout is unreachable, fall back to a redirect /
+// new tab using the plain checkout link from config.js.
+async function startCheckout(){
+  let url, id;
+  try{
+    const d = await (await fetch("/api/checkout", { headers: { Accept: "application/json" } })).json();
+    url = d && d.url; id = d && d.id;
+  }catch(e){ /* fall through to the fallback below */ }
+  if(!url){
+    if(BC_CONFIG.checkoutUrl && BC_CONFIG.checkoutUrl.indexOf("TODO") !== 0){
+      window.open(BC_CONFIG.checkoutUrl, "_blank", "noopener");
+    } else {
+      proMsg("Checkout isn't available right now — please try again in a moment.", "err");
+    }
     return;
   }
-  window.open(BC_CONFIG.checkoutUrl, "_blank", "noopener");
+  try{
+    if(!(window.Polar && window.Polar.EmbedCheckout)) throw new Error("embed unavailable");
+    const checkout = await window.Polar.EmbedCheckout.create(url, { theme: "light" });
+    checkout.addEventListener("success", (e) => {
+      const confirmUrl = (e.detail && e.detail.successURL) || (id ? "/api/confirm?checkout_id=" + encodeURIComponent(id) : null);
+      try{ checkout.close(); }catch(err){ /* already closing */ }
+      completeCheckout(confirmUrl);
+    });
+  }catch(e){
+    window.location.href = url; // fallback: full-page Polar checkout
+  }
+}
+
+if($buy) $buy.addEventListener("click", startCheckout);
+
+// Sign in on a new browser without a key: reveal the email form, POST the
+// address, and Polar emails a 15-minute magic link (/api/login) that, when
+// opened, sets the session cookie and unlocks Pro.
+if($signinLink) $signinLink.addEventListener("click", (e) => {
+  e.preventDefault();
+  if(!$signinForm) return;
+  $signinForm.hidden = !$signinForm.hidden;
+  if(!$signinForm.hidden && $signinEmail) $signinEmail.focus();
+});
+if($signinForm) $signinForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = (($signinEmail && $signinEmail.value) || "").trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ proMsg("Enter the email you used at checkout.", "err"); return; }
+  proMsg("Sending…");
+  try{
+    const r = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
+    const d = await r.json().catch(() => ({}));
+    proMsg(d.emailDisabled
+      ? "Email sign-in isn't set up yet — reply to your purchase receipt for help."
+      : "If that email has an active subscription, a sign-in link is on its way. It expires in 15 minutes.", "ok");
+  }catch(err){
+    proMsg("Couldn't reach the server — check your connection and try again.", "err");
+  }
 });
 
-// Subscription check on load: re-validate every 24h; keep Pro through a
-// 7-day offline grace window; pause Pro when the subscription has ended.
-(function(){
-  const key = load("bc_key");
-  if(!proActive || !key) return;
-  const lastOk = parseInt(load("bc_last_ok") || "0", 10);
-  const now = Date.now();
-  if(!revalidationDue(lastOk, now)) return;
-  validateLicense(key).then(r => {
-    if(r.valid){
-      store("bc_last_ok", String(now));
-    } else {
-      setPro(false);
-      licMsg("Your Pro subscription has ended. Resubscribe below, or re-activate if you renewed.", "err");
-    }
-  }).catch(() => {
-    if(graceExpired(lastOk, now)){
-      setPro(false);
-      licMsg("Couldn't verify your subscription for 7 days — connect to the internet once and re-activate your key.", "err");
-    } // inside grace: keep Pro, try again next load
-  });
+// Server redirects hand us the outcome as a URL param (?pro=1 after payment or
+// sign-in; ?signin=invalid|expired|required and ?portal=error for the sad
+// paths). Reflect it, scrub the address bar, then confirm via /api/me.
+(function initAccount(){
+  const params = new URLSearchParams(location.search);
+  const signinResult = params.get("signin");
+  if(signinResult === "invalid" || signinResult === "expired"){
+    proMsg(signinResult === "expired"
+      ? "That sign-in link has expired. Send yourself a fresh one below."
+      : "That sign-in link wasn't valid. Send yourself a fresh one below.", "err");
+    if($signinForm) $signinForm.hidden = false;
+  } else if(signinResult === "required"){
+    proMsg("Sign in first to manage your subscription.", "err");
+  }
+  if(params.get("portal") === "error"){
+    proMsg("Couldn't open the subscription portal — try again in a moment.", "err");
+  }
+  const optimisticPro = params.get("pro") === "1";
+  if(["pro","signin","portal"].some(k => params.has(k))){
+    ["pro","signin","portal"].forEach(k => params.delete(k));
+    const q = params.toString();
+    history.replaceState(null, "", location.pathname + (q ? "?" + q : ""));
+  }
+  if(optimisticPro){ setPro(true); proMsg("Pro unlocked — thank you!", "ok"); }
+  refreshPro();
 })();
 
 function nudgePro(text){
-  licMsg(text, "err");
+  proMsg(text, "err");
   const el = document.getElementById("pro");
   if(el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -2823,7 +2875,7 @@ if($zip) $zip.addEventListener("click", async () => {
     const blob = await zip.generateAsync({ type: "blob" });
     download(blob, "barecopy-clean-files.zip");
   }catch(e){
-    licMsg("ZIP export failed: " + (e && e.message ? e.message : "unknown error"), "err");
+    proMsg("ZIP export failed: " + (e && e.message ? e.message : "unknown error"), "err");
   }
   $zip.disabled = false;
   $zip.textContent = "ZIP + report";

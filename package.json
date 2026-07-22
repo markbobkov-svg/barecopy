@@ -2,7 +2,7 @@
   "name": "barecopy",
   "version": "1.0.0",
   "private": true,
-  "description": "Barecopy — client-side metadata removal. Static site plus one serverless contact endpoint (/api/contact) that relays the contact form over SMTP. No build step: Vercel serves the root statically and builds only the function.",
+  "description": "Barecopy — client-side metadata removal. Static site plus serverless functions in /api (contact relay + Polar-backed Pro: checkout, confirm, me, login, portal). No build step: Vercel serves the root statically and builds the functions. File data never reaches the server.",
   "dependencies": {
     "nodemailer": "^6.10.1"
   }
