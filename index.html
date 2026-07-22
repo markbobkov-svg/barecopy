@@ -25,7 +25,7 @@
 "applicationCategory":"UtilitiesApplication","operatingSystem":"Any (browser)",
 "description":"Inspect and remove hidden metadata from Word, Excel, PowerPoint, PDF and image files. All processing happens locally in the browser.",
 "offers":[{"@type":"Offer","price":"0","priceCurrency":"EUR","name":"Free"},
-{"@type":"Offer","price":"2","priceCurrency":"EUR","name":"Pro — monthly subscription (50% launch discount)"}]}
+{"@type":"Offer","price":"2","priceCurrency":"EUR","priceValidUntil":"2026-08-22","name":"Pro — monthly subscription (50% launch discount)"}]}
 </script>
 <!-- Fonts self-hosted from same origin (see fonts.css + /fonts/). No external
      requests: corporate networks that block CDNs must still render correctly. -->
@@ -620,10 +620,10 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=2adbd459e3" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=e3fa97a195" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=2adbd459e3" target="_blank" rel="noopener" aria-label="Open the sample verification report">
-        <img src="/sample-report-preview.png?v=aa52f17c18" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
+      <a class="sample-shot" href="/sample-report.pdf?v=e3fa97a195" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+        <img src="/sample-report-preview.png?v=221f2a82af" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
   </section>
@@ -644,7 +644,7 @@
       </div>
       <div class="tier highlight">
         <h3>Pro <span class="tier-tag">Launch · 50% off</span></h3>
-        <div class="price"><span class="was">€4</span> €2 <small>per month · this&nbsp;month only · cancel anytime</small></div>
+        <div class="price"><span class="was">€4</span> €2 <small>per month · until 22 August · cancel anytime</small></div>
         <ul>
           <li>Unlimited batch — clean a whole folder at once</li>
           <li>Everything as one ZIP download</li>
@@ -719,7 +719,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.8.1",
+  version: "1.8.2",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
