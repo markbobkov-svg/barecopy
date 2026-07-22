@@ -73,9 +73,9 @@
   <p>Da die Verarbeitung vollständig clientseitig erfolgt, funktioniert die Anwendung auch ohne Netzwerkverbindung weiter, sobald die Seite geladen wurde — eine Eigenschaft, die sich überprüfen lässt, indem Sie die Internetverbindung trennen und eine Datei bereinigen.</p>
 
   <h2>Vom Browser erzwungen, nicht nur versprochen</h2>
-  <p>Die obige Aussage beruht nicht auf Vertrauen. Barecopy wird mit einer strengen <strong>Content-Security-Policy</strong> ausgeliefert, die den Browser anweist, ausgehende Verbindungen nur zur eigenen Herkunft (Origin) von Barecopy und zum Zahlungsdienstleister (zur Lizenzvalidierung) zuzulassen. Unter dieser Richtlinie wird jeder Versuch der Seite, Dateiinhalte an einen Dritten zu übertragen, vom Browser selbst blockiert — bevor sie das Gerät verlassen.</p>
+  <p>Die obige Aussage beruht nicht auf Vertrauen. Barecopy wird mit einer strengen <strong>Content-Security-Policy</strong> ausgeliefert, die den Browser anweist, ausgehende Verbindungen nur zur eigenen Herkunft (Origin) von Barecopy zuzulassen. Unter dieser Richtlinie wird jeder Versuch der Seite, Dateiinhalte an einen Dritten zu übertragen, vom Browser selbst blockiert — bevor sie das Gerät verlassen. (Beim Abonnieren öffnet sich der Checkout des Zahlungsdienstleisters in einem separaten eingebetteten Fenster; er erhält niemals Ihre Dateien.)</p>
   <p>Die relevante Direktive lautet:</p>
-  <div class="verify">connect-src 'self' https://api.polar.sh</div>
+  <div class="verify">connect-src 'self'</div>
   <p>Sie können die vollständige Richtlinie selbst nachlesen in den Entwicklertools &rarr; Netzwerk (Network-Tab) &rarr; Dokument-Anfrage auswählen &rarr; Response Headers (Antwort-Header) &rarr; <code>Content-Security-Policy</code>. Die Skripte und Schriftarten, die die Seite verwendet, werden alle von derselben Herkunft (Origin) ausgeliefert (es gibt keine Drittanbieter-CDNs), was eine so strenge Richtlinie überhaupt erst möglich macht.</p>
 
   <h2>Welche Daten das Gerät verlassen</h2>
@@ -84,16 +84,16 @@
     <tr><td>Dateiinhalte (Dokumente, Bilder)</td><td><strong>Nein.</strong> Werden nur im Browser verarbeitet; niemals übertragen.</td></tr>
     <tr><td>Entfernte Metadatenwerte</td><td><strong>Nein.</strong> Werden lokal angezeigt; niemals übertragen.</td></tr>
     <tr><td>Prüfbericht (Pro)</td><td><strong>Nein.</strong> Wird im Browser erzeugt; direkt vom Nutzer heruntergeladen.</td></tr>
-    <tr><td>Pro-Lizenzschlüssel</td><td>Ja — wird ausschließlich an den Zahlungsdienstleister (Polar) gesendet, um den Abonnementstatus zu bestätigen. Es werden dabei keine Dateidaten mitgesendet.</td></tr>
+    <tr><td>Pro-Anmeldung (E-Mail)</td><td>Nur für Pro: Ihre E-Mail-Adresse wird an Barecopys eigenen Ursprung gesendet, um Ihr Abonnement zu erstellen oder wiederherzustellen, und für Checkout und Abrechnung an den Zahlungsdienstleister (Polar). Es gibt keinen Lizenzschlüssel, und es sind niemals Dateidaten beteiligt.</td></tr>
     <tr><td>Nachricht aus dem Kontaktformular</td><td>Nur wenn Sie die Kontaktseite nutzen: Der von Ihnen eingegebene Name, die E-Mail-Adresse und die Nachricht werden an Barecopys eigenen Ursprung gesendet und per SMTP an das Support-Postfach weitergeleitet. Es sind keine Dateidaten beteiligt, und es wird kein Formulardienst eines Drittanbieters verwendet.</td></tr>
   </table>
-  <p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">Die einzige zugelassene externe Verbindung — die Lizenzprüfung beim Zahlungsdienstleister — ist die einzige Ausnahme von „Nichts verlässt das Gerät", und sie überträgt einen Schlüssel, niemals Dateidaten. Alles andere wird durch die oben genannte Content-Security-Policy am Browser blockiert.</p>
+  <p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">Für einen angemeldeten Pro-Nutzer verlässt als einzige personenbezogene Angabe die E-Mail-Adresse das Gerät, mit der das Abonnement erstellt oder wiederhergestellt wird; daneben zählt ein anonymer Seitenaufruf-Ping die Besuche. Beides sind keine Dateidaten. Dateiinhalte, die darin gefundenen Metadaten und die bereinigten Kopien werden alle durch die oben genannte Content-Security-Policy am Verlassen gehindert.</p>
 
   <h2>Speicherung &amp; Aufbewahrung</h2>
   <ul>
     <li><strong>Dateien:</strong> werden nirgends gespeichert. Sie existieren nur im Arbeitsspeicher des Browser-Tabs während der Verarbeitung und werden verworfen, sobald der Tab geschlossen wird.</li>
     <li><strong>Serverseitig:</strong> es gibt keinen Anwendungsserver, der Dateien empfängt, also gibt es nichts, was aufbewahrt, protokolliert oder kompromittiert werden könnte.</li>
-    <li><strong>Lokaler Browser-Speicher:</strong> für Pro-Nutzer werden lediglich der Lizenzschlüssel und der Aktivierungsstatus im lokalen Speicher des Browsers gespeichert, auf dem eigenen Gerät des Nutzers.</li>
+    <li><strong>Lokaler Browser-Speicher:</strong> Es wird nichts über Ihre Dateien gespeichert. Für angemeldete Pro-Nutzer hält ein einzelnes signiertes, http-only Session-Cookie (gesetzt von Barecopys eigenem Server) das Abonnement auf dem Gerät freigeschaltet; es enthält keine Dateidaten.</li>
   </ul>
 
   <h2>Tracking &amp; Drittanbieter</h2>

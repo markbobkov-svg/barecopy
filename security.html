@@ -72,9 +72,9 @@
   <p>Because processing is entirely client-side, the application continues to function with no network connection after the page has loaded — a property that can be verified by disconnecting from the internet and cleaning a file.</p>
 
   <h2>Enforced by the browser, not just promised</h2>
-  <p>The claim above does not rest on trust. Barecopy is served with a strict <strong>Content-Security-Policy</strong> that instructs the browser to allow outbound connections only to Barecopy's own origin and to the payment provider (for licence validation). Under this policy, any attempt by the page to transmit file contents to a third party is blocked by the browser itself — before it leaves the machine.</p>
+  <p>The claim above does not rest on trust. Barecopy is served with a strict <strong>Content-Security-Policy</strong> that instructs the browser to allow outbound connections only to Barecopy's own origin. Under this policy, any attempt by the page to transmit file contents to a third party is blocked by the browser itself — before it leaves the machine. (Subscribing opens the payment provider's checkout in a separate embedded window; it never receives your files.)</p>
   <p>The relevant directive is:</p>
-  <div class="verify">connect-src 'self' https://api.polar.sh</div>
+  <div class="verify">connect-src 'self'</div>
   <p>You can read the full policy for yourself in Developer Tools &rarr; Network &rarr; select the document request &rarr; Response Headers &rarr; <code>Content-Security-Policy</code>. The scripts and fonts the page uses are all served from the same origin (there are no third-party CDNs), which is what makes such a tight policy possible.</p>
 
   <h2>What data leaves the device</h2>
@@ -83,17 +83,17 @@
     <tr><td>File contents (documents, images)</td><td><strong>No.</strong> Processed only in-browser; never transmitted.</td></tr>
     <tr><td>Removed metadata values</td><td><strong>No.</strong> Displayed locally; never transmitted.</td></tr>
     <tr><td>Verification report (Pro)</td><td><strong>No.</strong> Generated in-browser; downloaded directly by the user.</td></tr>
-    <tr><td>Pro licence key</td><td>Yes — sent only to the payment provider (Polar) to confirm subscription status. No file data accompanies it.</td></tr>
+    <tr><td>Pro sign-in (email)</td><td>Only for Pro: your email address is sent to Barecopy's own origin to create or restore your subscription, and to the payment provider (Polar) for checkout and billing. There is no license key, and no file data is ever involved.</td></tr>
     <tr><td>Page-view analytics</td><td>Yes — an anonymous, cookieless page-view count (which page, referrer, country, device type) is recorded by Vercel Web Analytics from the site's own origin. No file data, file names or metadata are included.</td></tr>
     <tr><td>Contact form message</td><td>Only if you use the contact page: the name, email and message you type are sent to Barecopy's own origin and relayed to the support mailbox over SMTP. No file data is involved, and it passes through no third-party form service.</td></tr>
   </table>
-  <p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">Two things leave the device, and neither is file data: the licence check to the payment provider (a key), and an anonymous page-view ping used to count visits. File contents, the metadata found in them, and the cleaned copies are all blocked from leaving by the Content-Security-Policy above.</p>
+  <p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">For a signed-in Pro user, the only personal data that leaves the device is the email address used to create or restore the subscription; alongside that, an anonymous page-view ping counts visits. Neither is file data. File contents, the metadata found in them, and the cleaned copies are all blocked from leaving by the Content-Security-Policy above.</p>
 
   <h2>Storage &amp; retention</h2>
   <ul>
     <li><strong>Files:</strong> not stored anywhere. They exist only in the browser tab's memory during processing and are discarded when the tab is closed.</li>
     <li><strong>Server-side:</strong> there is no application server that receives files, so there is nothing to retain, log or breach.</li>
-    <li><strong>Local browser storage:</strong> for Pro users, only the licence key and activation state are stored in the browser's local storage, on the user's own device.</li>
+    <li><strong>Local browser storage:</strong> nothing about your files is ever stored. For signed-in Pro users, a single signed, http-only session cookie (set by Barecopy's own server) keeps the subscription unlocked on the device; it holds no file data.</li>
   </ul>
 
   <h2>Tracking &amp; third parties</h2>
