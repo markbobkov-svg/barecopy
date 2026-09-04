@@ -545,9 +545,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=07502ca5a3" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=b21330ba35" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=07502ca5a3" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=b21330ba35" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -629,9 +629,10 @@
 <script src="/vendor/jszip.min.js"></script>
 <script src="/vendor/pdf-lib.min.js"></script>
 <script src="/vendor/exif.min.js"></script>
-<!-- Polar embedded-checkout SDK, self-hosted (same origin). Exposes
-     window.Polar.EmbedCheckout; the checkout runs in an iframe from polar.sh. -->
-<script src="/vendor/polar-embed.min.js"></script>
+<!-- Polar's embedded-checkout SDK (/vendor/polar-embed.min.js, window.Polar.EmbedCheckout)
+     is intentionally not loaded: checkout goes straight to Polar's hosted page
+     (see startCheckout) so Apple Pay / Google Pay wallet buttons work, which
+     Polar disables in the embedded iframe until they validate our domain. -->
 <script src="/config.js"></script>
 <script>
 (function(){
@@ -644,7 +645,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.8.4",
+  version: "1.8.5",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
@@ -2494,22 +2495,20 @@ async function refreshPro(){
   }catch(e){ /* dev / offline → stay free */ }
 }
 
-// After payment: hit the confirm URL (which sets the session cookie), then
-// re-check entitlement and drop the locks in place — the loaded file survives.
-async function completeCheckout(confirmUrl){
-  try{ if(confirmUrl) await fetch(confirmUrl, { credentials: "same-origin" }); }catch(e){ /* cookie best-effort */ }
-  await refreshPro();
-}
-
-// Embedded Polar checkout: an overlay over the page, no navigation away. On
-// success we stay put and unlock in place. If the embed can't initialize (old
-// browser, blocker) or /api/checkout is unreachable, fall back to a redirect /
-// new tab using the plain checkout link from config.js.
+// Full-page Polar checkout (navigates away). We deliberately don't use the
+// embedded overlay (Polar.EmbedCheckout) here: Apple Pay / Google Pay wallet
+// buttons are only available on Polar's own hosted checkout page — they stay
+// disabled in the embedded iframe unless Polar support has manually validated
+// our domain for embedded wallets. The full-page checkout gets us Apple Pay /
+// Google Pay for free (they show up automatically per-browser), at the cost
+// of a real navigation instead of an in-page overlay. On return, Polar hits
+// our success_url (/api/confirm), which sets the session cookie and redirects
+// back here as /?pro=1 — handled by initAccount() below.
 async function startCheckout(){
-  let url, id;
+  let url;
   try{
     const d = await (await fetch("/api/checkout", { headers: { Accept: "application/json" } })).json();
-    url = d && d.url; id = d && d.id;
+    url = d && d.url;
   }catch(e){ /* fall through to the fallback below */ }
   if(!url){
     if(BC_CONFIG.checkoutUrl && BC_CONFIG.checkoutUrl.indexOf("TODO") !== 0){
@@ -2519,17 +2518,7 @@ async function startCheckout(){
     }
     return;
   }
-  try{
-    if(!(window.Polar && window.Polar.EmbedCheckout)) throw new Error("embed unavailable");
-    const checkout = await window.Polar.EmbedCheckout.create(url, { theme: "light" });
-    checkout.addEventListener("success", (e) => {
-      const confirmUrl = (e.detail && e.detail.successURL) || (id ? "/api/confirm?checkout_id=" + encodeURIComponent(id) : null);
-      try{ checkout.close(); }catch(err){ /* already closing */ }
-      completeCheckout(confirmUrl);
-    });
-  }catch(e){
-    window.location.href = url; // fallback: full-page Polar checkout
-  }
+  window.location.href = url;
 }
 
 if($buy) $buy.addEventListener("click", startCheckout);
