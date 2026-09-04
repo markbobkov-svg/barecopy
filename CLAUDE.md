@@ -23,9 +23,13 @@ Deployed on Vercel (static hosting). Payments via Polar (Pro subscription, €4/
   silently broken PDF processing before. **Do not move these back to a CDN.**
   To update a library, download the new min.js into `/vendor/`; do not add a
   `<script src="https://…cdn…">`. (`polar-embed.min.js` is `@polar-sh/checkout`'s
-  `embed.global.js`; it exposes `window.Polar.EmbedCheckout`. The checkout UI
-  itself loads in an iframe from `polar.sh` — that's the one intentional
-  cross-origin frame, allowed via `frame-src` in `vercel.json`.)
+  `embed.global.js`; it exposes `window.Polar.EmbedCheckout` for an *embedded*
+  checkout overlay. It's currently unused — not `<script>`-loaded from
+  `index.html` — because checkout is a full-page navigation to Polar's hosted
+  page instead, so Apple Pay / Google Pay work without domain validation; see
+  Free vs Pro. The checkout UI loads in an iframe from `polar.sh` either way —
+  that's the one intentional cross-origin frame, allowed via `frame-src` in
+  `vercel.json`.)
 - **Config** in `config.js` — the ONLY file with the owner's Polar values
   (`BARECOPY_ORG_ID`, `BARECOPY_CHECKOUT`). It's read by `index.html` with a
   `TODO_...` fallback (`BC_CONFIG`). **Never overwrite this file's values.**
@@ -67,12 +71,24 @@ Deployed on Vercel (static hosting). Payments via Polar (Pro subscription, €4/
 ## Free vs Pro
 - Free tier: batch limited to `freeBatchLimit` (3) files.
 - **Pro is server-side & Polar-backed — there is NO license key to paste.**
-  (This replaced the old paste-a-key flow.) Payment runs in an *embedded* Polar
-  checkout overlay: `startCheckout` → `/api/checkout` creates the checkout,
-  `vendor/polar-embed.min.js` opens it on the page (redirect fallback if the
-  embed can't init). On success `/api/confirm` verifies the checkout with Polar
-  and sets a signed 30-day httpOnly session cookie (`bc_session`); the page
-  unlocks in place (server redirects to `?pro=1`).
+  (This replaced the old paste-a-key flow.) Payment is a **full-page navigation
+  to Polar's hosted checkout**, not the embedded overlay: `startCheckout` →
+  `/api/checkout` creates the checkout, then the browser navigates to its
+  `url` directly (redirect fallback to `BC_CONFIG.checkoutUrl` if
+  `/api/checkout` is unreachable). This is deliberate, not an oversight:
+  Polar disables Apple Pay / Google Pay wallet buttons in the embedded iframe
+  (`vendor/polar-embed.min.js` / `window.Polar.EmbedCheckout`) unless they've
+  manually validated the embedding domain (email support@polar.sh with the org
+  slug + domain to request that); on Polar's own hosted checkout page the
+  wallet buttons appear automatically per-browser, with no such step. The
+  embed SDK file stays in `/vendor/` but is intentionally not `<script>`-loaded
+  from `index.html` — only re-add it if embedded wallets get validated and the
+  overlay UX is wanted back. PayPal is not supported by Polar at all (cards via
+  Stripe only) — don't attempt to bolt it on without changing payment
+  processor first, which is a real architecture change, not a config flip.
+  On return from Polar, `/api/confirm` verifies the checkout with Polar and
+  sets a signed 30-day httpOnly session cookie (`bc_session`); the page
+  unlocks (server redirects to `?pro=1`).
 - Entitlement is re-read from the cookie on every load via `/api/me`
   (`refreshPro` → `setPro`) — Polar is the source of truth and nothing Pro is
   cached in `localStorage`. A returning user on a new browser/device signs in by
@@ -81,7 +97,7 @@ Deployed on Vercel (static hosting). Payments via Polar (Pro subscription, €4/
 - Key code — server: `lib/auth.js` (`signJWT`/`verifySession`/`sessionCookie`),
   `lib/polar.js` (`createCheckout`/`getCheckout`/`hasActiveSubscription`/
   `entitlement`), `lib/email.js` (`sendMagicLink`). Client: `startCheckout`,
-  `completeCheckout`, `refreshPro`, `isPro`/`setPro`, `initAccount`.
+  `refreshPro`, `isPro`/`setPro`, `initAccount`.
 
 ## Hard-won lessons — DO NOT REPEAT THESE
 1. **NO Service Worker.** A previous SW cached HTML and trapped users on stale
