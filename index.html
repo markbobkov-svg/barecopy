@@ -514,11 +514,11 @@
     <div class="how-grid">
       <div class="how-item">
         <h3>Word, Excel, PowerPoint</h3>
-        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file.</p>
+        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file. Cropped pictures are flagged too: Office keeps the whole original image behind the crop, and Pro re-saves it down to the part you can actually see.</p>
       </div>
       <div class="how-item">
         <h3>PDF</h3>
-        <p>Author, title, subject, keywords, creator and producer application, creation and modification dates — cleared from both the info dictionary and embedded XMP metadata.</p>
+        <p>Author, title, subject, keywords, creator and producer application, creation and modification dates — cleared from both the info dictionary and embedded XMP metadata. Barecopy also flags the earlier revisions an incremental save leaves inside a PDF — the text under a redaction box, the page you deleted — and Pro rewrites the file as a single revision so they can't be recovered.</p>
       </div>
       <div class="how-item">
         <h3>Photos</h3>
@@ -545,9 +545,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=b21330ba35" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=21247a4199" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=b21330ba35" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=21247a4199" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -608,7 +608,7 @@
     </details>
     <details>
       <summary>What does Barecopy not remove?</summary>
-      <p>Tracked changes and comments in Word are document content, not metadata. Barecopy detects them and warns you; accept or reject them in Word before sending. Password-protected PDFs are refused rather than risk corrupting them.</p>
+      <p>Tracked changes and comments in Word are document content, not metadata. Barecopy detects them and warns you — Pro can accept and strip them in one click, or you can do it in Word before sending. A page cropped inside a PDF is flagged but left alone: the hidden margin can only be removed by re-cropping in a PDF editor or printing to a new PDF. Password-protected PDFs are refused rather than risk corrupting them.</p>
     </details>
     <details>
       <summary>What exactly does the Pro verification report contain?</summary>
@@ -645,7 +645,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.8.5",
+  version: "1.8.6",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
@@ -1369,6 +1369,174 @@ async function deepCleanXlsx(zip, rec, info){
   await removeContentTypeOverrides(zip, /comments|threadedComment|person/i);
   info.push("Removed cell comments");
 }
+
+/* ---- Cropped pictures (DrawingML a:srcRect), all three OOXML formats ----
+   Cropping a picture in Word/PowerPoint/Excel only changes how much of it is
+   shown: the full original image stays in the package, and dragging the crop
+   handles back reveals whatever was cropped out — the face, the next column of
+   the screenshot, the rest of the letterhead. Office hides the real fix behind
+   "Compress Pictures → Delete cropped areas of pictures".
+   Detection is free; removal (Pro, opt-in) re-encodes each picture down to the
+   visible rectangle and drops the crop, which leaves the document looking
+   identical. Pictures shared by more than one shape, tiled fills and formats
+   the browser can't re-encode (EMF/WMF/SVG) are left untouched. */
+const CROP_PARTS = {
+  docx: /^word\/(document|header\d*|footer\d*|footnotes|endnotes)\.xml$/,
+  pptx: /^ppt\/(slides|slideLayouts|slideMasters|notesSlides)\/[^\/]+\.xml$/,
+  xlsx: /^xl\/drawings\/drawing\d+\.xml$/
+};
+const CROP_MIME = { png:"image/png", jpg:"image/jpeg", jpeg:"image/jpeg" };
+
+function relsPathFor(part){
+  const i = part.lastIndexOf("/");
+  return part.slice(0, i + 1) + "_rels/" + part.slice(i + 1) + ".rels";
+}
+// Resolve a relationship Target against the folder of the part that owns it.
+function resolveTarget(part, target){
+  if(target.charAt(0) === "/") return target.slice(1);
+  const segs = part.split("/").slice(0, -1);
+  for(const s of target.split("/")){
+    if(s === "" || s === ".") continue;
+    if(s === "..") segs.pop(); else segs.push(s);
+  }
+  return segs.join("/");
+}
+function isInternalRel(el){
+  const tgt = el.getAttribute("Target") || "";
+  return tgt && (el.getAttribute("TargetMode") || "") !== "External" && !/^[a-z]+:\/\//i.test(tgt);
+}
+async function relMap(zip, part){
+  const map = new Map();
+  const doc = await partDoc(zip, relsPathFor(part));
+  if(!doc) return map;
+  for(const el of allLocal(doc, "Relationship")){
+    const id = el.getAttribute("Id");
+    if(id && isInternalRel(el)) map.set(id, resolveTarget(part, el.getAttribute("Target")));
+  }
+  return map;
+}
+// How many relationships in the whole package point at each media part. Used to
+// leave shared pictures alone: cropping one would crop it everywhere it is used.
+async function mediaRelCounts(zip){
+  const counts = new Map();
+  for(const rp of zipPaths(zip, /_rels\/[^\/]+\.rels$/)){
+    const doc = await partDoc(zip, rp);
+    if(!doc) continue;
+    const owner = rp.replace(/_rels\/([^\/]+)\.rels$/, "$1");
+    for(const el of allLocal(doc, "Relationship")){
+      if(!isInternalRel(el)) continue;
+      // Count anything that points at an image, wherever the package keeps it.
+      if(!/image/i.test(el.getAttribute("Type") || "") && !/\/media\//.test(el.getAttribute("Target"))) continue;
+      const p = resolveTarget(owner, el.getAttribute("Target"));
+      counts.set(p, (counts.get(p) || 0) + 1);
+    }
+  }
+  return counts;
+}
+function cropSides(srcRect){
+  const num = n => { const v = parseInt(attrLocal(srcRect, n) || "0", 10); return isNaN(v) || v < 0 ? 0 : v; };
+  return { l:num("l"), t:num("t"), r:num("r"), b:num("b") };  // 1/1000 of a percent
+}
+// Share of the picture hidden by the crop, 0..1.
+function hiddenShare(c){
+  const w = Math.max(0, 1 - (c.l + c.r) / 100000);
+  const h = Math.max(0, 1 - (c.t + c.b) / 100000);
+  return 1 - w * h;
+}
+// Every cropped picture in the package, plus how often each media part is used
+// by a picture (a second use in the same part shares one relationship).
+async function findCroppedPics(zip, rec){
+  const pics = [], uses = new Map();
+  const rx = CROP_PARTS[rec.ext];
+  if(!rx) return { pics, uses };
+  for(const part of zipPaths(zip, rx)){
+    const doc = await partDoc(zip, part);
+    if(!doc) continue;
+    const rels = await relMap(zip, part);
+    const mediaOf = fill => {
+      for(const blip of allWithin(fill, "blip")){
+        const id = attrLocal(blip, "embed");
+        if(id && rels.has(id)) return rels.get(id);
+      }
+      return "";
+    };
+    for(const fill of allLocal(doc, "blipFill")){
+      const media = mediaOf(fill);
+      if(media) uses.set(media, (uses.get(media) || 0) + 1);
+      let srcRect = null;
+      for(let c = fill.firstChild; c; c = c.nextSibling){
+        if(c.nodeType === 1 && c.localName === "srcRect"){ srcRect = c; break; }
+      }
+      if(!srcRect) continue;
+      const sides = cropSides(srcRect);
+      if(!(sides.l || sides.t || sides.r || sides.b)) continue;
+      pics.push({ part, doc, srcRect, sides, media,
+        tiled: allWithin(fill, "tile").length > 0 });
+    }
+  }
+  return { pics, uses };
+}
+async function scanCroppedPics(zip, rec){
+  const { pics } = await findCroppedPics(zip, rec);
+  if(!pics.length) return;
+  let worst = 0;
+  for(const p of pics) worst = Math.max(worst, hiddenShare(p.sides));
+  rec.fields.push({ label:"Cropped pictures",
+    value: pics.length + " cropped picture" + (pics.length > 1 ? "s" : "") +
+      " — the cropped-away parts are still stored in full (up to " +
+      Math.round(worst * 100) + "% of a picture is hidden, not removed)",
+    leak:true, deep:"croppedImages" });
+}
+// Re-encode one picture down to its visible rectangle. Returns null when the
+// browser can't decode it, so the caller can leave the original in place.
+async function cropPictureBytes(bytes, mime, sides){
+  let bmp;
+  try{ bmp = await createImageBitmap(new Blob([bytes], { type:mime }), { imageOrientation:"none" }); }
+  catch(e){ return null; }
+  try{
+    const w = bmp.width, h = bmp.height;
+    const sx = Math.round(w * sides.l / 100000), sy = Math.round(h * sides.t / 100000);
+    const sw = Math.max(1, Math.round(w * (1 - (sides.l + sides.r) / 100000)));
+    const sh = Math.max(1, Math.round(h * (1 - (sides.t + sides.b) / 100000)));
+    if(sw >= w && sh >= h) return null;                       // nothing actually hidden
+    const canvas = document.createElement("canvas");
+    canvas.width = sw; canvas.height = sh;
+    const ctx = canvas.getContext("2d");
+    if(!ctx) return null;
+    ctx.drawImage(bmp, sx, sy, sw, sh, 0, 0, sw, sh);
+    const blob = await new Promise(res => canvas.toBlob(res, mime, 0.92));
+    if(!blob) return null;
+    return new Uint8Array(await blob.arrayBuffer());
+  }finally{
+    if(bmp && bmp.close) bmp.close();
+  }
+}
+async function deepCleanCrops(zip, rec, info){
+  const { pics, uses } = await findCroppedPics(zip, rec);
+  if(!pics.length) return;
+  const relCounts = await mediaRelCounts(zip);
+  const touched = new Map();
+  let done = 0, left = 0;
+  for(const p of pics){
+    const mime = CROP_MIME[(p.media.split(".").pop() || "").toLowerCase()];
+    const shared = (relCounts.get(p.media) || 0) > 1 || (uses.get(p.media) || 0) > 1;
+    if(!p.media || !mime || p.tiled || shared){ left++; continue; }
+    try{
+      const src = await zip.file(p.media).async("uint8array");
+      const out = await cropPictureBytes(src, mime, p.sides);
+      if(!out){ left++; continue; }
+      zip.file(p.media, out);
+      p.srcRect.parentNode.removeChild(p.srcRect);
+      touched.set(p.part, p.doc);
+      done++;
+    }catch(e){ left++; }
+  }
+  for(const [part, doc] of touched) zip.file(part, serializeXml(doc));
+  if(done) info.push("Cropped " + done + " picture" + (done > 1 ? "s" : "") + " down to the visible area" +
+    (left ? " (" + left + " left as-is — shared between shapes or not re-encodable)" : ""));
+  else if(left) info.push("Cropped pictures left as-is (" + left +
+    " shared between shapes or not re-encodable — remove the cropped areas in the Office app)");
+}
 /* ==DEEP:END== */
 
 async function analyzeOoxml(rec, buf){
@@ -1443,6 +1611,7 @@ async function analyzeOoxml(rec, buf){
   if(rec.ext === "docx") await deepScanDocx(zip, rec);
   else if(rec.ext === "pptx") await deepScanPptx(zip, rec);
   else if(rec.ext === "xlsx") await deepScanXlsx(zip, rec);
+  await scanCroppedPics(zip, rec);
 }
 
 const CLEAN_CORE =
@@ -1496,6 +1665,8 @@ async function deepCleanOoxml(zip, rec){
   if(rec.ext === "docx") await deepCleanDocx(zip, rec, rec.deepApplied);
   else if(rec.ext === "pptx") await deepCleanPptx(zip, rec, rec.deepApplied);
   else if(rec.ext === "xlsx") await deepCleanXlsx(zip, rec, rec.deepApplied);
+  // Runs last, so it reads the parts the format-specific cleaners just rewrote.
+  if(rec.deepSelected.has("croppedImages")) await deepCleanCrops(zip, rec, rec.deepApplied);
 }
 
 async function cleanOoxml(rec){
@@ -1618,6 +1789,81 @@ async function cleanOdf(rec){
 }
 
 /* ---------------- PDF ---------------- */
+
+/* A PDF that was saved incrementally (Acrobat's plain "Save", digital signing,
+   most form fillers) keeps every earlier revision inside the same file: the new
+   objects are appended and the old ones are simply no longer referenced. Text
+   under a redaction box, a deleted page, a replaced logo — all still there, and
+   any parser that walks the file linearly can read them back.
+   pdf-lib parses every object it finds, including those orphans, and writes
+   them back out on save(), so removing them takes an explicit sweep: keep what
+   the catalog can reach, drop the rest (see dropPdfOrphans). */
+const PDF_EOF = [0x25,0x25,0x45,0x4F,0x46];               // %%EOF
+const PDF_STARTXREF = [0x73,0x74,0x61,0x72,0x74,0x78,0x72,0x65,0x66];            // startxref
+const PDF_LINEARIZED = [0x2F,0x4C,0x69,0x6E,0x65,0x61,0x72,0x69,0x7A,0x65,0x64]; // /Linearized
+
+function bytesMatch(u8, pat, at){
+  for(let j = 0; j < pat.length; j++) if(u8[at+j] !== pat[j]) return false;
+  return true;
+}
+function bytesHave(u8, pat, from, to){
+  const lim = Math.min(to === undefined ? u8.length : to, u8.length) - pat.length;
+  for(let i = from || 0; i <= lim; i++) if(bytesMatch(u8, pat, i)) return true;
+  return false;
+}
+// How many times this file has been saved. Every save ends with the same
+// signature — "startxref", the offset, then %%EOF — and an incremental save
+// simply appends another one, keeping everything the previous save wrote.
+// Matching the pair rather than a bare %%EOF keeps an embedded PDF attachment
+// from being counted as a revision of this document. A linearized ("fast web
+// view") file writes a second pair for its front xref without being a second
+// revision, so don't count that one.
+function pdfRevisionMarks(u8){
+  let n = 0;
+  const lim = u8.length - PDF_STARTXREF.length;
+  for(let i = 0; i <= lim; i++){
+    if(u8[i] !== PDF_STARTXREF[0] || !bytesMatch(u8, PDF_STARTXREF, i)) continue;
+    // the byte offset and %%EOF follow within a few bytes of whitespace/digits
+    if(bytesHave(u8, PDF_EOF, i + PDF_STARTXREF.length, i + PDF_STARTXREF.length + 40)) n++;
+    i += PDF_STARTXREF.length - 1;
+  }
+  return n;
+}
+function pdfPriorRevisions(buf){
+  const u8 = new Uint8Array(buf);
+  const marks = pdfRevisionMarks(u8);
+  if(marks < 2) return 0;
+  const linear = bytesHave(u8, PDF_LINEARIZED, 0, 2048);
+  return Math.max(0, marks - (linear ? 2 : 1));
+}
+// Objects the file still carries that nothing reachable from the catalog points
+// at — the residue of earlier revisions. Returns the leftover refs.
+function pdfOrphans(doc){
+  const ctx = doc.context;
+  const seen = new Set(), stack = [];
+  const push = v => { if(v != null) stack.push(v); };
+  push(ctx.trailerInfo.Root); push(ctx.trailerInfo.Info); push(ctx.trailerInfo.Encrypt);
+  while(stack.length){
+    const o = stack.pop();
+    if(o instanceof PDFLib.PDFRef){
+      if(seen.has(o.tag)) continue;
+      seen.add(o.tag);
+      push(ctx.lookup(o));
+    }
+    else if(o instanceof PDFLib.PDFArray){ const a = o.asArray(); for(let i = 0; i < a.length; i++) push(a[i]); }
+    else if(o instanceof PDFLib.PDFDict){ for(const v of o.values()) push(v); }
+    else if(o && o.dict instanceof PDFLib.PDFDict){ for(const v of o.dict.values()) push(v); }  // streams
+  }
+  const out = [];
+  for(const [ref] of ctx.enumerateIndirectObjects()) if(!seen.has(ref.tag)) out.push(ref);
+  return out;
+}
+function dropPdfOrphans(doc){
+  const orphans = pdfOrphans(doc);
+  for(const ref of orphans) doc.context.delete(ref);
+  return orphans.length;
+}
+
 async function analyzePdf(rec, buf){
   let doc;
   try{
@@ -1664,10 +1910,42 @@ async function analyzePdf(rec, buf){
         value:"timestamps on " + lastModPages + " page" + (lastModPages > 1 ? "s" : ""), leak:false });
     }
   }catch(e){}
+  // Earlier revisions left behind by incremental saves (see the note above).
+  try{
+    const prior = pdfPriorRevisions(buf);
+    const orphans = pdfOrphans(doc).length;
+    if(prior || orphans){
+      const bits = [];
+      if(prior) bits.push(prior + " earlier revision" + (prior > 1 ? "s" : ""));
+      if(orphans) bits.push(orphans + " leftover object" + (orphans > 1 ? "s" : ""));
+      rec.fields.push({ label:"Earlier revisions",
+        value: bits.join(" · ") + " kept inside the file — text or images deleted in a later save can be recovered",
+        leak:true, deep:"pdfRevisions" });
+    }
+  }catch(e){}
+  // Pages cropped to show less than they contain. The hidden margin is still
+  // full content — anyone can reset the crop and read it. Nothing safe to
+  // remove here (that needs re-rasterising), so this is detection only.
+  try{
+    const cropped = [];
+    for(const page of doc.getPages()){
+      const mb = page.getMediaBox(), cb = page.getCropBox();
+      if(!mb || !cb) continue;
+      if(Math.abs(mb.x - cb.x) > 1 || Math.abs(mb.y - cb.y) > 1 ||
+         Math.abs(mb.width - cb.width) > 1 || Math.abs(mb.height - cb.height) > 1) cropped.push(page);
+    }
+    if(cropped.length){
+      rec.fields.push({ label:"Cropped pages",
+        value: cropped.length + " page" + (cropped.length > 1 ? "s are" : " is") +
+          " cropped — the hidden area is still in the file; re-crop in a PDF editor or print to a new PDF",
+        leak:true, deep:"pdfCrop" });
+    }
+  }catch(e){}
 }
 
-async function cleanPdf(rec){
-  const doc = rec.pdf;
+const PDF_REV_FAIL_WARN = "Earlier revisions couldn't be removed from this PDF safely, so only its metadata was cleaned. Content deleted in an earlier save may still be recoverable.";
+
+function cleanPdfMeta(doc){
   doc.setTitle(""); doc.setAuthor(""); doc.setSubject(""); doc.setKeywords([]);
   doc.setCreator(""); doc.setProducer("");
   const epoch = new Date(0);
@@ -1681,6 +1959,39 @@ async function cleanPdf(rec){
       try{ page.node.delete(PDFLib.PDFName.of("Metadata")); }catch(e){}
     }
   }catch(e){}
+}
+
+async function cleanPdf(rec){
+  // Parse a fresh copy when we can: cleaning mutates the document, and the
+  // orphan sweep is destructive, so re-running it after the user changes the
+  // deep-clean choices must start from the original bytes.
+  let doc = rec.pdf;
+  if(rec.buffer){
+    try{ doc = await PDFLib.PDFDocument.load(rec.buffer, { updateMetadata:false, ignoreEncryption:true }); }
+    catch(e){ doc = rec.pdf; }
+  }
+  rec.deepApplied = [];
+  cleanPdfMeta(doc);
+
+  // Deep (Pro, opt-in): drop everything the catalog can't reach, so earlier
+  // revisions stop travelling with the file. If it throws — or leaves the page
+  // tree unusable — fall back to a metadata-only clean rather than hand over a
+  // broken PDF.
+  if(rec.deepSelected && rec.deepSelected.has("pdfRevisions")){
+    try{
+      const dropped = dropPdfOrphans(doc);
+      if(doc.getPageCount() < 1) throw new Error("page tree lost");
+      rec.deepApplied.push(dropped
+        ? "Removed " + dropped + " leftover object" + (dropped > 1 ? "s" : "") + " from earlier revisions"
+        : "Rewrote the file as a single revision");
+    }catch(e){
+      doc = await PDFLib.PDFDocument.load(rec.buffer || await rec.file.arrayBuffer(),
+        { updateMetadata:false, ignoreEncryption:true });
+      cleanPdfMeta(doc);
+      rec.deepApplied = [];
+      if(rec.warnings.indexOf(PDF_REV_FAIL_WARN) === -1) rec.warnings.push(PDF_REV_FAIL_WARN);
+    }
+  }
   const bytes = await doc.save({ useObjectStreams:false });
   return new Blob([bytes], { type:"application/pdf" });
 }
@@ -2279,14 +2590,17 @@ $cleanAll.addEventListener("click", async () => {
 
 /* ---------------- render ---------------- */
 // Deep-clean options: which content-level removals to offer, in display order.
-// hiddenSheets is intentionally absent — it's detection-only (no safe remover).
+// hiddenSheets and pdfCrop are intentionally absent — they're detection-only
+// (no safe remover; both need a decision inside the app that made the file).
 const DEEP_META = {
   trackedChanges: { label: "Accept &amp; remove tracked changes", note: "Removes revision history. Changes the visible document, like Accept All in Word." },
   comments:       { label: "Remove comments &amp; reviewer names", note: "" },
   notes:          { label: "Remove speaker notes", note: "" },
+  croppedImages:  { label: "Crop pictures to what's visible", note: "Throws away the cropped-off parts for good. The document looks the same; pictures are re-saved, so they're recompressed once." },
+  pdfRevisions:   { label: "Remove earlier revisions", note: "Drops what previous saves left inside the file. The visible document is unchanged.", def: true },
   rsid:           { label: "Strip revision IDs (rsid)", note: "Invisible editing-session fingerprints. Safe to remove.", def: true }
 };
-const DEEP_ORDER = ["trackedChanges","comments","notes","rsid"];
+const DEEP_ORDER = ["trackedChanges","comments","notes","croppedImages","pdfRevisions","rsid"];
 
 function renderDeepBlock(rec){
   const keys = DEEP_ORDER.filter(k => rec.fields.some(f => f.deep === k));
@@ -2356,9 +2670,15 @@ function renderCard(rec){
     if(rec.status === "cleaned" && rec.verify){
       if(rec.verify.ok === true && !keptAfter)
         verifyLine = '<div class="verified-badge"><span class="tick">✓</span> Re-scanned after cleaning: 0 identifying fields remain.</div>';
-      else if(rec.verify.ok === true && keptAfter)
+      else if(rec.verify.ok === true && keptAfter){
+        // Some kept items have a Deep clean switch; others (hidden sheets,
+        // cropped pages) are detection-only — don't point at a button for those.
+        const fixable = rec.verify.kept.some(f => DEEP_META[f.deep]);
         verifyLine = '<div class="verified-badge partial"><span class="tick">✓</span> Standard metadata removed &amp; re-scanned. Still in the file: ' +
-          esc(rec.verify.kept.map(f => f.label).join(", ")) + '. Use Deep clean above to remove ' + (keptAfter > 1 ? 'them' : 'it') + '.</div>';
+          esc(rec.verify.kept.map(f => f.label).join(", ")) +
+          (fixable ? '. Use Deep clean above to remove ' + (keptAfter > 1 ? 'them' : 'it')
+                   : '. This is document content — review ' + (keptAfter > 1 ? 'these' : 'it') + ' in the app that made the file') + '.</div>';
+      }
       else if(rec.verify.ok === false)
         verifyLine = '<div class="verified-badge fail"><span class="tick">!</span> Re-scan still found: ' + esc(rec.verify.remaining.map(f => f.label).join(", ")) + '. Please report this file.</div>';
       else
@@ -2403,7 +2723,7 @@ function renderCard(rec){
     cb.addEventListener("change", () => {
       if(!isPro()){
         cb.checked = false;
-        nudgePro("One-click deep clean (tracked changes, comments, notes) is a Pro feature. Detection is free.");
+        nudgePro("One-click deep clean (tracked changes, comments, notes, cropped pictures, earlier PDF revisions) is a Pro feature. Detection is free.");
         return;
       }
       const k = cb.getAttribute("data-deep");
@@ -2805,6 +3125,8 @@ try{
     window.__BC = { analyzeOoxml, cleanOoxml, deepScanDocx, deepCleanDocx,
       deepScanPptx, deepCleanPptx, deepScanXlsx, deepCleanXlsx,
       flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
+      analyzePdf, cleanPdf, pdfPriorRevisions, pdfOrphans, dropPdfOrphans,
+      findCroppedPics, scanCroppedPics, deepCleanCrops, hiddenShare, resolveTarget,
       renderCard, refreshBar, setPro, isPro, files,
       analyzeOdf, cleanOdf, analyzeImage, stripGif, gifBlocks,
       analyzeVideo, stripVideo, mp4Boxes,
