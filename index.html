@@ -545,9 +545,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=21247a4199" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=935c3ff637" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=21247a4199" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=935c3ff637" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -608,7 +608,7 @@
     </details>
     <details>
       <summary>What does Barecopy not remove?</summary>
-      <p>Tracked changes and comments in Word are document content, not metadata. Barecopy detects them and warns you — Pro can accept and strip them in one click, or you can do it in Word before sending. A page cropped inside a PDF is flagged but left alone: the hidden margin can only be removed by re-cropping in a PDF editor or printing to a new PDF. Password-protected PDFs are refused rather than risk corrupting them.</p>
+      <p>Tracked changes and comments in Word are document content, not metadata. Barecopy detects them and warns you — Pro can accept and strip them in one click, or you can do it in Word before sending. A page cropped inside a PDF is flagged but left alone: the hidden margin can only be removed by re-cropping in a PDF editor or printing to a new PDF. A digitally signed PDF is flagged before you clean it — the signature covers the exact bytes of the file, so removing metadata voids it; send the signed original if the signature is the point, or sign the clean copy again. Password-protected PDFs are refused rather than risk corrupting them.</p>
     </details>
     <details>
       <summary>What exactly does the Pro verification report contain?</summary>
@@ -645,7 +645,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.8.6",
+  version: "1.8.7",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
@@ -1858,6 +1858,72 @@ function pdfOrphans(doc){
   for(const [ref] of ctx.enumerateIndirectObjects()) if(!seen.has(ref.tag)) out.push(ref);
   return out;
 }
+/* A digital signature covers the exact bytes of the file — the signature
+   dictionary records the byte ranges it signs. Any metadata change rewrites
+   those bytes, so the signature stops validating, and a recipient sees a
+   BROKEN signature, which reads worse than no signature at all. Barecopy
+   can't avoid that (the metadata sits inside the signed bytes), so it says so
+   before you clean instead of handing back a quietly invalidated file. */
+const PDF_SIGNED_WARN = "This PDF is digitally signed. Removing metadata rewrites the file, so the signature can no longer validate — send the signed original if the signature is the point, or sign the clean copy again.";
+
+function pdfText(v){
+  try{
+    if(v && typeof v.decodeText === "function") return v.decodeText().trim();
+    if(v && typeof v.asString === "function") return v.asString().trim();
+  }catch(e){}
+  return "";
+}
+// PDF date syntax: D:YYYYMMDDHHmmSSOHH'mm' (everything after the year optional).
+function pdfDate(v){
+  const s = pdfText(v).replace(/^D:/, "");
+  const m = /^(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?(?:([+-])(\d{2})'?(\d{2})?)?/.exec(s);
+  if(!m) return "";
+  let ms = Date.UTC(+m[1], (+m[2] || 1) - 1, +m[3] || 1, +m[4] || 0, +m[5] || 0, +m[6] || 0);
+  if(m[7]){                                   // shift the local time back to UTC
+    const off = ((+m[8] || 0) * 60 + (+m[9] || 0)) * 60000;
+    ms += (m[7] === "+" ? -off : off);
+  }
+  const d = new Date(ms);
+  return isNaN(d) ? "" : fmtDate(d);
+}
+// Signature fields that actually carry a signature (/V), walking the AcroForm
+// field tree — signatures are often nested under a parent field.
+function pdfSignatures(doc){
+  const sigs = [];
+  let fields;
+  try{
+    const acro = doc.catalog.lookup(PDFLib.PDFName.of("AcroForm"), PDFLib.PDFDict);
+    if(acro) fields = acro.lookup(PDFLib.PDFName.of("Fields"), PDFLib.PDFArray);
+  }catch(e){}
+  if(!fields) return sigs;
+  const seen = new Set();
+  const walk = (arr, inherited, depth) => {
+    if(depth > 8) return;
+    for(let i = 0; i < arr.size(); i++){
+      let f;
+      try{ f = arr.lookup(i, PDFLib.PDFDict); }catch(e){ continue; }
+      if(!f || seen.has(f)) continue;
+      seen.add(f);
+      let ft = inherited;
+      try{ const t = f.lookup(PDFLib.PDFName.of("FT")); if(t) ft = String(t); }catch(e){}
+      if(ft === "/Sig"){
+        let v = null;
+        try{ v = f.lookup(PDFLib.PDFName.of("V"), PDFLib.PDFDict); }catch(e){}
+        if(v){
+          const at = k => { try{ return v.lookup(PDFLib.PDFName.of(k)); }catch(e){ return null; } };
+          sigs.push({ name: pdfText(at("Name")), date: pdfDate(at("M")),
+            reason: pdfText(at("Reason")), location: pdfText(at("Location")) });
+        }
+      }
+      let kids = null;
+      try{ kids = f.lookup(PDFLib.PDFName.of("Kids"), PDFLib.PDFArray); }catch(e){}
+      if(kids) walk(kids, ft, depth + 1);
+    }
+  };
+  try{ walk(fields, "", 0); }catch(e){}
+  return sigs;
+}
+
 function dropPdfOrphans(doc){
   const orphans = pdfOrphans(doc);
   for(const ref of orphans) doc.context.delete(ref);
@@ -1908,6 +1974,24 @@ async function analyzePdf(rec, buf){
     if(lastModPages){
       rec.fields.push({ label:"Page last-modified",
         value:"timestamps on " + lastModPages + " page" + (lastModPages > 1 ? "s" : ""), leak:false });
+    }
+  }catch(e){}
+  // Digital signatures: not a leak to remove, but cleaning will break them, so
+  // surface who signed and warn before the user downloads a void signature.
+  try{
+    const sigs = pdfSignatures(doc);
+    if(sigs.length){
+      const who = sigs.map(s => {
+        const bits = [s.name || "unnamed signer"];
+        if(s.date) bits.push(s.date);
+        if(s.reason) bits.push('"' + s.reason + '"');
+        if(s.location) bits.push(s.location);
+        return bits.join(", ");
+      });
+      rec.fields.push({ label: sigs.length > 1 ? "Digital signatures" : "Digital signature",
+        value: who.join(" · ") + " — cleaning rewrites the file, so this signature stops validating",
+        leak:false });
+      if(rec.warnings && rec.warnings.indexOf(PDF_SIGNED_WARN) === -1) rec.warnings.push(PDF_SIGNED_WARN);
     }
   }catch(e){}
   // Earlier revisions left behind by incremental saves (see the note above).
