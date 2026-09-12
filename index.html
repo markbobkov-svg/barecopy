@@ -514,7 +514,7 @@
     <div class="how-grid">
       <div class="how-item">
         <h3>Word, Excel, PowerPoint</h3>
-        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file. Cropped pictures are flagged too: Office keeps the whole original image behind the crop, and Pro re-saves it down to the part you can actually see. In Excel, so is the copy of the source data a pivot table keeps inside the workbook — it survives deleting the sheet it came from, and Pro drops it.</p>
+        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file. Cropped pictures are flagged too: Office keeps the whole original image behind the crop, and Pro re-saves it down to the part you can actually see. In Excel, so is the copy of the source data a pivot table keeps inside the workbook — it survives deleting the sheet it came from, and Pro drops it. Barecopy also clears two things Office's own Document Inspector leaves behind: the saved printer setup, which names an internal print server, and the path the file was last saved to, which spells out your SharePoint site and folders.</p>
       </div>
       <div class="how-item">
         <h3>PDF</h3>
@@ -545,9 +545,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=9d66f3673b" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=971b01e12f" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=9d66f3673b" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=971b01e12f" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -645,7 +645,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.9.0",
+  version: "1.10.0",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
@@ -1278,14 +1278,26 @@ async function deepCleanPptx(zip, rec, info){
 }
 
 // ---- XLSX: comments (removal) + hidden sheets (detection only) ----
+// Excel mirrors every threaded comment as a legacy note whose author is the
+// thread's id, so counting both parts doubles the total and fills the author
+// list with GUIDs. The real names (and the AD identities behind them) live in
+// xl/persons — a shadow is recognised by that author marker.
+const TC_SHADOW = /^tc=\{[0-9A-Fa-f-]+\}$/;
+const EMAIL_RX = /([^:;,\s<>"]+@[^:;,\s<>"]+\.[A-Za-z]{2,})/;
+
 async function deepScanXlsx(zip, rec){
   let cCount = 0;
-  const cAuthors = new Set();
+  const cAuthors = new Set(), emails = new Set();
   for(const p of zipPaths(zip, /^xl\/comments\d*\.xml$/)){
     const doc = await partDoc(zip, p);
     if(!doc) continue;
-    for(const el of allLocal(doc, "comment")) cCount++;
-    for(const el of allLocal(doc, "author")){ const n = (el.textContent || "").trim(); if(n) cAuthors.add(n); }
+    const authors = allLocal(doc, "author").map(el => (el.textContent || "").trim());
+    for(const el of allLocal(doc, "comment")){
+      const who = authors[parseInt(attrLocal(el, "authorId") || "0", 10)] || "";
+      if(TC_SHADOW.test(who)) continue;       // counted as a threaded comment below
+      cCount++;
+      if(who) cAuthors.add(who);
+    }
   }
   for(const p of zipPaths(zip, /^xl\/threadedComments\/.*\.xml$/)){
     const doc = await partDoc(zip, p);
@@ -1295,12 +1307,19 @@ async function deepScanXlsx(zip, rec){
   for(const p of zipPaths(zip, /^xl\/persons\/.*\.xml$/)){
     const doc = await partDoc(zip, p);
     if(!doc) continue;
-    for(const el of allLocal(doc, "person")){ const n = attrLocal(el, "displayName"); if(n) cAuthors.add(n); }
+    for(const el of allLocal(doc, "person")){
+      const n = attrLocal(el, "displayName");
+      if(n) cAuthors.add(n);
+      const m = EMAIL_RX.exec(attrLocal(el, "userId"));   // "S::name@company.com::guid"
+      if(m) emails.add(m[1]);
+    }
   }
   if(cCount || cAuthors.size){
     rec.fields.push({ label: "Cell comments",
       value: (cCount ? cCount + " comment" + (cCount !== 1 ? "s" : "") : "commenter identities") +
-        (cAuthors.size ? " by " + authorList(cAuthors) : "") + " — visible to recipients",
+        (cAuthors.size ? " by " + authorList(cAuthors) : "") +
+        (emails.size ? " — work email addresses stored with them (" + authorList(emails) + ")" : "") +
+        " — visible to recipients",
       leak: true, deep: "comments" });
   }
   const wb = await partDoc(zip, "xl/workbook.xml");
@@ -1510,6 +1529,122 @@ async function deepCleanXlsx(zip, rec, info){
   }
   await removeContentTypeOverrides(zip, /comments|threadedComment|person/i);
   info.push("Removed cell comments");
+}
+
+/* ---- Printer setup and custom XML: two parts nobody looks at ----
+   printerSettings*.bin is a Windows DEVMODE blob saved with the file. It opens
+   with the full device name of the printer the file was last set up for —
+   "\\\\PRINTSRV1.corp.local\\Finance 3rd floor" — which hands a recipient an
+   internal hostname, a domain and an office location. Office's own Document
+   Inspector does not touch it. Nothing needs it: Excel and Word fall back to
+   the default printer.
+   customXml/ holds the document-library properties SharePoint (or an add-in)
+   attaches: content types, site columns, managed metadata, sometimes the
+   people-picker values behind them. Document Inspector calls this "Custom XML
+   Data" and removes it; removal is opt-in here because a document-assembly
+   add-in can genuinely depend on it. */
+const DEVMODE_NAME_BYTES = 64;                 // CCHDEVICENAME, UTF-16LE
+async function printerDeviceName(zip, path){
+  try{
+    const u8 = await zip.file(path).async("uint8array");
+    let s = "";
+    for(let i = 0; i + 1 < Math.min(DEVMODE_NAME_BYTES, u8.length); i += 2){
+      const c = u8[i] | (u8[i + 1] << 8);
+      if(!c) break;
+      if(c < 32 || c > 0xFFFD) return "";      // not the text field we expected
+      s += String.fromCharCode(c);
+    }
+    return s.trim();
+  }catch(e){ return ""; }
+}
+async function scanPrinterSettings(zip, rec){
+  const parts = zipPaths(zip, /printerSettings\/printerSettings\d*\.bin$/);
+  if(!parts.length) return;
+  const names = new Set();
+  for(const p of parts){
+    const n = await printerDeviceName(zip, p);
+    if(n) names.add(n);
+  }
+  rec.fields.push({ label: "Printer setup",
+    value: (names.size ? authorList(names) : parts.length + " saved printer configuration" + (parts.length > 1 ? "s" : "")) +
+      " — the printer this file was last set up for; a network name gives away a host and often an office",
+    leak: true, deep: "printerSettings" });
+}
+async function dropPrinterSettings(zip, info){
+  const gone = removeParts(zip, [/printerSettings\/printerSettings\d*\.bin$/]);
+  if(!gone.length) return;
+  for(const rp of zipPaths(zip, /_rels\/[^\/]+\.rels$/)) await removeRels(zip, rp, /printerSettings/i);
+  // Sheets point at their printer setup from <pageSetup r:id="…">; drop the
+  // pointer but keep the element, which also carries paper size and scale.
+  for(const p of zipPaths(zip, /^xl\/(worksheets|chartsheets)\/[^\/]+\.xml$/)){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    let ch = false;
+    for(const ps of allLocal(doc, "pageSetup")){
+      for(const at of [].slice.call(ps.attributes))
+        if(at.localName === "id"){ ps.removeAttributeNode(at); ch = true; }
+    }
+    if(ch) zip.file(p, serializeXml(doc));
+  }
+  info.push("Removed the saved printer setup (" + gone.length + " part" + (gone.length > 1 ? "s" : "") + ")");
+}
+/* Two more things xl/workbook.xml carries about the person and the place:
+   <fileSharing userName="…"> — who set "read-only recommended" (the write
+   reservation next to it keeps a password hash, which is not ours to touch) —
+   and x15ac:absPath, the full URL or folder the workbook was last saved to,
+   which spells out the SharePoint tenant, the site and the folder tree. Both
+   are plain identity metadata like the author, so they go in the standard
+   clean rather than behind an opt-in. */
+async function scanXlsxWorkbook(zip, rec){
+  const doc = await partDoc(zip, "xl/workbook.xml");
+  if(!doc) return;
+  for(const fs of allLocal(doc, "fileSharing")){
+    const who = attrLocal(fs, "userName");
+    if(who) rec.fields.push({ label: "Write-reservation user",
+      value: who + " — the name stored with “read-only recommended”", leak: true });
+  }
+  for(const ap of allLocal(doc, "absPath")){
+    const url = attrLocal(ap, "url");
+    if(url) rec.fields.push({ label: "Storage path",
+      value: url + " — where this workbook was last saved; names the site, the library and the folder tree",
+      leak: true });
+  }
+}
+async function cleanXlsxWorkbook(zip){
+  const doc = await partDoc(zip, "xl/workbook.xml");
+  if(!doc) return;
+  let changed = false;
+  for(const fs of allLocal(doc, "fileSharing")){
+    if(attrLocal(fs, "userName")){
+      for(const at of [].slice.call(fs.attributes))
+        if(at.localName === "userName") fs.removeAttributeNode(at);
+      changed = true;
+    }
+  }
+  for(const ap of allLocal(doc, "absPath")){
+    // drop the wrapper too, so no empty mc:AlternateContent is left behind
+    let node = ap;
+    while(node.parentNode && node.parentNode.localName === "Choice") node = node.parentNode;
+    while(node.parentNode && node.parentNode.localName === "AlternateContent") node = node.parentNode;
+    if(node.parentNode){ node.parentNode.removeChild(node); changed = true; }
+  }
+  if(changed) zip.file("xl/workbook.xml", serializeXml(doc));
+}
+
+async function scanCustomXml(zip, rec){
+  const items = zipPaths(zip, /^customXml\/item\d*\.xml$/);
+  if(!items.length) return;
+  rec.fields.push({ label: "Custom XML data",
+    value: items.length + " embedded XML part" + (items.length > 1 ? "s" : "") +
+      " — document-library properties from SharePoint or an add-in; can carry site columns, record ids and the people behind them",
+    leak: true, deep: "customXml" });
+}
+async function dropCustomXml(zip, info){
+  const gone = removeParts(zip, [/^customXml\//]);
+  if(!gone.length) return;
+  for(const rp of zipPaths(zip, /_rels\/[^\/]+\.rels$/)) await removeRels(zip, rp, /customXml/i);
+  await removeContentTypeOverrides(zip, /customXml/i);
+  info.push("Removed custom XML data (" + gone.length + " part" + (gone.length > 1 ? "s" : "") + ")");
 }
 
 /* ---- Cropped pictures (DrawingML a:srcRect), all three OOXML formats ----
@@ -1754,6 +1889,9 @@ async function analyzeOoxml(rec, buf){
   else if(rec.ext === "pptx") await deepScanPptx(zip, rec);
   else if(rec.ext === "xlsx") await deepScanXlsx(zip, rec);
   await scanCroppedPics(zip, rec);
+  await scanPrinterSettings(zip, rec);
+  await scanCustomXml(zip, rec);
+  if(rec.ext === "xlsx") await scanXlsxWorkbook(zip, rec);
 }
 
 const CLEAN_CORE =
@@ -1786,6 +1924,8 @@ async function cleanOoxmlMeta(zip, rec){
     zip.file("docProps/app.xml", new XMLSerializer().serializeToString(app));
   }
 
+  if(rec.ext === "xlsx") await cleanXlsxWorkbook(zip);
+
   if(rec.thumbPath){
     zip.remove(rec.thumbPath);
     const relsFile = zip.file("_rels/.rels");
@@ -1807,8 +1947,10 @@ async function deepCleanOoxml(zip, rec){
   if(rec.ext === "docx") await deepCleanDocx(zip, rec, rec.deepApplied);
   else if(rec.ext === "pptx") await deepCleanPptx(zip, rec, rec.deepApplied);
   else if(rec.ext === "xlsx") await deepCleanXlsx(zip, rec, rec.deepApplied);
-  // Runs last, so it reads the parts the format-specific cleaners just rewrote.
+  // Run last, so they read the parts the format-specific cleaners just rewrote.
   if(rec.deepSelected.has("croppedImages")) await deepCleanCrops(zip, rec, rec.deepApplied);
+  if(rec.deepSelected.has("printerSettings")) await dropPrinterSettings(zip, rec.deepApplied);
+  if(rec.deepSelected.has("customXml")) await dropCustomXml(zip, rec.deepApplied);
 }
 
 async function cleanOoxml(rec){
@@ -2888,9 +3030,11 @@ const DEEP_META = {
   pivotCache:     { label: "Drop the pivot table's copy of the source data", note: "Same as turning off “Save source data with file” in Excel: the pivot rebuilds from its source on open. If the source sheet is gone, it opens empty." },
   pdfRevisions:   { label: "Remove earlier revisions", note: "Drops what previous saves left inside the file. The visible document is unchanged.", def: true },
   pdfSignature:   { label: "Remove the invalidated signature", note: "Cleaning voids the signature anyway. This drops it along with the signer's name, reason and location, instead of leaving a signature that reads as broken." },
+  printerSettings:{ label: "Remove the saved printer setup", note: "The printer name and its host. Nothing needs it \u2014 Office falls back to the default printer.", def: true },
+  customXml:      { label: "Remove custom XML data", note: "SharePoint / add-in properties travelling with the file. Leave it on if a document-assembly add-in reads this file." },
   rsid:           { label: "Strip revision IDs (rsid)", note: "Invisible editing-session fingerprints. Safe to remove.", def: true }
 };
-const DEEP_ORDER = ["trackedChanges","comments","notes","croppedImages","pivotCache","pdfRevisions","pdfSignature","rsid"];
+const DEEP_ORDER = ["trackedChanges","comments","notes","croppedImages","pivotCache","customXml","pdfRevisions","pdfSignature","printerSettings","rsid"];
 
 function renderDeepBlock(rec){
   const keys = DEEP_ORDER.filter(k => rec.fields.some(f => f.deep === k));
@@ -3417,6 +3561,8 @@ try{
       flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
       analyzePdf, cleanPdf, pdfPriorRevisions, pdfOrphans, dropPdfOrphans,
       pdfSignatures, dropPdfSignatures, scanPivotCaches, scanExternalData, dropPivotCacheData,
+      scanPrinterSettings, dropPrinterSettings, scanCustomXml, dropCustomXml, printerDeviceName,
+      scanXlsxWorkbook, cleanXlsxWorkbook,
       findCroppedPics, scanCroppedPics, deepCleanCrops, hiddenShare, resolveTarget,
       renderCard, refreshBar, setPro, isPro, files,
       analyzeOdf, cleanOdf, analyzeImage, stripGif, gifBlocks,
