@@ -545,9 +545,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=935c3ff637" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=ee35389ec7" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=935c3ff637" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=ee35389ec7" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -608,7 +608,7 @@
     </details>
     <details>
       <summary>What does Barecopy not remove?</summary>
-      <p>Tracked changes and comments in Word are document content, not metadata. Barecopy detects them and warns you — Pro can accept and strip them in one click, or you can do it in Word before sending. A page cropped inside a PDF is flagged but left alone: the hidden margin can only be removed by re-cropping in a PDF editor or printing to a new PDF. A digitally signed PDF is flagged before you clean it — the signature covers the exact bytes of the file, so removing metadata voids it; send the signed original if the signature is the point, or sign the clean copy again. Password-protected PDFs are refused rather than risk corrupting them.</p>
+      <p>Tracked changes and comments in Word are document content, not metadata. Barecopy detects them and warns you — Pro can accept and strip them in one click, or you can do it in Word before sending. A page cropped inside a PDF is flagged but left alone: the hidden margin can only be removed by re-cropping in a PDF editor or printing to a new PDF. A digitally signed PDF is flagged before you clean it — the signature covers the exact bytes of the file, so removing metadata voids it. Send the signed original if the signature is the point, sign the clean copy again, or let Pro drop the void signature along with the signer's name, reason and location rather than leave one that reads as broken. Password-protected PDFs are refused rather than risk corrupting them.</p>
     </details>
     <details>
       <summary>What exactly does the Pro verification report contain?</summary>
@@ -645,7 +645,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.8.7",
+  version: "1.8.8",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
@@ -1924,6 +1924,60 @@ function pdfSignatures(doc){
   return sigs;
 }
 
+// Unlink every signature: the field, its widget annotation on the page, the
+// AcroForm's signature flags and the document permission/validation
+// dictionaries that only exist to serve it. The signature dictionary itself —
+// the one holding the signer's name — is left unreferenced, so the caller must
+// follow this with dropPdfOrphans or the name stays in the file.
+function dropPdfSignatures(doc){
+  let acro = null, fields = null;
+  try{
+    acro = doc.catalog.lookup(PDFLib.PDFName.of("AcroForm"), PDFLib.PDFDict);
+    if(acro) fields = acro.lookup(PDFLib.PDFName.of("Fields"), PDFLib.PDFArray);
+  }catch(e){}
+  if(!fields) return 0;
+
+  const doomed = new Set();          // refs to unlink from the pages
+  let removed = 0;
+  const mark = raw => { if(raw instanceof PDFLib.PDFRef) doomed.add(raw.tag); };
+  const prune = (arr, inherited, depth) => {
+    if(depth > 8) return;
+    for(let i = arr.size() - 1; i >= 0; i--){
+      let f = null;
+      try{ f = arr.lookup(i, PDFLib.PDFDict); }catch(e){}
+      if(!f) continue;
+      let ft = inherited, kids = null;
+      try{ const t = f.lookup(PDFLib.PDFName.of("FT")); if(t) ft = String(t); }catch(e){}
+      try{ kids = f.lookup(PDFLib.PDFName.of("Kids"), PDFLib.PDFArray); }catch(e){}
+      if(ft === "/Sig"){
+        mark(arr.get(i));
+        if(kids) for(let k = 0; k < kids.size(); k++) mark(kids.get(k));
+        arr.remove(i);
+        removed++;
+        continue;
+      }
+      if(kids) prune(kids, ft, depth + 1);
+    }
+  };
+  try{ prune(fields, "", 0); }catch(e){}
+  if(!removed) return 0;
+
+  for(const page of doc.getPages()){
+    let annots = null;
+    try{ annots = page.node.lookup(PDFLib.PDFName.of("Annots"), PDFLib.PDFArray); }catch(e){}
+    if(!annots) continue;
+    for(let i = annots.size() - 1; i >= 0; i--){
+      const r = annots.get(i);
+      if(r instanceof PDFLib.PDFRef && doomed.has(r.tag)) annots.remove(i);
+    }
+  }
+  for(const [holder, key] of [[acro,"SigFlags"], [acro,"DSS"], [doc.catalog,"Perms"], [doc.catalog,"DSS"]]){
+    try{ holder.delete(PDFLib.PDFName.of(key)); }catch(e){}
+  }
+  try{ if(fields.size() === 0) doc.catalog.delete(PDFLib.PDFName.of("AcroForm")); }catch(e){}
+  return removed;
+}
+
 function dropPdfOrphans(doc){
   const orphans = pdfOrphans(doc);
   for(const ref of orphans) doc.context.delete(ref);
@@ -1976,8 +2030,9 @@ async function analyzePdf(rec, buf){
         value:"timestamps on " + lastModPages + " page" + (lastModPages > 1 ? "s" : ""), leak:false });
     }
   }catch(e){}
-  // Digital signatures: not a leak to remove, but cleaning will break them, so
-  // surface who signed and warn before the user downloads a void signature.
+  // Digital signatures. Cleaning voids them either way, and the signature
+  // dictionary carries the signer's name, reason and location, so this is a
+  // real finding — removable on opt-in, never silently.
   try{
     const sigs = pdfSignatures(doc);
     if(sigs.length){
@@ -1990,7 +2045,7 @@ async function analyzePdf(rec, buf){
       });
       rec.fields.push({ label: sigs.length > 1 ? "Digital signatures" : "Digital signature",
         value: who.join(" · ") + " — cleaning rewrites the file, so this signature stops validating",
-        leak:false });
+        leak:true, deep:"pdfSignature" });
       if(rec.warnings && rec.warnings.indexOf(PDF_SIGNED_WARN) === -1) rec.warnings.push(PDF_SIGNED_WARN);
     }
   }catch(e){}
@@ -2027,7 +2082,7 @@ async function analyzePdf(rec, buf){
   }catch(e){}
 }
 
-const PDF_REV_FAIL_WARN = "Earlier revisions couldn't be removed from this PDF safely, so only its metadata was cleaned. Content deleted in an earlier save may still be recoverable.";
+const PDF_REV_FAIL_WARN = "The deep clean couldn't be applied to this PDF safely, so only its metadata was removed. Earlier revisions and any signature are still in the file — content deleted in an earlier save may remain recoverable.";
 
 function cleanPdfMeta(doc){
   doc.setTitle(""); doc.setAuthor(""); doc.setSubject(""); doc.setKeywords([]);
@@ -2057,15 +2112,22 @@ async function cleanPdf(rec){
   rec.deepApplied = [];
   cleanPdfMeta(doc);
 
-  // Deep (Pro, opt-in): drop everything the catalog can't reach, so earlier
-  // revisions stop travelling with the file. If it throws — or leaves the page
-  // tree unusable — fall back to a metadata-only clean rather than hand over a
-  // broken PDF.
-  if(rec.deepSelected && rec.deepSelected.has("pdfRevisions")){
+  // Deep (Pro, opt-in): unlink the void signature, and drop everything the
+  // catalog can't reach so earlier revisions stop travelling with the file. If
+  // anything throws — or leaves the page tree unusable — fall back to a
+  // metadata-only clean rather than hand over a broken PDF.
+  const sel = rec.deepSelected || new Set();
+  if(sel.has("pdfSignature") || sel.has("pdfRevisions")){
     try{
-      const dropped = dropPdfOrphans(doc);
+      let sigs = 0;
+      if(sel.has("pdfSignature")) sigs = dropPdfSignatures(doc);
+      // Always sweep after unlinking a signature: the signature dictionary
+      // holds the signer's name and is unreferenced, not gone, until we do.
+      const dropped = (sigs || sel.has("pdfRevisions")) ? dropPdfOrphans(doc) : 0;
       if(doc.getPageCount() < 1) throw new Error("page tree lost");
-      rec.deepApplied.push(dropped
+      if(sigs) rec.deepApplied.push("Removed " + sigs + " invalidated signature" + (sigs > 1 ? "s" : "") +
+        " with the signer's name, reason and location");
+      if(sel.has("pdfRevisions")) rec.deepApplied.push(dropped
         ? "Removed " + dropped + " leftover object" + (dropped > 1 ? "s" : "") + " from earlier revisions"
         : "Rewrote the file as a single revision");
     }catch(e){
@@ -2682,9 +2744,10 @@ const DEEP_META = {
   notes:          { label: "Remove speaker notes", note: "" },
   croppedImages:  { label: "Crop pictures to what's visible", note: "Throws away the cropped-off parts for good. The document looks the same; pictures are re-saved, so they're recompressed once." },
   pdfRevisions:   { label: "Remove earlier revisions", note: "Drops what previous saves left inside the file. The visible document is unchanged.", def: true },
+  pdfSignature:   { label: "Remove the invalidated signature", note: "Cleaning voids the signature anyway. This drops it along with the signer's name, reason and location, instead of leaving a signature that reads as broken." },
   rsid:           { label: "Strip revision IDs (rsid)", note: "Invisible editing-session fingerprints. Safe to remove.", def: true }
 };
-const DEEP_ORDER = ["trackedChanges","comments","notes","croppedImages","pdfRevisions","rsid"];
+const DEEP_ORDER = ["trackedChanges","comments","notes","croppedImages","pdfRevisions","pdfSignature","rsid"];
 
 function renderDeepBlock(rec){
   const keys = DEEP_ORDER.filter(k => rec.fields.some(f => f.deep === k));
@@ -3210,6 +3273,7 @@ try{
       deepScanPptx, deepCleanPptx, deepScanXlsx, deepCleanXlsx,
       flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
       analyzePdf, cleanPdf, pdfPriorRevisions, pdfOrphans, dropPdfOrphans,
+      pdfSignatures, dropPdfSignatures,
       findCroppedPics, scanCroppedPics, deepCleanCrops, hiddenShare, resolveTarget,
       renderCard, refreshBar, setPro, isPro, files,
       analyzeOdf, cleanOdf, analyzeImage, stripGif, gifBlocks,
