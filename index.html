@@ -108,6 +108,11 @@
   @keyframes pulseSoft{0%,100%{opacity:1}50%{opacity:.45}}
   /* Keep the header on ONE line at phone widths — no wrap to a second row.
      Tighten padding, gaps, wordmark and the trust-chip so it all fits. */
+  @media (max-width:700px){
+    /* Two nav links don't fit next to the trust chip on a phone; Pricing is the
+       one that has to stay reachable from the header. */
+    .nav-link.nav-hide-sm{display:none}
+  }
   @media (max-width:480px){
     .local-badge .lb-more{display:none}
     .head-in{flex-wrap:nowrap;padding:14px 15px;gap:10px}
@@ -375,6 +380,39 @@
   }
   @keyframes spin{to{transform:rotate(360deg)}}
 
+  /* ---------- hidden content (the Deep clean pitch) ---------- */
+  .hid{margin-top:64px;border-top:1px solid var(--line);padding-top:36px}
+  .hid h2{
+    font-family:var(--brand);font-weight:600;font-size:14px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);
+  }
+  .new-tag{
+    display:inline-block;margin-left:8px;padding:2px 8px;border-radius:100px;
+    border:1px solid var(--clean-line);background:var(--clean-bg);color:var(--clean);
+    font-family:var(--brand);font-size:10.5px;font-weight:600;letter-spacing:.1em;
+    text-transform:uppercase;vertical-align:2px;
+  }
+  .hid-lead{
+    margin-top:14px;max-width:62ch;font-size:15px;line-height:1.6;color:var(--ink);
+  }
+  .hid-lead strong{font-weight:600}
+  .hid-grid{margin-top:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:var(--line-soft);border:1px solid var(--line-soft);border-radius:10px;overflow:hidden}
+  .hid-item{background:var(--card);padding:18px 18px 20px}
+  .hid-item h3{font-family:var(--brand);font-size:14.5px;font-weight:600;margin-bottom:7px}
+  .hid-item p{font-size:13.5px;color:var(--ink-soft);line-height:1.55}
+  .hid-where{
+    display:block;margin-top:9px;font-family:var(--mono);font-size:11px;
+    letter-spacing:.04em;color:var(--ink-faint);text-transform:uppercase;
+  }
+  .hid-foot{
+    margin-top:22px;padding:16px 18px;border:1px solid var(--warn-line);
+    background:var(--warn-bg);border-radius:10px;font-size:13.5px;line-height:1.6;color:var(--ink);
+  }
+  .hid-foot b{font-weight:600}
+  @media (max-width:860px){ .hid-grid{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:640px){ .hid-grid{grid-template-columns:1fr} .hid-lead{font-size:14.5px} }
+
   /* ---------- trust / how ---------- */
   .how{
     margin-top:64px;border-top:1px solid var(--line);padding-top:36px;
@@ -470,6 +508,7 @@
   <div class="wrap head-in">
     <div class="wordmark"><svg width="24" height="30" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V64.75" stroke="currentColor" stroke-width="7"/><circle cx="39" cy="45.25" r="16" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</div>
     <div class="head-right">
+      <a class="nav-link nav-hide-sm" href="#hidden">Hidden content</a>
       <a class="nav-link" href="#pro">Pricing</a>
       <div class="local-badge" aria-label="Runs locally — nothing uploaded" title="All processing happens in this browser tab. You can disconnect from the internet and it still works.">
         <span class="pulse" aria-hidden="true"></span>Runs locally<span class="lb-more"> · nothing uploaded</span>
@@ -509,16 +548,56 @@
 
   <div class="cards" id="cards"></div>
 
+  <section class="hid" id="hidden">
+    <h2>Hidden content <span class="new-tag">New</span></h2>
+    <p class="hid-lead">Metadata is the easy half. The rest is <strong>real content that is inside the file but not on the screen</strong> — and Word's and Excel's own Document Inspector doesn't look for most of it. Barecopy shows you all of it for free; removing it is one checkbox each in Pro.</p>
+
+    <div class="hid-grid">
+      <div class="hid-item">
+        <h3>Cropped pictures</h3>
+        <p>You cropped a screenshot to hide the column next to it. The whole original is still in the file — dragging the crop handles back brings it straight out. Pro re-saves the picture as only the part you can see.</p>
+        <span class="hid-where">Word · Excel · PowerPoint · OpenDocument</span>
+      </div>
+      <div class="hid-item">
+        <h3>Earlier versions of a PDF</h3>
+        <p>A plain "Save" in Acrobat appends the changes and keeps the version before them. The text under a black box, the page you deleted — both still readable. Pro rewrites the file as a single version.</p>
+        <span class="hid-where">PDF</span>
+      </div>
+      <div class="hid-item">
+        <h3>The pivot table's own copy of your data</h3>
+        <p>A pivot table doesn't read the sheet — it reads a full copy of every source row stored inside the workbook. Delete the salary tab before sending and the rows are still there. Pro drops the copy.</p>
+        <span class="hid-where">Excel</span>
+      </div>
+      <div class="hid-item">
+        <h3>Comments, notes and attachments</h3>
+        <p>Sticky notes and highlights carry the author, the timestamp and the text — "internal, don't send to client" travels with the file. A PDF can also carry whole files inside it, and Excel comments store work email addresses.</p>
+        <span class="hid-where">PDF · Word · Excel · PowerPoint</span>
+      </div>
+      <div class="hid-item">
+        <h3>Your network, spelled out</h3>
+        <p>The printer a file was last set up for names an internal host and often an office floor. The storage path names your SharePoint site and folder tree. Links point at shares like <span class="k-mono">\\fileserver\finance</span>.</p>
+        <span class="hid-where">Excel · Word · PDF</span>
+      </div>
+      <div class="hid-item">
+        <h3>Signatures and form data</h3>
+        <p>A signature carries the signer's name, reason and location — and cleaning any metadata voids it, so Barecopy warns you first. A form field marked hidden keeps its answer in the file but not on the page.</p>
+        <span class="hid-where">PDF</span>
+      </div>
+    </div>
+
+    <p class="hid-foot"><b>What Barecopy deliberately won't touch.</b> If a PDF has a redaction mark that was never applied, the text under that black box is still in the file. Deleting the mark would look tidy and leave the secret — so Barecopy keeps it and tells you to apply it properly. Same with links to other workbooks: cutting them turns formulas into errors, so it shows you the paths and names the Excel command that does it safely. And when something can't be done in a browser — a TIFF picture, a picture shared by several shapes — it says so instead of quietly reporting success.</p>
+  </section>
+
   <section class="how">
     <h2>What gets removed</h2>
     <div class="how-grid">
       <div class="how-item">
         <h3>Word, Excel, PowerPoint</h3>
-        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file. Cropped pictures are flagged too — in OpenDocument files as well as Office ones: the whole original image sits behind the crop, and Pro re-saves it down to the part you can actually see. In Excel, so is the copy of the source data a pivot table keeps inside the workbook — it survives deleting the sheet it came from, and Pro drops it. Barecopy also clears two things Office's own Document Inspector leaves behind: the saved printer setup, which names an internal print server, and the path the file was last saved to, which spells out your SharePoint site and folders.</p>
+        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file. Plus two things Office's own Document Inspector leaves behind: the saved printer setup and the path the file was last saved to.</p>
       </div>
       <div class="how-item">
         <h3>PDF</h3>
-        <p>Author, title, subject, keywords, creator and producer application, creation and modification dates — cleared from both the info dictionary and embedded XMP metadata. Barecopy also flags the earlier revisions an incremental save leaves inside a PDF — the text under a redaction box, the page you deleted — and Pro rewrites the file as a single revision so they can't be recovered. Comments, attached files and redaction marks that were never applied are reported too; Pro strips the first two and deliberately leaves the third, because deleting an unapplied mark would hide the warning and keep the secret. Links pointing at a file on your own machine are flagged as well — they spell out drives, shares and folders.</p>
+        <p>Author, title, subject, keywords, creator and producer application, creation and modification dates — cleared from both the info dictionary and embedded XMP metadata. Everything a PDF hides beyond that — earlier versions, comments, attachments, signatures — is in Hidden content above.</p>
       </div>
       <div class="how-item">
         <h3>Photos</h3>
@@ -545,9 +624,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=5cae7010cc" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=62381a2e82" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=5cae7010cc" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=62381a2e82" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -571,6 +650,7 @@
         <h3>Pro <span class="tier-tag">Launch · 50% off</span></h3>
         <div class="price"><span class="was">€4</span> €2 <small>per month · until 30 September · cancel anytime</small></div>
         <ul>
+          <li><strong>Deep clean</strong> — one click each for cropped-away picture areas, earlier PDF versions, pivot-table data copies, comments, attachments and signatures</li>
           <li>Unlimited batch — clean a whole folder at once</li>
           <li>Everything as one ZIP download</li>
           <li>PDF verification report: every removed field, SHA-256 before &amp; after, and a re-scan confirming 0 fields remain</li>
@@ -645,7 +725,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.13.0",
+  version: "1.14.0",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
