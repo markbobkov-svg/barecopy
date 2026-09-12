@@ -514,7 +514,7 @@
     <div class="how-grid">
       <div class="how-item">
         <h3>Word, Excel, PowerPoint</h3>
-        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file. Cropped pictures are flagged too: Office keeps the whole original image behind the crop, and Pro re-saves it down to the part you can actually see.</p>
+        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file. Cropped pictures are flagged too: Office keeps the whole original image behind the crop, and Pro re-saves it down to the part you can actually see. In Excel, so is the copy of the source data a pivot table keeps inside the workbook — it survives deleting the sheet it came from, and Pro drops it.</p>
       </div>
       <div class="how-item">
         <h3>PDF</h3>
@@ -545,9 +545,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=910f6b562d" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=9d66f3673b" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=910f6b562d" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=9d66f3673b" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -645,7 +645,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.8.9",
+  version: "1.9.0",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
@@ -1371,6 +1371,44 @@ async function scanPivotCaches(zip, rec){
       " — the pivot keeps its own copy, so deleting the source sheet does not delete the data",
     leak: true, deep: "pivotCache" });
 }
+/* Put the workbook into the state Excel itself writes when "Save source data
+   with file" is switched off: no records part, saveData="0", and refreshOnLoad
+   so the cache is rebuilt from the source the next time the file is opened.
+   The definition keeps the field list (the pivot layout survives) but loses the
+   values — the item lists and the min/max of numeric columns go with them. If
+   the source sheet is gone, the pivot opens empty, which is the intended
+   outcome: the copy of the data was the thing being removed. */
+const PIVOT_VALUE_ATTRS = ["count","minValue","maxValue","minDate","maxDate","longText"];
+async function dropPivotCacheData(zip, info){
+  const records = removeParts(zip, [/^xl\/pivotCache\/pivotCacheRecords\d*\.xml$/]);
+  for(const rp of zipPaths(zip, /^xl\/pivotCache\/_rels\/pivotCacheDefinition\d*\.xml\.rels$/))
+    await removeRels(zip, rp, /pivotCacheRecords/i);
+  await removeContentTypeOverrides(zip, /pivotCacheRecords/i);
+
+  let defs = 0;
+  for(const p of zipPaths(zip, /^xl\/pivotCache\/pivotCacheDefinition\d*\.xml$/)){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    const root = doc.documentElement;
+    root.setAttribute("saveData", "0");
+    root.setAttribute("refreshOnLoad", "1");
+    root.removeAttribute("recordCount");
+    for(const at of [].slice.call(root.attributes))
+      if(at.localName === "id") root.removeAttributeNode(at);   // pointed at the records part
+    for(const si of allLocal(doc, "sharedItems")){
+      while(si.firstChild) si.removeChild(si.firstChild);
+      for(const at of [].slice.call(si.attributes))
+        if(PIVOT_VALUE_ATTRS.indexOf(at.localName) !== -1) si.removeAttributeNode(at);
+    }
+    zip.file(p, serializeXml(doc));
+    defs++;
+  }
+  if(!defs && !records.length) return;
+  info.push("Dropped the pivot table's copy of the source data" +
+    (records.length ? " (" + records.length + " cache part" + (records.length > 1 ? "s" : "") + ")" : "") +
+    " — Excel rebuilds it from the source when the file is opened");
+}
+
 async function scanExternalData(zip, rec){
   // External workbook links: the rels carry the path, the part carries values
   // cached from that workbook.
@@ -1422,6 +1460,7 @@ async function scanExternalData(zip, rec){
 }
 async function deepCleanXlsx(zip, rec, info){
   const sel = rec.deepSelected;
+  if(sel.has("pivotCache")) await dropPivotCacheData(zip, info);
   if(!sel.has("comments")) return;
   // Modern comments + threaded comments + person parts.
   const removed = removeParts(zip, [/^xl\/comments\d*\.xml$/, /^xl\/threadedComments\//, /^xl\/persons\//]);
@@ -2846,11 +2885,12 @@ const DEEP_META = {
   comments:       { label: "Remove comments &amp; reviewer names", note: "" },
   notes:          { label: "Remove speaker notes", note: "" },
   croppedImages:  { label: "Crop pictures to what's visible", note: "Throws away the cropped-off parts for good. The document looks the same; pictures are re-saved, so they're recompressed once." },
+  pivotCache:     { label: "Drop the pivot table's copy of the source data", note: "Same as turning off “Save source data with file” in Excel: the pivot rebuilds from its source on open. If the source sheet is gone, it opens empty." },
   pdfRevisions:   { label: "Remove earlier revisions", note: "Drops what previous saves left inside the file. The visible document is unchanged.", def: true },
   pdfSignature:   { label: "Remove the invalidated signature", note: "Cleaning voids the signature anyway. This drops it along with the signer's name, reason and location, instead of leaving a signature that reads as broken." },
   rsid:           { label: "Strip revision IDs (rsid)", note: "Invisible editing-session fingerprints. Safe to remove.", def: true }
 };
-const DEEP_ORDER = ["trackedChanges","comments","notes","croppedImages","pdfRevisions","pdfSignature","rsid"];
+const DEEP_ORDER = ["trackedChanges","comments","notes","croppedImages","pivotCache","pdfRevisions","pdfSignature","rsid"];
 
 function renderDeepBlock(rec){
   const keys = DEEP_ORDER.filter(k => rec.fields.some(f => f.deep === k));
@@ -3376,7 +3416,7 @@ try{
       deepScanPptx, deepCleanPptx, deepScanXlsx, deepCleanXlsx,
       flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
       analyzePdf, cleanPdf, pdfPriorRevisions, pdfOrphans, dropPdfOrphans,
-      pdfSignatures, dropPdfSignatures,
+      pdfSignatures, dropPdfSignatures, scanPivotCaches, scanExternalData, dropPivotCacheData,
       findCroppedPics, scanCroppedPics, deepCleanCrops, hiddenShare, resolveTarget,
       renderCard, refreshBar, setPro, isPro, files,
       analyzeOdf, cleanOdf, analyzeImage, stripGif, gifBlocks,
