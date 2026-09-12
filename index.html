@@ -545,9 +545,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=75c00b7131" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=5cae7010cc" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=75c00b7131" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=5cae7010cc" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -645,7 +645,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.12.1",
+  version: "1.13.0",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
@@ -888,7 +888,7 @@ function addFile(file){
       : (VID[ext] ? "video" : (HEIF[ext] ? "heif" : (ext === "svg" ? "svg" : "unsupported")))))),
     fields: [], warnings: [], error: null,
     leaks: 0, status: "working", cleanedBlob: null,
-    deepSelected: new Set(), deepApplied: [], deepInit: false
+    deepSelected: new Set(), deepApplied: [], deepPartial: new Set(), deepInit: false
   };
   files.set(id, rec);
   renderCard(rec);
@@ -1788,31 +1788,43 @@ async function cropPictureBytes(bytes, mime, sides){
     if(bmp && bmp.close) bmp.close();
   }
 }
+// Why a picture had to be left alone, said plainly — "we could not do this one"
+// is different from "you did not ask", and the card must not treat it as a
+// failure of the clean (see deepPartial / wasRemoved).
+function cropLeftNote(shared, unsupported){
+  const why = [];
+  if(shared) why.push(shared + " used by more than one shape");
+  if(unsupported) why.push(unsupported + " in a format the browser can't re-save (EMF, WMF, TIFF)");
+  return why.join(", ");
+}
 async function deepCleanCrops(zip, rec, info){
   const { pics, uses } = await findCroppedPics(zip, rec);
   if(!pics.length) return;
   const relCounts = await mediaRelCounts(zip);
   const touched = new Map();
-  let done = 0, left = 0;
+  let done = 0, shared = 0, unsupported = 0;
   for(const p of pics){
     const mime = CROP_MIME[(p.media.split(".").pop() || "").toLowerCase()];
-    const shared = (relCounts.get(p.media) || 0) > 1 || (uses.get(p.media) || 0) > 1;
-    if(!p.media || !mime || p.tiled || shared){ left++; continue; }
+    if(!p.media || p.tiled || (relCounts.get(p.media) || 0) > 1 || (uses.get(p.media) || 0) > 1){ shared++; continue; }
+    if(!mime){ unsupported++; continue; }
     try{
       const src = await zip.file(p.media).async("uint8array");
       const out = await cropPictureBytes(src, mime, p.sides);
-      if(!out){ left++; continue; }
+      if(!out){ unsupported++; continue; }
       zip.file(p.media, out);
       p.srcRect.parentNode.removeChild(p.srcRect);
       touched.set(p.part, p.doc);
       done++;
-    }catch(e){ left++; }
+    }catch(e){ unsupported++; }
   }
   for(const [part, doc] of touched) zip.file(part, serializeXml(doc));
+  const left = shared + unsupported;
+  if(left) rec.deepPartial.add("croppedImages");
+  const note = cropLeftNote(shared, unsupported);
   if(done) info.push("Cropped " + done + " picture" + (done > 1 ? "s" : "") + " down to the visible area" +
-    (left ? " (" + left + " left as-is — shared between shapes or not re-encodable)" : ""));
-  else if(left) info.push("Cropped pictures left as-is (" + left +
-    " shared between shapes or not re-encodable — remove the cropped areas in the Office app)");
+    (left ? "; " + left + " left untouched (" + note + ") — crop " + (left > 1 ? "those" : "that one") + " in the Office app" : ""));
+  else info.push("Cropped pictures left untouched (" + note +
+    ") — remove the cropped areas in the Office app (Picture Format → Compress Pictures)");
 }
 /* ==DEEP:END== */
 
@@ -1957,6 +1969,7 @@ async function cleanOoxml(rec){
   let zip = rec.zip;
   await cleanOoxmlMeta(zip, rec);
   rec.deepApplied = [];
+  rec.deepPartial = new Set();
   rec.deepFailed = false;
 
   // Deep (content-level) removal — opt-in and Pro. If anything throws, the file
@@ -1970,6 +1983,7 @@ async function cleanOoxml(rec){
       rec.zip = zip;
       await cleanOoxmlMeta(zip, rec);
       rec.deepApplied = [];
+      rec.deepPartial = new Set(rec.deepSelected);   // asked for, none of it applied
       rec.deepFailed = true;
       if(rec.warnings.indexOf(DEEP_FAIL_WARN) === -1) rec.warnings.push(DEEP_FAIL_WARN);
     }
@@ -2125,30 +2139,33 @@ async function deepCleanOdfCrops(zip, rec, info){
   const { pics, styleUse, imageUse, doc } = await findOdfCrops(zip);
   if(!pics.length) return;
   const touched = new Map();
-  let done = 0, left = 0;
+  let done = 0, shared = 0, unsupported = 0;
   for(const p of pics){
     const mime = CROP_MIME[(p.href.split(".").pop() || "").toLowerCase()];
-    const shared = (styleUse.get(p.styleName) || 0) > 1 || (imageUse.get(p.href) || 0) > 1;
     const file = zip.file(p.href);
-    if(!mime || !p.sides || shared || !file){ left++; continue; }
+    if((styleUse.get(p.styleName) || 0) > 1 || (imageUse.get(p.href) || 0) > 1){ shared++; continue; }
+    if(!mime || !p.sides || !file){ unsupported++; continue; }
     try{
       const out = await cropPictureBytes(await file.async("uint8array"), mime, p.sides);
-      if(!out){ left++; continue; }
+      if(!out){ unsupported++; continue; }
       zip.file(p.href, out);
       for(const at of [].slice.call(p.st.gp.attributes))
         if(at.localName === "clip") p.st.gp.removeAttributeNode(at);
       touched.set(p.st.part, p.st.doc);
       done++;
-    }catch(e){ left++; }
+    }catch(e){ unsupported++; }
   }
   // Only the style parts are written back: `doc` here is a second parse of
   // content.xml used to read frames, and writing it would undo the edits made
   // to the style DOM when both live in that same part.
   for(const [part, d] of touched) zip.file(part, serializeXml(d));
+  const left = shared + unsupported;
+  if(left) rec.deepPartial.add("croppedImages");
+  const note = cropLeftNote(shared, unsupported);
   if(done) info.push("Cropped " + done + " picture" + (done > 1 ? "s" : "") + " down to the visible area" +
-    (left ? " (" + left + " left as-is — shared between frames or not re-encodable)" : ""));
-  else if(left) info.push("Cropped pictures left as-is (" + left +
-    " shared between frames or not re-encodable)");
+    (left ? "; " + left + " left untouched (" + note + ")" : ""));
+  else info.push("Cropped pictures left untouched (" + note +
+    ") — remove the cropped areas in LibreOffice (right-click the picture → Compress)");
 }
 
 const ODF_DEEP_FAIL_WARN = "Deep clean couldn't be applied to this file safely, so only standard metadata was removed. The cropped-away parts of pictures may remain \u2014 remove them in LibreOffice (right-click the picture \u2192 Compress) before sending.";
@@ -2181,6 +2198,7 @@ async function cleanOdf(rec){
   let zip = rec.zip;
   await cleanOdfMeta(zip, rec);
   rec.deepApplied = [];
+  rec.deepPartial = new Set();
   rec.deepFailed = false;
 
   // Same contract as the OOXML path: if a content-level removal throws, rebuild
@@ -2194,6 +2212,7 @@ async function cleanOdf(rec){
       rec.zip = zip;
       await cleanOdfMeta(zip, rec);
       rec.deepApplied = [];
+      rec.deepPartial = new Set(rec.deepSelected);
       rec.deepFailed = true;
       if(rec.warnings.indexOf(ODF_DEEP_FAIL_WARN) === -1) rec.warnings.push(ODF_DEEP_FAIL_WARN);
     }
@@ -2816,6 +2835,7 @@ async function cleanPdf(rec){
     catch(e){ doc = rec.pdf; }
   }
   rec.deepApplied = [];
+  rec.deepPartial = new Set();
   cleanPdfMeta(doc);
 
   // Deep (Pro, opt-in): unlink the void signature, and drop everything the
@@ -2848,6 +2868,7 @@ async function cleanPdf(rec){
         { updateMetadata:false, ignoreEncryption:true });
       cleanPdfMeta(doc);
       rec.deepApplied = [];
+      rec.deepPartial = new Set(rec.deepSelected);
       if(rec.warnings.indexOf(PDF_REV_FAIL_WARN) === -1) rec.warnings.push(PDF_REV_FAIL_WARN);
     }
   }
@@ -3390,7 +3411,17 @@ async function ensureCleanedBlob(rec){
 // or a deep item the user opted into. Deep items left in place on purpose
 // (unchecked, or detection-only like hidden sheets) are NOT failures.
 function wasRemoved(rec, f){
-  return f.leak && f.value && (!f.deep || (rec.deepSelected && rec.deepSelected.has(f.deep)));
+  if(!f.leak || !f.value) return false;
+  if(!f.deep) return true;                                   // standard metadata: always removed
+  if(!(rec.deepSelected && rec.deepSelected.has(f.deep))) return false;   // not asked for
+  // Asked for, but the cleaner could only do part of it (a picture in a format
+  // the browser can't re-save, one shared between shapes). What remains was
+  // left on purpose and explained in deepApplied — it is not a failed clean.
+  return !(rec.deepPartial && rec.deepPartial.has(f.deep));
+}
+// Anything identifying that is still in the file by choice or by limitation.
+function keptOnPurpose(rec, f){
+  return !!(f.leak && f.value && f.deep && !wasRemoved(rec, f));
 }
 async function reScanCleaned(rec){
   if(rec.verify) return rec.verify;
@@ -3408,7 +3439,7 @@ async function reScanCleaned(rec){
     // Only fields we intended to remove count against verification; intentionally
     // kept deep items (e.g. hidden sheets) are reported separately, not as leaks.
     const remaining = probe.fields.filter(f => wasRemoved(rec, f));
-    const kept = probe.fields.filter(f => f.leak && f.value && f.deep && !(rec.deepSelected && rec.deepSelected.has(f.deep)));
+    const kept = probe.fields.filter(f => keptOnPurpose(rec, f));
     rec.verify = { ok: remaining.length === 0, remaining, kept, error: null };
   }catch(e){
     rec.verify = { ok: null, remaining: [], kept: [], error: (e && e.message) || "re-scan failed" };
@@ -3524,8 +3555,7 @@ function renderCard(rec){
     let rows = "";
     rec.fields.forEach(f => {
       const removed = rec.status === "cleaned" && wasRemoved(rec, f);
-      const kept = rec.status === "cleaned" && f.leak && f.value && !!f.deep &&
-        !(rec.deepSelected && rec.deepSelected.has(f.deep));
+      const kept = rec.status === "cleaned" && keptOnPurpose(rec, f);
       rows += '<div class="row' + (f.leak ? ' leak' : '') + (removed ? ' removed' : '') + (kept ? ' kept' : '') + '">' +
         '<span class="k">' + esc(f.label) + '</span>' +
         '<span class="v">' + esc(f.value) + '</span></div>';
@@ -3536,13 +3566,19 @@ function renderCard(rec){
       if(rec.verify.ok === true && !keptAfter)
         verifyLine = '<div class="verified-badge"><span class="tick">✓</span> Re-scanned after cleaning: 0 identifying fields remain.</div>';
       else if(rec.verify.ok === true && keptAfter){
-        // Some kept items have a Deep clean switch; others (hidden sheets,
-        // cropped pages) are detection-only — don't point at a button for those.
-        const fixable = rec.verify.kept.some(f => DEEP_META[f.deep]);
+        // Three different reasons something can still be there, and each needs
+        // its own sentence: the switch is off, the switch was on but this file
+        // put it out of reach, or there is no switch at all (hidden sheets,
+        // cropped pages) — never point at a button that won't help.
+        const stuck = rec.verify.kept.some(f => rec.deepPartial && rec.deepPartial.has(f.deep));
+        const fixable = rec.verify.kept.some(f => DEEP_META[f.deep] && !(rec.deepPartial && rec.deepPartial.has(f.deep)));
+        const why = stuck
+          ? '. Deep clean couldn\'t finish ' + (keptAfter > 1 ? 'these' : 'this one') + ' in the browser — see the note above'
+          : fixable
+            ? '. Use Deep clean above to remove ' + (keptAfter > 1 ? 'them' : 'it')
+            : '. This is document content — review ' + (keptAfter > 1 ? 'these' : 'it') + ' in the app that made the file';
         verifyLine = '<div class="verified-badge partial"><span class="tick">✓</span> Standard metadata removed &amp; re-scanned. Still in the file: ' +
-          esc(rec.verify.kept.map(f => f.label).join(", ")) +
-          (fixable ? '. Use Deep clean above to remove ' + (keptAfter > 1 ? 'them' : 'it')
-                   : '. This is document content — review ' + (keptAfter > 1 ? 'these' : 'it') + ' in the app that made the file') + '.</div>';
+          esc(rec.verify.kept.map(f => f.label).join(", ")) + why + '.</div>';
       }
       else if(rec.verify.ok === false)
         verifyLine = '<div class="verified-badge fail"><span class="tick">!</span> Re-scan still found: ' + esc(rec.verify.remaining.map(f => f.label).join(", ")) + '. Please report this file.</div>';
@@ -3595,7 +3631,7 @@ function renderCard(rec){
       if(cb.checked) rec.deepSelected.add(k); else rec.deepSelected.delete(k);
       // Selection changed — invalidate the cached clean + its verification so the
       // next download reflects the new choice.
-      rec.cleanedBlob = null; rec.verify = null; rec.deepApplied = [];
+      rec.cleanedBlob = null; rec.verify = null; rec.deepApplied = []; rec.deepPartial = new Set();
       if(rec.status === "cleaned") rec.status = "analyzed";
       renderCard(rec);
     });
@@ -3989,7 +4025,7 @@ try{
   if(typeof window !== "undefined" && window.__BC_ALLOW_TEST){
     window.__BC = { analyzeOoxml, cleanOoxml, deepScanDocx, deepCleanDocx,
       deepScanPptx, deepCleanPptx, deepScanXlsx, deepCleanXlsx,
-      flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
+      flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved, keptOnPurpose,
       analyzePdf, cleanPdf, pdfPriorRevisions, pdfOrphans, dropPdfOrphans,
       pdfSignatures, dropPdfSignatures, scanPivotCaches, scanExternalData, dropPivotCacheData,
       pdfAnnotScan, dropPdfAnnots, pdfEmbeddedFiles, dropPdfAttachments, pdfFormValues, pdfLocalLinks, pdfContentOrphans,

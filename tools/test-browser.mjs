@@ -528,6 +528,34 @@ const results = await page.evaluate(async (pdfB64) => {
   const sharedPic = await zsOut.file('word/media/image1.png').async('uint8array');
   log('a shared picture is not cropped', sharedXml.includes('srcRect') && sharedPic.length === picBytes.length,
     srec.deepApplied.join('; '));
+  // Leaving it was the right call, so the clean must not be reported as failed:
+  // real files hit this constantly (LibreOffice's tif-crop.docx, POI's
+  // 54542_cropped_bitmap.pptx) and the card used to tell the user to report it.
+  log('a picture we could not crop counts as kept, not as a failed clean',
+    B.wasRemoved(srec, { leak:true, value:'x', deep:'croppedImages' }) === false &&
+    B.keptOnPurpose(srec, { leak:true, value:'x', deep:'croppedImages' }) === true,
+    'deepPartial: ' + [...(srec.deepPartial || [])].join(','));
+  log('the reason it was left is spelled out', /used by more than one shape/.test(srec.deepApplied.join(' ')),
+    srec.deepApplied.join('; '));
+
+  // a picture the browser cannot re-encode (TIFF, EMF, WMF) takes the same path
+  const tifRels = relsXml.replace('media/image1.png', 'media/image1.tif');
+  const zt = new JSZip();
+  zt.file('[Content_Types].xml', ct); zt.file('_rels/.rels', rootRels);
+  zt.file('word/document.xml', docXml);
+  zt.file('word/_rels/document.xml.rels', tifRels);
+  zt.file('word/media/image1.tif', picBytes);
+  const tifBuf = await zt.generateAsync({ type:'arraybuffer' });
+  const trec = { ext:'docx', kind:'ooxml', fields:[], warnings:[], deepApplied:[], buffer: tifBuf,
+    deepSelected: new Set(['croppedImages']), file: new File([tifBuf], 't.docx') };
+  await B.analyzeOoxml(trec, tifBuf);
+  const tifOut = await JSZip.loadAsync(await (await B.cleanOoxml(trec)).arrayBuffer());
+  log('a TIFF picture is left intact rather than mangled',
+    (await tifOut.file('word/media/image1.tif').async('uint8array')).length === picBytes.length &&
+    (await tifOut.file('word/document.xml').async('string')).includes('srcRect'));
+  log('and it is reported as left untouched, with the format as the reason',
+    B.wasRemoved(trec, { leak:true, value:'x', deep:'croppedImages' }) === false &&
+    /can't re-save/.test(trec.deepApplied.join(' ')), trec.deepApplied.join('; '));
 
   /* ---------------- PPTX: crop on a slide (media via ../media/) ------------ */
   const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
