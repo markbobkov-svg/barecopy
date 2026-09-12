@@ -550,42 +550,42 @@
 
   <section class="hid" id="hidden">
     <h2>Hidden content <span class="new-tag">New</span></h2>
-    <p class="hid-lead">Metadata is the easy half. The rest is <strong>real content that is inside the file but not on the screen</strong> — and Word's and Excel's own Document Inspector doesn't look for most of it. Barecopy shows you all of it for free; removing it is one checkbox each in Pro.</p>
+    <p class="hid-lead">Metadata is the easy half. The rest is <strong>real content inside the file but not on the screen</strong> — and Office's own inspector doesn't look for it. Free to find, one checkbox each to remove.</p>
 
     <div class="hid-grid">
       <div class="hid-item">
         <h3>Cropped pictures</h3>
-        <p>You cropped a screenshot to hide the column next to it. The whole original is still in the file — dragging the crop handles back brings it straight out. Pro re-saves the picture as only the part you can see.</p>
+        <p>What you cropped away is still in there — drag the handles back and it returns.</p>
         <span class="hid-where">Word · Excel · PowerPoint · OpenDocument</span>
       </div>
       <div class="hid-item">
         <h3>Earlier versions of a PDF</h3>
-        <p>A plain "Save" in Acrobat appends the changes and keeps the version before them. The text under a black box, the page you deleted — both still readable. Pro rewrites the file as a single version.</p>
+        <p>A plain Save keeps the version before it, black boxes and deleted pages included.</p>
         <span class="hid-where">PDF</span>
       </div>
       <div class="hid-item">
-        <h3>The pivot table's own copy of your data</h3>
-        <p>A pivot table doesn't read the sheet — it reads a full copy of every source row stored inside the workbook. Delete the salary tab before sending and the rows are still there. Pro drops the copy.</p>
+        <h3>The pivot table's copy of your data</h3>
+        <p>It stores every source row, so deleting the salary tab doesn't delete the salaries.</p>
         <span class="hid-where">Excel</span>
       </div>
       <div class="hid-item">
-        <h3>Comments, notes and attachments</h3>
-        <p>Sticky notes and highlights carry the author, the timestamp and the text — "internal, don't send to client" travels with the file. A PDF can also carry whole files inside it, and Excel comments store work email addresses.</p>
+        <h3>Comments and attachments</h3>
+        <p>Notes travel with their author and text. A PDF can carry whole files inside it.</p>
         <span class="hid-where">PDF · Word · Excel · PowerPoint</span>
       </div>
       <div class="hid-item">
         <h3>Your network, spelled out</h3>
-        <p>The printer a file was last set up for names an internal host and often an office floor. The storage path names your SharePoint site and folder tree. Links point at shares like <span class="k-mono">\\fileserver\finance</span>.</p>
+        <p>Printer names, SharePoint paths, links to <span class="k-mono">\\fileserver\finance</span>.</p>
         <span class="hid-where">Excel · Word · PDF</span>
       </div>
       <div class="hid-item">
         <h3>Signatures and form data</h3>
-        <p>A signature carries the signer's name, reason and location — and cleaning any metadata voids it, so Barecopy warns you first. A form field marked hidden keeps its answer in the file but not on the page.</p>
+        <p>The signer's name and location, and answers in fields marked hidden.</p>
         <span class="hid-where">PDF</span>
       </div>
     </div>
 
-    <p class="hid-foot"><b>What Barecopy deliberately won't touch.</b> If a PDF has a redaction mark that was never applied, the text under that black box is still in the file. Deleting the mark would look tidy and leave the secret — so Barecopy keeps it and tells you to apply it properly. Same with links to other workbooks: cutting them turns formulas into errors, so it shows you the paths and names the Excel command that does it safely. And when something can't be done in a browser — a TIFF picture, a picture shared by several shapes — it says so instead of quietly reporting success.</p>
+    <p class="hid-foot"><b>And what it won't touch.</b> A redaction mark that was never applied stays — deleting it would hide the warning and keep the secret. So do links your formulas depend on. When something can't be removed, Barecopy says so instead of reporting success.</p>
   </section>
 
   <section class="how">
@@ -624,9 +624,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=62381a2e82" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=e8b6c6ba13" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=62381a2e82" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=e8b6c6ba13" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -725,7 +725,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.14.0",
+  version: "1.14.1",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
