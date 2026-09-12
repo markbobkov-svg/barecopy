@@ -514,11 +514,11 @@
     <div class="how-grid">
       <div class="how-item">
         <h3>Word, Excel, PowerPoint</h3>
-        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file. Cropped pictures are flagged too: Office keeps the whole original image behind the crop, and Pro re-saves it down to the part you can actually see. In Excel, so is the copy of the source data a pivot table keeps inside the workbook — it survives deleting the sheet it came from, and Pro drops it. Barecopy also clears two things Office's own Document Inspector leaves behind: the saved printer setup, which names an internal print server, and the path the file was last saved to, which spells out your SharePoint site and folders.</p>
+        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file. Cropped pictures are flagged too — in OpenDocument files as well as Office ones: the whole original image sits behind the crop, and Pro re-saves it down to the part you can actually see. In Excel, so is the copy of the source data a pivot table keeps inside the workbook — it survives deleting the sheet it came from, and Pro drops it. Barecopy also clears two things Office's own Document Inspector leaves behind: the saved printer setup, which names an internal print server, and the path the file was last saved to, which spells out your SharePoint site and folders.</p>
       </div>
       <div class="how-item">
         <h3>PDF</h3>
-        <p>Author, title, subject, keywords, creator and producer application, creation and modification dates — cleared from both the info dictionary and embedded XMP metadata. Barecopy also flags the earlier revisions an incremental save leaves inside a PDF — the text under a redaction box, the page you deleted — and Pro rewrites the file as a single revision so they can't be recovered. Comments, attached files and redaction marks that were never applied are reported too; Pro strips the first two and deliberately leaves the third, because deleting an unapplied mark would hide the warning and keep the secret.</p>
+        <p>Author, title, subject, keywords, creator and producer application, creation and modification dates — cleared from both the info dictionary and embedded XMP metadata. Barecopy also flags the earlier revisions an incremental save leaves inside a PDF — the text under a redaction box, the page you deleted — and Pro rewrites the file as a single revision so they can't be recovered. Comments, attached files and redaction marks that were never applied are reported too; Pro strips the first two and deliberately leaves the third, because deleting an unapplied mark would hide the warning and keep the secret. Links pointing at a file on your own machine are flagged as well — they spell out drives, shares and folders.</p>
       </div>
       <div class="how-item">
         <h3>Photos</h3>
@@ -545,9 +545,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=24a03c98e9" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=c3d368d7bf" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=24a03c98e9" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=c3d368d7bf" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -645,7 +645,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.11.0",
+  version: "1.12.0",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
@@ -2037,7 +2037,121 @@ async function analyzeOdf(rec, buf){
     rec.thumbPath = "Thumbnails/thumbnail.png";
     rec.fields.push({ label: "Preview thumbnail", value: "embedded image of page 1", leak: true });
   }
+  await scanOdfCrops(zip, rec);
 }
+
+/* ---- Cropped pictures in OpenDocument ----
+   Same leak as in Office, expressed the other way round: the crop is not on the
+   picture but on the graphic style a <draw:frame> points at, as
+   fo:clip="rect(top right bottom left)", and the whole picture stays in
+   Pictures/. The clip lengths are absolute, so the original size is the frame
+   plus what was trimmed off each side — which is what turns them into the same
+   per-side fractions the Office path already works in. */
+const ODF_UNITS = { cm:1, mm:0.1, in:2.54, pt:2.54/72, pc:2.54/6, px:2.54/96 };
+function odfLen(v){
+  const m = /^\s*(-?[\d.]+)\s*(cm|mm|in|pt|pc|px)?\s*$/.exec(v || "");
+  if(!m) return null;
+  const n = parseFloat(m[1]);
+  return isNaN(n) ? null : n * (ODF_UNITS[m[2]] || 1);
+}
+function parseOdfClip(v){
+  const m = /^\s*rect\s*\(([^)]*)\)\s*$/i.exec(v || "");
+  if(!m) return null;
+  const parts = m[1].split(/[,\s]+/).filter(Boolean);
+  if(parts.length !== 4) return null;
+  const nums = parts.map(p => /^auto$/i.test(p) ? 0 : odfLen(p));
+  if(nums.some(x => x == null)) return null;
+  const [t, r, b, l] = nums;
+  if(t <= 0 && r <= 0 && b <= 0 && l <= 0) return null;     // nothing hidden (or an inset)
+  return { t: Math.max(0, t), r: Math.max(0, r), b: Math.max(0, b), l: Math.max(0, l) };
+}
+// Clip lengths + frame size -> the same 1/1000-of-a-percent sides as DrawingML.
+function odfSides(rect, frameW, frameH){
+  const fullW = frameW + rect.l + rect.r, fullH = frameH + rect.t + rect.b;
+  if(!(fullW > 0) || !(fullH > 0)) return null;
+  return { l: Math.round(rect.l / fullW * 100000), r: Math.round(rect.r / fullW * 100000),
+           t: Math.round(rect.t / fullH * 100000), b: Math.round(rect.b / fullH * 100000) };
+}
+// Graphic styles that carry a crop, by style name. Styles live in either part.
+async function odfCropStyles(zip){
+  const map = new Map();
+  for(const part of ["content.xml", "styles.xml"]){
+    const doc = await partDoc(zip, part);
+    if(!doc) continue;
+    for(const st of allLocal(doc, "style")){
+      const name = attrLocal(st, "name");
+      if(!name) continue;
+      for(const gp of allWithin(st, "graphic-properties")){
+        const rect = parseOdfClip(attrLocal(gp, "clip"));
+        if(rect) map.set(name, { rect, part, doc, gp });
+      }
+    }
+  }
+  return map;
+}
+async function findOdfCrops(zip){
+  const pics = [], styleUse = new Map(), imageUse = new Map();
+  const styles = await odfCropStyles(zip);
+  const doc = await partDoc(zip, "content.xml");
+  if(!doc) return { pics, styles, styleUse, imageUse };
+  for(const frame of allLocal(doc, "frame")){
+    const styleName = attrLocal(frame, "style-name");
+    if(styleName) styleUse.set(styleName, (styleUse.get(styleName) || 0) + 1);
+    let href = "";
+    for(const img of allWithin(frame, "image")){
+      href = attrLocal(img, "href").replace(/^\.\//, "");
+      if(href) break;
+    }
+    if(href) imageUse.set(href, (imageUse.get(href) || 0) + 1);
+    const st = styles.get(styleName);
+    if(!st || !href) continue;
+    pics.push({ href, styleName, st,
+      sides: odfSides(st.rect, odfLen(attrLocal(frame, "width")), odfLen(attrLocal(frame, "height"))) });
+  }
+  return { pics, styles, styleUse, imageUse, doc };
+}
+async function scanOdfCrops(zip, rec){
+  const { pics } = await findOdfCrops(zip);
+  if(!pics.length) return;
+  let worst = 0;
+  for(const p of pics) if(p.sides) worst = Math.max(worst, hiddenShare(p.sides));
+  rec.fields.push({ label: "Cropped pictures",
+    value: pics.length + " cropped picture" + (pics.length > 1 ? "s" : "") +
+      " — the cropped-away parts are still stored in full" +
+      (worst > 0 ? " (up to " + Math.round(worst * 100) + "% of a picture is hidden, not removed)" : ""),
+    leak:true, deep:"croppedImages" });
+}
+async function deepCleanOdfCrops(zip, rec, info){
+  const { pics, styleUse, imageUse, doc } = await findOdfCrops(zip);
+  if(!pics.length) return;
+  const touched = new Map();
+  let done = 0, left = 0;
+  for(const p of pics){
+    const mime = CROP_MIME[(p.href.split(".").pop() || "").toLowerCase()];
+    const shared = (styleUse.get(p.styleName) || 0) > 1 || (imageUse.get(p.href) || 0) > 1;
+    const file = zip.file(p.href);
+    if(!mime || !p.sides || shared || !file){ left++; continue; }
+    try{
+      const out = await cropPictureBytes(await file.async("uint8array"), mime, p.sides);
+      if(!out){ left++; continue; }
+      zip.file(p.href, out);
+      for(const at of [].slice.call(p.st.gp.attributes))
+        if(at.localName === "clip") p.st.gp.removeAttributeNode(at);
+      touched.set(p.st.part, p.st.doc);
+      done++;
+    }catch(e){ left++; }
+  }
+  // Only the style parts are written back: `doc` here is a second parse of
+  // content.xml used to read frames, and writing it would undo the edits made
+  // to the style DOM when both live in that same part.
+  for(const [part, d] of touched) zip.file(part, serializeXml(d));
+  if(done) info.push("Cropped " + done + " picture" + (done > 1 ? "s" : "") + " down to the visible area" +
+    (left ? " (" + left + " left as-is — shared between frames or not re-encodable)" : ""));
+  else if(left) info.push("Cropped pictures left as-is (" + left +
+    " shared between frames or not re-encodable)");
+}
+
+const ODF_DEEP_FAIL_WARN = "Deep clean couldn't be applied to this file safely, so only standard metadata was removed. The cropped-away parts of pictures may remain \u2014 remove them in LibreOffice (right-click the picture \u2192 Compress) before sending.";
 
 const CLEAN_ODF_META =
 '<?xml version="1.0" encoding="UTF-8"?>' +
@@ -2045,8 +2159,7 @@ const CLEAN_ODF_META =
 'xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" ' +
 'xmlns:dc="http://purl.org/dc/elements/1.1/" office:version="1.2"><office:meta/></office:document-meta>';
 
-async function cleanOdf(rec){
-  const zip = rec.zip;
+async function cleanOdfMeta(zip, rec){
   if(zip.file("meta.xml")) zip.file("meta.xml", CLEAN_ODF_META);
   if(rec.thumbPath) zip.remove(rec.thumbPath);
 
@@ -2060,6 +2173,29 @@ async function cleanOdf(rec){
         if(/^Thumbnails\//.test(attrLocal(el, "full-path"))){ el.parentNode.removeChild(el); changed = true; }
       }
       if(changed) zip.file("META-INF/manifest.xml", serializeXml(doc));
+    }
+  }
+}
+
+async function cleanOdf(rec){
+  let zip = rec.zip;
+  await cleanOdfMeta(zip, rec);
+  rec.deepApplied = [];
+  rec.deepFailed = false;
+
+  // Same contract as the OOXML path: if a content-level removal throws, rebuild
+  // a metadata-only clean from the original bytes rather than hand over a
+  // package with dangling references.
+  if(rec.deepSelected && rec.deepSelected.has("croppedImages")){
+    try{
+      await deepCleanOdfCrops(zip, rec, rec.deepApplied);
+    }catch(e){
+      zip = await JSZip.loadAsync(rec.buffer);
+      rec.zip = zip;
+      await cleanOdfMeta(zip, rec);
+      rec.deepApplied = [];
+      rec.deepFailed = true;
+      if(rec.warnings.indexOf(ODF_DEEP_FAIL_WARN) === -1) rec.warnings.push(ODF_DEEP_FAIL_WARN);
     }
   }
 
@@ -2332,6 +2468,46 @@ function pdfEmbeddedFiles(doc){
   return specs.map(pdfFileSpecInfo);
 }
 
+/* A link does not have to point at the web. /Launch and /GoToR actions, and
+   file: URIs, point at a path on the machine the PDF was made on — the same
+   leak an Excel external link carries: the drive letter, the share, the folder
+   tree, often a user name. Detection only: the link is page content the author
+   put there, and a recipient seeing a dead link is better than Barecopy
+   silently rewriting the document. */
+function pdfLocalLinks(doc){
+  const paths = new Set();
+  const spec = fs => {
+    if(!fs) return "";
+    if(typeof fs.lookup !== "function") return pdfText(fs);
+    const at = k => { try{ return fs.lookup(PDFLib.PDFName.of(k)); }catch(e){ return null; } };
+    return pdfText(at("UF")) || pdfText(at("F")) || "";
+  };
+  for(const page of doc.getPages()){
+    const annots = pdfPageAnnots(page);
+    if(!annots) continue;
+    for(let i = 0; i < annots.size(); i++){
+      let a = null;
+      try{ a = annots.lookup(i, PDFLib.PDFDict); }catch(e){}
+      if(!a) continue;
+      let act = null;
+      try{ act = a.lookup(PDFLib.PDFName.of("A"), PDFLib.PDFDict); }catch(e){}
+      if(!act) continue;
+      let kind = "";
+      try{ kind = String(act.lookup(PDFLib.PDFName.of("S")) || ""); }catch(e){}
+      if(kind === "/URI"){
+        let uri = "";
+        try{ uri = pdfText(act.lookup(PDFLib.PDFName.of("URI"))); }catch(e){}
+        if(/^file:/i.test(uri)) paths.add(uri.replace(/^file:\/{2,}/i, ""));
+      }else if(kind === "/Launch" || kind === "/GoToR"){
+        let p = "";
+        try{ p = spec(act.lookup(PDFLib.PDFName.of("F"))); }catch(e){}
+        if(p) paths.add(p);
+      }
+    }
+  }
+  return [...paths];
+}
+
 function dropPdfAnnots(doc){
   let removed = 0;
   for(const page of doc.getPages()){
@@ -2521,6 +2697,15 @@ async function analyzePdf(rec, buf){
           " Apply " + (an.redact > 1 ? "them" : "it") + " in a PDF editor (Acrobat: Redact → Apply);" +
           " Barecopy leaves the mark" + (an.redact > 1 ? "s" : "") + " alone rather than hide the warning",
         leak:true, deep:"pdfRedact" });
+    }
+  }catch(e){}
+  try{
+    const links = pdfLocalLinks(doc);
+    if(links.length){
+      rec.fields.push({ label: "Links to local files",
+        value: authorList(new Set(links)) +
+          " — link targets on the machine this PDF was made on; they name drives, shares and folders. Edit or drop them in a PDF editor",
+        leak:true, deep:"pdfLocalLinks" });
     }
   }catch(e){}
   try{
@@ -3785,7 +3970,8 @@ try{
       flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
       analyzePdf, cleanPdf, pdfPriorRevisions, pdfOrphans, dropPdfOrphans,
       pdfSignatures, dropPdfSignatures, scanPivotCaches, scanExternalData, dropPivotCacheData,
-      pdfAnnotScan, dropPdfAnnots, pdfEmbeddedFiles, dropPdfAttachments, pdfFormValues,
+      pdfAnnotScan, dropPdfAnnots, pdfEmbeddedFiles, dropPdfAttachments, pdfFormValues, pdfLocalLinks,
+      scanOdfCrops, deepCleanOdfCrops, parseOdfClip, odfSides, odfLen,
       scanPrinterSettings, dropPrinterSettings, scanCustomXml, dropCustomXml, printerDeviceName,
       scanXlsxWorkbook, cleanXlsxWorkbook,
       findCroppedPics, scanCroppedPics, deepCleanCrops, hiddenShare, resolveTarget,
