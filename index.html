@@ -518,7 +518,7 @@
       </div>
       <div class="how-item">
         <h3>PDF</h3>
-        <p>Author, title, subject, keywords, creator and producer application, creation and modification dates — cleared from both the info dictionary and embedded XMP metadata. Barecopy also flags the earlier revisions an incremental save leaves inside a PDF — the text under a redaction box, the page you deleted — and Pro rewrites the file as a single revision so they can't be recovered.</p>
+        <p>Author, title, subject, keywords, creator and producer application, creation and modification dates — cleared from both the info dictionary and embedded XMP metadata. Barecopy also flags the earlier revisions an incremental save leaves inside a PDF — the text under a redaction box, the page you deleted — and Pro rewrites the file as a single revision so they can't be recovered. Comments, attached files and redaction marks that were never applied are reported too; Pro strips the first two and deliberately leaves the third, because deleting an unapplied mark would hide the warning and keep the secret.</p>
       </div>
       <div class="how-item">
         <h3>Photos</h3>
@@ -545,9 +545,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=971b01e12f" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=24a03c98e9" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=971b01e12f" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=24a03c98e9" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -645,7 +645,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.10.0",
+  version: "1.11.0",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
@@ -2170,16 +2170,15 @@ function pdfDate(v){
   const d = new Date(ms);
   return isNaN(d) ? "" : fmtDate(d);
 }
-// Signature fields that actually carry a signature (/V), walking the AcroForm
-// field tree — signatures are often nested under a parent field.
-function pdfSignatures(doc){
-  const sigs = [];
+// Walk the AcroForm field tree, inheriting /FT down through /Kids — form
+// fields, signatures included, are often nested under a parent field.
+function walkAcroFields(doc, visit){
   let fields;
   try{
     const acro = doc.catalog.lookup(PDFLib.PDFName.of("AcroForm"), PDFLib.PDFDict);
     if(acro) fields = acro.lookup(PDFLib.PDFName.of("Fields"), PDFLib.PDFArray);
   }catch(e){}
-  if(!fields) return sigs;
+  if(!fields) return;
   const seen = new Set();
   const walk = (arr, inherited, depth) => {
     if(depth > 8) return;
@@ -2190,22 +2189,191 @@ function pdfSignatures(doc){
       seen.add(f);
       let ft = inherited;
       try{ const t = f.lookup(PDFLib.PDFName.of("FT")); if(t) ft = String(t); }catch(e){}
-      if(ft === "/Sig"){
-        let v = null;
-        try{ v = f.lookup(PDFLib.PDFName.of("V"), PDFLib.PDFDict); }catch(e){}
-        if(v){
-          const at = k => { try{ return v.lookup(PDFLib.PDFName.of(k)); }catch(e){ return null; } };
-          sigs.push({ name: pdfText(at("Name")), date: pdfDate(at("M")),
-            reason: pdfText(at("Reason")), location: pdfText(at("Location")) });
-        }
-      }
+      visit(f, ft);
       let kids = null;
       try{ kids = f.lookup(PDFLib.PDFName.of("Kids"), PDFLib.PDFArray); }catch(e){}
       if(kids) walk(kids, ft, depth + 1);
     }
   };
   try{ walk(fields, "", 0); }catch(e){}
+}
+function pdfSignatures(doc){
+  const sigs = [];
+  walkAcroFields(doc, (f, ft) => {
+    if(ft !== "/Sig") return;
+    let v = null;
+    try{ v = f.lookup(PDFLib.PDFName.of("V"), PDFLib.PDFDict); }catch(e){}
+    if(!v) return;
+    const at = k => { try{ return v.lookup(PDFLib.PDFName.of(k)); }catch(e){ return null; } };
+    sigs.push({ name: pdfText(at("Name")), date: pdfDate(at("M")),
+      reason: pdfText(at("Reason")), location: pdfText(at("Location")) });
+  });
   return sigs;
+}
+// Answers held as form data rather than page content. A filled form showing its
+// values is not a leak — the recipient can see them anyway — but a field the
+// form keeps hidden is exactly that.
+function pdfFormValues(doc){
+  let filled = 0, hidden = 0;
+  const hiddenNames = [];
+  walkAcroFields(doc, (f, ft) => {
+    if(!ft || ft === "/Sig") return;
+    let v = null;
+    try{ v = f.lookup(PDFLib.PDFName.of("V")); }catch(e){}
+    if(v == null) return;
+    const val = (v instanceof PDFLib.PDFName) ? String(v) : pdfText(v);
+    if(!val || val === "/Off") return;
+    filled++;
+    let flags = 0;
+    try{
+      const fl = f.lookup(PDFLib.PDFName.of("F"));
+      if(fl && typeof fl.asNumber === "function") flags = fl.asNumber();
+    }catch(e){}
+    if(flags & 2){                                   // bit 2: Hidden
+      hidden++;
+      const t = pdfText(f.lookup(PDFLib.PDFName.of("T")));
+      if(t) hiddenNames.push(t);
+    }
+  });
+  return { filled, hidden, hiddenNames };
+}
+
+/* Annotations: everything drawn on a page that is not the page. Sticky notes,
+   highlights, ink scribbles and stamps each carry the author (/T), the comment
+   text (/Contents) and a timestamp, and they survive printing to PDF as often
+   as not. Two subtypes are deliberately left alone by the remover:
+   Link (navigation, not a comment) and Widget (the form itself). A third,
+   Redact, is never touched for a stronger reason — a redaction mark that has
+   not been applied means the text under the black box is still in the file, and
+   deleting the mark would remove the warning while leaving the secret. */
+const PDF_MARKUP = ["/Text","/FreeText","/Line","/Square","/Circle","/Polygon","/PolyLine","/Highlight",
+  "/Underline","/Squiggly","/StrikeOut","/Stamp","/Caret","/Ink","/FileAttachment","/Sound","/Movie"];
+
+function pdfAnnotSubtype(a){
+  try{ return String(a.lookup(PDFLib.PDFName.of("Subtype")) || ""); }catch(e){ return ""; }
+}
+function pdfPageAnnots(page){
+  try{ return page.node.lookup(PDFLib.PDFName.of("Annots"), PDFLib.PDFArray) || null; }catch(e){ return null; }
+}
+function pdfAnnotScan(doc){
+  const res = { markup: 0, withText: 0, redact: 0, authors: new Set(), kinds: new Set() };
+  for(const page of doc.getPages()){
+    const annots = pdfPageAnnots(page);
+    if(!annots) continue;
+    for(let i = 0; i < annots.size(); i++){
+      let a = null;
+      try{ a = annots.lookup(i, PDFLib.PDFDict); }catch(e){}
+      if(!a) continue;
+      const sub = pdfAnnotSubtype(a);
+      if(sub === "/Redact"){ res.redact++; continue; }
+      if(PDF_MARKUP.indexOf(sub) === -1) continue;
+      res.markup++;
+      res.kinds.add(sub.slice(1));
+      const who = pdfText(a.lookup(PDFLib.PDFName.of("T")));
+      if(who) res.authors.add(who);
+      if(pdfText(a.lookup(PDFLib.PDFName.of("Contents")))) res.withText++;
+    }
+  }
+  return res;
+}
+
+// Whole files carried inside the PDF: the catalog's EmbeddedFiles name tree
+// (Acrobat's "Attachments" pane) and any FileAttachment annotation.
+function pdfNameTreeSpecs(node, out, depth){
+  if(!node || depth > 8) return;
+  let names = null, kids = null;
+  try{ names = node.lookup(PDFLib.PDFName.of("Names"), PDFLib.PDFArray); }catch(e){}
+  if(names) for(let i = 0; i + 1 < names.size(); i += 2){
+    try{ const spec = names.lookup(i + 1, PDFLib.PDFDict); if(spec) out.push(spec); }catch(e){}
+  }
+  try{ kids = node.lookup(PDFLib.PDFName.of("Kids"), PDFLib.PDFArray); }catch(e){}
+  if(kids) for(let i = 0; i < kids.size(); i++){
+    let k = null;
+    try{ k = kids.lookup(i, PDFLib.PDFDict); }catch(e){}
+    pdfNameTreeSpecs(k, out, depth + 1);
+  }
+}
+function pdfFileSpecInfo(spec){
+  const at = k => { try{ return spec.lookup(PDFLib.PDFName.of(k)); }catch(e){ return null; } };
+  const name = pdfText(at("UF")) || pdfText(at("F")) || "unnamed file";
+  let size = 0;
+  try{
+    const ef = spec.lookup(PDFLib.PDFName.of("EF"), PDFLib.PDFDict);
+    const stream = ef && ef.lookup(PDFLib.PDFName.of("F"));
+    if(stream && stream.dict){
+      const num = k => {
+        const n = stream.dict.lookup(PDFLib.PDFName.of(k));
+        return n && typeof n.asNumber === "function" ? n.asNumber() : 0;
+      };
+      const params = stream.dict.lookup(PDFLib.PDFName.of("Params"), PDFLib.PDFDict);
+      const sz = params && params.lookup(PDFLib.PDFName.of("Size"));
+      size = (sz && typeof sz.asNumber === "function") ? sz.asNumber() : num("Length");
+    }
+  }catch(e){}
+  return { name, size };
+}
+function pdfEmbeddedFiles(doc){
+  const specs = [];
+  try{
+    const names = doc.catalog.lookup(PDFLib.PDFName.of("Names"), PDFLib.PDFDict);
+    const ef = names && names.lookup(PDFLib.PDFName.of("EmbeddedFiles"), PDFLib.PDFDict);
+    if(ef) pdfNameTreeSpecs(ef, specs, 0);
+  }catch(e){}
+  for(const page of doc.getPages()){
+    const annots = pdfPageAnnots(page);
+    if(!annots) continue;
+    for(let i = 0; i < annots.size(); i++){
+      let a = null;
+      try{ a = annots.lookup(i, PDFLib.PDFDict); }catch(e){}
+      if(!a || pdfAnnotSubtype(a) !== "/FileAttachment") continue;
+      try{ const fs = a.lookup(PDFLib.PDFName.of("FS"), PDFLib.PDFDict); if(fs) specs.push(fs); }catch(e){}
+    }
+  }
+  return specs.map(pdfFileSpecInfo);
+}
+
+function dropPdfAnnots(doc){
+  let removed = 0;
+  for(const page of doc.getPages()){
+    const annots = pdfPageAnnots(page);
+    if(!annots) continue;
+    for(let i = annots.size() - 1; i >= 0; i--){
+      let a = null;
+      try{ a = annots.lookup(i, PDFLib.PDFDict); }catch(e){}
+      if(!a || PDF_MARKUP.indexOf(pdfAnnotSubtype(a)) === -1) continue;
+      annots.remove(i);
+      removed++;
+    }
+    try{ if(annots.size() === 0) page.node.delete(PDFLib.PDFName.of("Annots")); }catch(e){}
+  }
+  return removed;
+}
+function dropPdfAttachments(doc){
+  let removed = 0;
+  try{
+    const names = doc.catalog.lookup(PDFLib.PDFName.of("Names"), PDFLib.PDFDict);
+    const ef = names && names.lookup(PDFLib.PDFName.of("EmbeddedFiles"), PDFLib.PDFDict);
+    if(ef){
+      const specs = [];
+      pdfNameTreeSpecs(ef, specs, 0);
+      removed += specs.length;
+      names.delete(PDFLib.PDFName.of("EmbeddedFiles"));
+      if(!names.keys().length) doc.catalog.delete(PDFLib.PDFName.of("Names"));
+    }
+  }catch(e){}
+  for(const page of doc.getPages()){
+    const annots = pdfPageAnnots(page);
+    if(annots) for(let i = annots.size() - 1; i >= 0; i--){
+      let a = null;
+      try{ a = annots.lookup(i, PDFLib.PDFDict); }catch(e){}
+      if(!a || pdfAnnotSubtype(a) !== "/FileAttachment") continue;
+      annots.remove(i);
+      removed++;
+    }
+    try{ page.node.delete(PDFLib.PDFName.of("AF")); }catch(e){}   // associated files
+  }
+  try{ doc.catalog.delete(PDFLib.PDFName.of("AF")); }catch(e){}
+  return removed;
 }
 
 // Unlink every signature: the field, its widget annotation on the page, the
@@ -2333,6 +2501,53 @@ async function analyzePdf(rec, buf){
       if(rec.warnings && rec.warnings.indexOf(PDF_SIGNED_WARN) === -1) rec.warnings.push(PDF_SIGNED_WARN);
     }
   }catch(e){}
+  // Annotations, attached files and form data.
+  try{
+    const an = pdfAnnotScan(doc);
+    if(an.markup){
+      rec.fields.push({ label: "Annotations",
+        value: an.markup + " annotation" + (an.markup > 1 ? "s" : "") +
+          " (" + authorList(an.kinds) + ")" +
+          (an.authors.size ? " by " + authorList(an.authors) : "") +
+          (an.withText ? ", " + an.withText + " with comment text" : "") +
+          " — review notes anyone can open in a PDF reader",
+        leak:true, deep:"pdfAnnots" });
+    }
+    if(an.redact){
+      rec.fields.push({ label: "Unapplied redactions",
+        value: an.redact + " redaction mark" + (an.redact > 1 ? "s that were" : " that was") +
+          " never applied — the text under " + (an.redact > 1 ? "those black boxes is" : "that black box is") +
+          " still in the file and can be copied out." +
+          " Apply " + (an.redact > 1 ? "them" : "it") + " in a PDF editor (Acrobat: Redact → Apply);" +
+          " Barecopy leaves the mark" + (an.redact > 1 ? "s" : "") + " alone rather than hide the warning",
+        leak:true, deep:"pdfRedact" });
+    }
+  }catch(e){}
+  try{
+    const files = pdfEmbeddedFiles(doc);
+    if(files.length){
+      const named = files.map(f => f.name + (f.size ? " (" + fmtSize(f.size) + ")" : ""));
+      rec.fields.push({ label: "Attached files",
+        value: files.length + " file" + (files.length > 1 ? "s" : "") + " carried inside this PDF: " +
+          authorList(new Set(named)) + " — they open straight from the attachments pane",
+        leak:true, deep:"pdfAttachments" });
+    }
+  }catch(e){}
+  try{
+    const fv = pdfFormValues(doc);
+    if(fv.hidden){
+      rec.fields.push({ label: "Hidden form fields",
+        value: fv.hidden + " filled field" + (fv.hidden > 1 ? "s are" : " is") + " marked hidden" +
+          (fv.hiddenNames.length ? " (" + authorList(new Set(fv.hiddenNames)) + ")" : "") +
+          " — the values are in the file but not on the page; flatten the form in a PDF editor to drop them",
+        leak:true, deep:"pdfFormHidden" });
+    }
+    if(fv.filled - fv.hidden > 0){
+      rec.fields.push({ label: "Form data",
+        value: (fv.filled - fv.hidden) + " filled field" + (fv.filled - fv.hidden > 1 ? "s" : "") +
+          " stored as data, not just drawn on the page", leak:false });
+    }
+  }catch(e){}
   // Earlier revisions left behind by incremental saves (see the note above).
   try{
     const prior = pdfPriorRevisions(buf);
@@ -2401,16 +2616,23 @@ async function cleanPdf(rec){
   // anything throws — or leaves the page tree unusable — fall back to a
   // metadata-only clean rather than hand over a broken PDF.
   const sel = rec.deepSelected || new Set();
-  if(sel.has("pdfSignature") || sel.has("pdfRevisions")){
+  const wantsDeep = ["pdfSignature","pdfRevisions","pdfAnnots","pdfAttachments"].some(k => sel.has(k));
+  if(wantsDeep){
     try{
-      let sigs = 0;
+      let sigs = 0, annots = 0, files = 0;
       if(sel.has("pdfSignature")) sigs = dropPdfSignatures(doc);
-      // Always sweep after unlinking a signature: the signature dictionary
-      // holds the signer's name and is unreferenced, not gone, until we do.
-      const dropped = (sigs || sel.has("pdfRevisions")) ? dropPdfOrphans(doc) : 0;
+      if(sel.has("pdfAnnots")) annots = dropPdfAnnots(doc);
+      if(sel.has("pdfAttachments")) files = dropPdfAttachments(doc);
+      // Unlinking is not deleting: the signature dictionary with the signer's
+      // name, the annotation dictionary with the comment text and the attached
+      // file's stream all stay in the file, readable, until the sweep runs.
+      const dropped = (sigs || annots || files || sel.has("pdfRevisions")) ? dropPdfOrphans(doc) : 0;
       if(doc.getPageCount() < 1) throw new Error("page tree lost");
       if(sigs) rec.deepApplied.push("Removed " + sigs + " invalidated signature" + (sigs > 1 ? "s" : "") +
         " with the signer's name, reason and location");
+      if(annots) rec.deepApplied.push("Removed " + annots + " annotation" + (annots > 1 ? "s" : "") +
+        " with their authors and comment text");
+      if(files) rec.deepApplied.push("Removed " + files + " attached file" + (files > 1 ? "s" : ""));
       if(sel.has("pdfRevisions")) rec.deepApplied.push(dropped
         ? "Removed " + dropped + " leftover object" + (dropped > 1 ? "s" : "") + " from earlier revisions"
         : "Rewrote the file as a single revision");
@@ -3028,13 +3250,15 @@ const DEEP_META = {
   notes:          { label: "Remove speaker notes", note: "" },
   croppedImages:  { label: "Crop pictures to what's visible", note: "Throws away the cropped-off parts for good. The document looks the same; pictures are re-saved, so they're recompressed once." },
   pivotCache:     { label: "Drop the pivot table's copy of the source data", note: "Same as turning off “Save source data with file” in Excel: the pivot rebuilds from its source on open. If the source sheet is gone, it opens empty." },
+  pdfAnnots:      { label: "Remove annotations & comments", note: "Sticky notes, highlights, ink and stamps, with the author and text behind each. Links and form fields stay; so do unapplied redaction marks." },
+  pdfAttachments: { label: "Remove attached files", note: "Whole files riding inside the PDF, visible in the attachments pane." },
   pdfRevisions:   { label: "Remove earlier revisions", note: "Drops what previous saves left inside the file. The visible document is unchanged.", def: true },
   pdfSignature:   { label: "Remove the invalidated signature", note: "Cleaning voids the signature anyway. This drops it along with the signer's name, reason and location, instead of leaving a signature that reads as broken." },
   printerSettings:{ label: "Remove the saved printer setup", note: "The printer name and its host. Nothing needs it \u2014 Office falls back to the default printer.", def: true },
   customXml:      { label: "Remove custom XML data", note: "SharePoint / add-in properties travelling with the file. Leave it on if a document-assembly add-in reads this file." },
   rsid:           { label: "Strip revision IDs (rsid)", note: "Invisible editing-session fingerprints. Safe to remove.", def: true }
 };
-const DEEP_ORDER = ["trackedChanges","comments","notes","croppedImages","pivotCache","customXml","pdfRevisions","pdfSignature","printerSettings","rsid"];
+const DEEP_ORDER = ["trackedChanges","comments","notes","croppedImages","pivotCache","customXml","pdfAnnots","pdfAttachments","pdfRevisions","pdfSignature","printerSettings","rsid"];
 
 function renderDeepBlock(rec){
   const keys = DEEP_ORDER.filter(k => rec.fields.some(f => f.deep === k));
@@ -3561,6 +3785,7 @@ try{
       flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
       analyzePdf, cleanPdf, pdfPriorRevisions, pdfOrphans, dropPdfOrphans,
       pdfSignatures, dropPdfSignatures, scanPivotCaches, scanExternalData, dropPivotCacheData,
+      pdfAnnotScan, dropPdfAnnots, pdfEmbeddedFiles, dropPdfAttachments, pdfFormValues,
       scanPrinterSettings, dropPrinterSettings, scanCustomXml, dropCustomXml, printerDeviceName,
       scanXlsxWorkbook, cleanXlsxWorkbook,
       findCroppedPics, scanCroppedPics, deepCleanCrops, hiddenShare, resolveTarget,
