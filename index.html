@@ -545,9 +545,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=ee35389ec7" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=910f6b562d" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=ee35389ec7" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=910f6b562d" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -645,7 +645,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.8.8",
+  version: "1.8.9",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
@@ -1314,6 +1314,109 @@ async function deepScanXlsx(zip, rec){
       rec.fields.push({ label: "Hidden sheets",
         value: hidden.length + " hidden (" + authorList(new Set(hidden)) + ") — recipients can unhide them; kept by design, review in Excel",
         leak: true, deep: "hiddenSheets" });
+    }
+  }
+  await scanPivotCaches(zip, rec);
+  await scanExternalData(zip, rec);
+}
+
+/* ---- XLSX: the copies of data a workbook keeps out of sight ----
+   A pivot table does not read the sheet it was built from: it reads its own
+   cache, a full copy of the source rows stored inside the workbook. Delete the
+   source sheet before sending and the cache still has every row — that is the
+   leak behind more than one "we removed the salary tab" incident. Excel's own
+   fix is the "Save source data with file" checkbox, which is on by default.
+   External links and data connections leak something different: not the rows
+   but the infrastructure — UNC paths to file servers, SQL hostnames, service
+   account names in connection strings — plus cached values pulled from the
+   other workbook. Both are detection-only for now: breaking a link or dropping
+   a connection changes formulas and refresh behaviour, which belongs in Excel. */
+// Values the cache definition holds even when the records part is gone: the
+// list of distinct entries per column, and — just as telling for a salary or
+// price column — the min/max it saw.
+function pivotItemValues(doc){
+  let n = 0;
+  for(const si of allLocal(doc, "sharedItems")){
+    for(let c = si.firstChild; c; c = c.nextSibling){
+      if(c.nodeType === 1 && attrLocal(c, "v")) n++;
+    }
+    for(const a of ["minValue","maxValue","minDate","maxDate"]) if(attrLocal(si, a)) n++;
+  }
+  return n;
+}
+async function scanPivotCaches(zip, rec){
+  const defs = zipPaths(zip, /^xl\/pivotCache\/pivotCacheDefinition\d*\.xml$/);
+  if(!defs.length) return;
+  let rows = 0, fields = 0, values = 0;
+  const sheets = new Set();
+  for(const p of defs){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    rows += parseInt(attrLocal(doc.documentElement, "recordCount") || "0", 10) || 0;
+    fields += allLocal(doc, "cacheField").length;
+    values += pivotItemValues(doc);
+    for(const ws of allLocal(doc, "worksheetSource")){
+      const n = attrLocal(ws, "sheet");
+      if(n) sheets.add(n);
+    }
+  }
+  const hasRecords = zipPaths(zip, /^xl\/pivotCache\/pivotCacheRecords\d*\.xml$/).length > 0;
+  if(!hasRecords && !rows && !values) return;          // cache saved without its data
+  const what = rows
+    ? rows + " row" + (rows > 1 ? "s" : "") + (fields ? " × " + fields + " column" + (fields > 1 ? "s" : "") : "")
+    : values + " stored value" + (values > 1 ? "s" : "") + (fields ? " across " + fields + " column" + (fields > 1 ? "s" : "") : "");
+  rec.fields.push({ label: "Pivot table cache",
+    value: what + " of source data stored inside the file" +
+      (sheets.size ? " (from " + authorList(sheets) + ")" : "") +
+      " — the pivot keeps its own copy, so deleting the source sheet does not delete the data",
+    leak: true, deep: "pivotCache" });
+}
+async function scanExternalData(zip, rec){
+  // External workbook links: the rels carry the path, the part carries values
+  // cached from that workbook.
+  const targets = [];
+  let cached = 0;
+  for(const rp of zipPaths(zip, /^xl\/externalLinks\/_rels\/externalLink\d*\.xml\.rels$/)){
+    const doc = await partDoc(zip, rp);
+    if(!doc) continue;
+    for(const el of allLocal(doc, "Relationship")){
+      const tgt = el.getAttribute("Target") || "";
+      if(!tgt || /\.xml$/i.test(tgt)) continue;
+      let path = tgt;
+      try{ path = decodeURIComponent(tgt); }catch(e){}
+      targets.push(path.replace(/^file:\/{2,}/i, ""));
+    }
+  }
+  for(const p of zipPaths(zip, /^xl\/externalLinks\/externalLink\d*\.xml$/)){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    cached += allLocal(doc, "cell").length;
+    for(const b of allLocal(doc, "externalBook")) if(!targets.length) targets.push("an external workbook");
+  }
+  if(targets.length){
+    rec.fields.push({ label: "Links to other workbooks",
+      value: authorList(new Set(targets)) +
+        (cached ? " — with " + cached + " cached cell value" + (cached > 1 ? "s" : "") + " from it" : "") +
+        "; the path shows your folders and file servers. Data → Edit Links → Break Link in Excel to cut them",
+      leak: true, deep: "externalData" });
+  }
+  // Data connections: server names, database names, sometimes a user id.
+  const conn = await partDoc(zip, "xl/connections.xml");
+  if(conn){
+    const where = new Set();
+    for(const c of allLocal(conn, "connection")){
+      const n = attrLocal(c, "name"), d = attrLocal(c, "description");
+      if(n) where.add(n); else if(d) where.add(d);
+    }
+    for(const db of allLocal(conn, "dbPr")){
+      const cs = attrLocal(db, "connection");
+      const m = /(?:data source|server)\s*=\s*([^;]+)/i.exec(cs);
+      if(m) where.add(m[1].trim());
+    }
+    if(where.size){
+      rec.fields.push({ label: "Data connections",
+        value: authorList(where) + " — connection strings name your servers, databases and sometimes the account used; remove them in Data → Queries & Connections",
+        leak: true, deep: "externalData" });
     }
   }
 }
