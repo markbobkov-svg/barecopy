@@ -178,6 +178,60 @@ const results = await page.evaluate(async (pdfB64) => {
   log('an uncompressed embedded PDF is counted at most once', B.pdfPriorRevisions(eu8.buffer) === 1,
     'got ' + B.pdfPriorRevisions(eu8.buffer) + ' (a known limit: it looks like a revision)');
 
+  /* ---- regressions found by running real files through the app ----
+     Both of these came from the py-pdf sample corpus, not from a fixture. */
+
+  // imagemagick and Ghostscript make a stream's /Length an indirect object.
+  // pdf-lib inlines the length when it writes and leaves that number object
+  // behind unreferenced, so counting every unreachable object reported a file
+  // as still carrying leftovers immediately after we had cleaned it.
+  const indirectLenPdf = () => {
+    const pad = n => String(n).padStart(10, "0");
+    const offsets = {};
+    let body = "%PDF-1.4\n";
+    const put = (num, text) => { offsets[num] = body.length; body += num + " 0 obj\n" + text + "\nendobj\n"; };
+    const s = "BT /F1 12 Tf 20 100 Td (hello) Tj ET";
+    put(1, "<</Type/Catalog/Pages 2 0 R>>");
+    put(2, "<</Type/Pages/Kids[3 0 R]/Count 1>>");
+    put(3, "<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]/Contents 4 0 R>>");
+    put(4, "<</Length 5 0 R>>\nstream\n" + s + "\nendstream");
+    put(5, String(s.length));                       // the indirect length
+    const xref = body.length;
+    body += "xref\n0 6\n0000000000 65535 f \n";
+    for(let i = 1; i <= 5; i++) body += pad(offsets[i]) + " 00000 n \n";
+    body += "trailer\n<</Size 6/Root 1 0 R>>\nstartxref\n" + xref + "\n%%EOF\n";
+    const u8 = new Uint8Array([...body].map(c => c.charCodeAt(0)));
+    return u8.buffer;
+  };
+  const ilBuf = indirectLenPdf();
+  const ilRec = { ext:'pdf', kind:'pdf', fields:[], warnings:[], deepApplied:[], buffer: ilBuf,
+    deepSelected: new Set(['pdfRevisions']), file: new File([ilBuf], 'il.pdf') };
+  await B.analyzePdf(ilRec, ilBuf);
+  log('an indirect stream length is not a finding on its own',
+    !ilRec.fields.some(f => f.label === 'Earlier revisions'),
+    JSON.stringify(ilRec.fields.map(f => f.label)));
+  const ilOut = await (await B.cleanPdf(ilRec)).arrayBuffer();
+  const ilProbe = { ext:'pdf', kind:'pdf', fields:[], warnings:[] };
+  await B.analyzePdf(ilProbe, ilOut);
+  log('our own output is not reported as still carrying leftovers',
+    !ilProbe.fields.some(f => f.label === 'Earlier revisions'),
+    JSON.stringify(ilProbe.fields.map(f => f.label)));
+  const ilDoc = await PDFLib.PDFDocument.load(ilOut, { updateMetadata:false });
+  log('the sweep still clears the stranded number, it just is not a leak',
+    B.pdfContentOrphans(ilDoc).length === 0,
+    'unreachable objects of any kind: ' + B.pdfOrphans(ilDoc).length);
+
+  // A PDF that simply will not parse must say so in the parser's own words —
+  // claiming "password-protected" for every failure is the lie CLAUDE.md
+  // lesson 2 exists to prevent.
+  const junk = new TextEncoder().encode("this is not a PDF at all, just bytes with a .pdf name");
+  let parseErr = "";
+  try{
+    await B.analyzePdf({ ext:'pdf', kind:'pdf', fields:[], warnings:[] }, junk.buffer);
+  }catch(e){ parseErr = e.message; }
+  log('an unparseable PDF reports the real reason, not a guess about passwords',
+    /couldn't be opened:/.test(parseErr) && parseErr.length > 60, parseErr);
+
   /* ---------------- PDF: digital signatures ---------------- */
   const { PDFString, PDFHexString, PDFName } = PDFLib;
   const mkSigned = async (nest) => {

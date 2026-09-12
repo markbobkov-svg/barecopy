@@ -545,9 +545,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=c3d368d7bf" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=75c00b7131" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=c3d368d7bf" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=75c00b7131" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -645,7 +645,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.12.0",
+  version: "1.12.1",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
@@ -2606,6 +2606,22 @@ function dropPdfSignatures(doc){
   return removed;
 }
 
+/* Which leftovers could actually carry something identifying. A dictionary, a
+   stream or a string can; a bare number or name cannot — and pdf-lib's writer
+   inlines every stream /Length while still emitting the number object the
+   source file had made indirect, so a plain save leaves unreferenced numbers
+   behind. Counting those would report a file as still dirty immediately after
+   we cleaned it (imagemagick and Ghostscript output hits this every time). */
+function pdfContentOrphans(doc){
+  const ctx = doc.context;
+  return pdfOrphans(doc).filter(ref => {
+    let o = null;
+    try{ o = ctx.lookup(ref); }catch(e){ return false; }
+    if(!o) return false;
+    return o instanceof PDFLib.PDFDict || o instanceof PDFLib.PDFString ||
+      o instanceof PDFLib.PDFHexString || (o.dict instanceof PDFLib.PDFDict);
+  });
+}
 function dropPdfOrphans(doc){
   const orphans = pdfOrphans(doc);
   for(const ref of orphans) doc.context.delete(ref);
@@ -2617,7 +2633,13 @@ async function analyzePdf(rec, buf){
   try{
     doc = await PDFLib.PDFDocument.load(buf, { updateMetadata:false, ignoreEncryption:true });
   }catch(e){
-    throw new Error("This PDF couldn't be opened. If it's password-protected, remove the password first.");
+    // Lesson 2 in CLAUDE.md: say what actually went wrong. Most failures here
+    // are odd exporters and scanners, not encryption — the genuinely encrypted
+    // case is caught below, by isEncrypted.
+    const why = (e && e.message ? String(e.message) : "").replace(/\s+/g, " ").trim();
+    throw new Error("This PDF couldn't be opened" + (why ? ": " + why.slice(0, 180) : ".") +
+      " If it is password-protected, remove the password first; otherwise re-save it " +
+      "(open it and print to PDF) and try that copy.");
   }
   if(doc.isEncrypted){
     throw new Error("This PDF is password-protected — cleaning it would corrupt the file. Open it with the password, save an unlocked copy (Print → Save as PDF works), then drop that copy here.");
@@ -2736,7 +2758,7 @@ async function analyzePdf(rec, buf){
   // Earlier revisions left behind by incremental saves (see the note above).
   try{
     const prior = pdfPriorRevisions(buf);
-    const orphans = pdfOrphans(doc).length;
+    const orphans = pdfContentOrphans(doc).length;
     if(prior || orphans){
       const bits = [];
       if(prior) bits.push(prior + " earlier revision" + (prior > 1 ? "s" : ""));
@@ -3970,7 +3992,7 @@ try{
       flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
       analyzePdf, cleanPdf, pdfPriorRevisions, pdfOrphans, dropPdfOrphans,
       pdfSignatures, dropPdfSignatures, scanPivotCaches, scanExternalData, dropPivotCacheData,
-      pdfAnnotScan, dropPdfAnnots, pdfEmbeddedFiles, dropPdfAttachments, pdfFormValues, pdfLocalLinks,
+      pdfAnnotScan, dropPdfAnnots, pdfEmbeddedFiles, dropPdfAttachments, pdfFormValues, pdfLocalLinks, pdfContentOrphans,
       scanOdfCrops, deepCleanOdfCrops, parseOdfClip, odfSides, odfLen,
       scanPrinterSettings, dropPrinterSettings, scanCustomXml, dropCustomXml, printerDeviceName,
       scanXlsxWorkbook, cleanXlsxWorkbook,
