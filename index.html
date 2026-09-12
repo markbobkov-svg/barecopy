@@ -108,6 +108,11 @@
   @keyframes pulseSoft{0%,100%{opacity:1}50%{opacity:.45}}
   /* Keep the header on ONE line at phone widths — no wrap to a second row.
      Tighten padding, gaps, wordmark and the trust-chip so it all fits. */
+  @media (max-width:700px){
+    /* Two nav links don't fit next to the trust chip on a phone; Pricing is the
+       one that has to stay reachable from the header. */
+    .nav-link.nav-hide-sm{display:none}
+  }
   @media (max-width:480px){
     .local-badge .lb-more{display:none}
     .head-in{flex-wrap:nowrap;padding:14px 15px;gap:10px}
@@ -375,6 +380,39 @@
   }
   @keyframes spin{to{transform:rotate(360deg)}}
 
+  /* ---------- hidden content (the Deep clean pitch) ---------- */
+  .hid{margin-top:64px;border-top:1px solid var(--line);padding-top:36px}
+  .hid h2{
+    font-family:var(--brand);font-weight:600;font-size:14px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);
+  }
+  .new-tag{
+    display:inline-block;margin-left:8px;padding:2px 8px;border-radius:100px;
+    border:1px solid var(--clean-line);background:var(--clean-bg);color:var(--clean);
+    font-family:var(--brand);font-size:10.5px;font-weight:600;letter-spacing:.1em;
+    text-transform:uppercase;vertical-align:2px;
+  }
+  .hid-lead{
+    margin-top:14px;max-width:62ch;font-size:15px;line-height:1.6;color:var(--ink);
+  }
+  .hid-lead strong{font-weight:600}
+  .hid-grid{margin-top:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:var(--line-soft);border:1px solid var(--line-soft);border-radius:10px;overflow:hidden}
+  .hid-item{background:var(--card);padding:18px 18px 20px}
+  .hid-item h3{font-family:var(--brand);font-size:14.5px;font-weight:600;margin-bottom:7px}
+  .hid-item p{font-size:13.5px;color:var(--ink-soft);line-height:1.55}
+  .hid-where{
+    display:block;margin-top:9px;font-family:var(--mono);font-size:11px;
+    letter-spacing:.04em;color:var(--ink-faint);text-transform:uppercase;
+  }
+  .hid-foot{
+    margin-top:22px;padding:16px 18px;border:1px solid var(--warn-line);
+    background:var(--warn-bg);border-radius:10px;font-size:13.5px;line-height:1.6;color:var(--ink);
+  }
+  .hid-foot b{font-weight:600}
+  @media (max-width:860px){ .hid-grid{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:640px){ .hid-grid{grid-template-columns:1fr} .hid-lead{font-size:14.5px} }
+
   /* ---------- trust / how ---------- */
   .how{
     margin-top:64px;border-top:1px solid var(--line);padding-top:36px;
@@ -470,6 +508,7 @@
   <div class="wrap head-in">
     <div class="wordmark"><svg width="24" height="30" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V64.75" stroke="currentColor" stroke-width="7"/><circle cx="39" cy="45.25" r="16" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</div>
     <div class="head-right">
+      <a class="nav-link nav-hide-sm" href="#hidden">Hidden content</a>
       <a class="nav-link" href="#pro">Pricing</a>
       <div class="local-badge" aria-label="Runs locally — nothing uploaded" title="All processing happens in this browser tab. You can disconnect from the internet and it still works.">
         <span class="pulse" aria-hidden="true"></span>Runs locally<span class="lb-more"> · nothing uploaded</span>
@@ -509,16 +548,56 @@
 
   <div class="cards" id="cards"></div>
 
+  <section class="hid" id="hidden">
+    <h2>Hidden content <span class="new-tag">New</span></h2>
+    <p class="hid-lead">Metadata is the easy half. The rest is <strong>real content inside the file but not on the screen</strong> — and Office's own inspector doesn't look for it. Free to find, one checkbox each to remove.</p>
+
+    <div class="hid-grid">
+      <div class="hid-item">
+        <h3>Cropped pictures</h3>
+        <p>What you cropped away is still in there — drag the handles back and it returns.</p>
+        <span class="hid-where">Word · Excel · PowerPoint · OpenDocument</span>
+      </div>
+      <div class="hid-item">
+        <h3>Earlier versions of a PDF</h3>
+        <p>A plain Save keeps the version before it, black boxes and deleted pages included.</p>
+        <span class="hid-where">PDF</span>
+      </div>
+      <div class="hid-item">
+        <h3>The pivot table's copy of your data</h3>
+        <p>It stores every source row, so deleting the salary tab doesn't delete the salaries.</p>
+        <span class="hid-where">Excel</span>
+      </div>
+      <div class="hid-item">
+        <h3>Comments and attachments</h3>
+        <p>Notes travel with their author and text. A PDF can carry whole files inside it.</p>
+        <span class="hid-where">PDF · Word · Excel · PowerPoint</span>
+      </div>
+      <div class="hid-item">
+        <h3>Your network, spelled out</h3>
+        <p>Printer names, SharePoint paths, links to <span class="k-mono">\\fileserver\finance</span>.</p>
+        <span class="hid-where">Excel · Word · PDF</span>
+      </div>
+      <div class="hid-item">
+        <h3>Signatures and form data</h3>
+        <p>The signer's name and location, and answers in fields marked hidden.</p>
+        <span class="hid-where">PDF</span>
+      </div>
+    </div>
+
+    <p class="hid-foot"><b>And what it won't touch.</b> A redaction mark that was never applied stays — deleting it would hide the warning and keep the secret. So do links your formulas depend on. When something can't be removed, Barecopy says so instead of reporting success.</p>
+  </section>
+
   <section class="how">
     <h2>What gets removed</h2>
     <div class="how-grid">
       <div class="how-item">
         <h3>Word, Excel, PowerPoint</h3>
-        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file.</p>
+        <p>Author, last modified by, company, manager, custom properties, template name, total editing time, print date and the embedded preview thumbnail — cleared from <span class="k-mono">docProps</span> inside the file. Plus two things Office's own Document Inspector leaves behind: the saved printer setup and the path the file was last saved to.</p>
       </div>
       <div class="how-item">
         <h3>PDF</h3>
-        <p>Author, title, subject, keywords, creator and producer application, creation and modification dates — cleared from both the info dictionary and embedded XMP metadata.</p>
+        <p>Author, title, subject, keywords, creator and producer application, creation and modification dates — cleared from both the info dictionary and embedded XMP metadata. Everything a PDF hides beyond that — earlier versions, comments, attachments, signatures — is in Hidden content above.</p>
       </div>
       <div class="how-item">
         <h3>Photos</h3>
@@ -545,9 +624,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=b21330ba35" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=e8b6c6ba13" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=b21330ba35" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=e8b6c6ba13" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -571,6 +650,7 @@
         <h3>Pro <span class="tier-tag">Launch · 50% off</span></h3>
         <div class="price"><span class="was">€4</span> €2 <small>per month · until 30 September · cancel anytime</small></div>
         <ul>
+          <li><strong>Deep clean</strong> — one click each for cropped-away picture areas, earlier PDF versions, pivot-table data copies, comments, attachments and signatures</li>
           <li>Unlimited batch — clean a whole folder at once</li>
           <li>Everything as one ZIP download</li>
           <li>PDF verification report: every removed field, SHA-256 before &amp; after, and a re-scan confirming 0 fields remain</li>
@@ -608,7 +688,7 @@
     </details>
     <details>
       <summary>What does Barecopy not remove?</summary>
-      <p>Tracked changes and comments in Word are document content, not metadata. Barecopy detects them and warns you; accept or reject them in Word before sending. Password-protected PDFs are refused rather than risk corrupting them.</p>
+      <p>Tracked changes and comments in Word are document content, not metadata. Barecopy detects them and warns you — Pro can accept and strip them in one click, or you can do it in Word before sending. A page cropped inside a PDF is flagged but left alone: the hidden margin can only be removed by re-cropping in a PDF editor or printing to a new PDF. A digitally signed PDF is flagged before you clean it — the signature covers the exact bytes of the file, so removing metadata voids it. Send the signed original if the signature is the point, sign the clean copy again, or let Pro drop the void signature along with the signer's name, reason and location rather than leave one that reads as broken. Password-protected PDFs are refused rather than risk corrupting them.</p>
     </details>
     <details>
       <summary>What exactly does the Pro verification report contain?</summary>
@@ -645,7 +725,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.8.5",
+  version: "1.14.1",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
@@ -888,7 +968,7 @@ function addFile(file){
       : (VID[ext] ? "video" : (HEIF[ext] ? "heif" : (ext === "svg" ? "svg" : "unsupported")))))),
     fields: [], warnings: [], error: null,
     leaks: 0, status: "working", cleanedBlob: null,
-    deepSelected: new Set(), deepApplied: [], deepInit: false
+    deepSelected: new Set(), deepApplied: [], deepPartial: new Set(), deepInit: false
   };
   files.set(id, rec);
   renderCard(rec);
@@ -1278,14 +1358,26 @@ async function deepCleanPptx(zip, rec, info){
 }
 
 // ---- XLSX: comments (removal) + hidden sheets (detection only) ----
+// Excel mirrors every threaded comment as a legacy note whose author is the
+// thread's id, so counting both parts doubles the total and fills the author
+// list with GUIDs. The real names (and the AD identities behind them) live in
+// xl/persons — a shadow is recognised by that author marker.
+const TC_SHADOW = /^tc=\{[0-9A-Fa-f-]+\}$/;
+const EMAIL_RX = /([^:;,\s<>"]+@[^:;,\s<>"]+\.[A-Za-z]{2,})/;
+
 async function deepScanXlsx(zip, rec){
   let cCount = 0;
-  const cAuthors = new Set();
+  const cAuthors = new Set(), emails = new Set();
   for(const p of zipPaths(zip, /^xl\/comments\d*\.xml$/)){
     const doc = await partDoc(zip, p);
     if(!doc) continue;
-    for(const el of allLocal(doc, "comment")) cCount++;
-    for(const el of allLocal(doc, "author")){ const n = (el.textContent || "").trim(); if(n) cAuthors.add(n); }
+    const authors = allLocal(doc, "author").map(el => (el.textContent || "").trim());
+    for(const el of allLocal(doc, "comment")){
+      const who = authors[parseInt(attrLocal(el, "authorId") || "0", 10)] || "";
+      if(TC_SHADOW.test(who)) continue;       // counted as a threaded comment below
+      cCount++;
+      if(who) cAuthors.add(who);
+    }
   }
   for(const p of zipPaths(zip, /^xl\/threadedComments\/.*\.xml$/)){
     const doc = await partDoc(zip, p);
@@ -1295,12 +1387,19 @@ async function deepScanXlsx(zip, rec){
   for(const p of zipPaths(zip, /^xl\/persons\/.*\.xml$/)){
     const doc = await partDoc(zip, p);
     if(!doc) continue;
-    for(const el of allLocal(doc, "person")){ const n = attrLocal(el, "displayName"); if(n) cAuthors.add(n); }
+    for(const el of allLocal(doc, "person")){
+      const n = attrLocal(el, "displayName");
+      if(n) cAuthors.add(n);
+      const m = EMAIL_RX.exec(attrLocal(el, "userId"));   // "S::name@company.com::guid"
+      if(m) emails.add(m[1]);
+    }
   }
   if(cCount || cAuthors.size){
     rec.fields.push({ label: "Cell comments",
       value: (cCount ? cCount + " comment" + (cCount !== 1 ? "s" : "") : "commenter identities") +
-        (cAuthors.size ? " by " + authorList(cAuthors) : "") + " — visible to recipients",
+        (cAuthors.size ? " by " + authorList(cAuthors) : "") +
+        (emails.size ? " — work email addresses stored with them (" + authorList(emails) + ")" : "") +
+        " — visible to recipients",
       leak: true, deep: "comments" });
   }
   const wb = await partDoc(zip, "xl/workbook.xml");
@@ -1316,9 +1415,151 @@ async function deepScanXlsx(zip, rec){
         leak: true, deep: "hiddenSheets" });
     }
   }
+  await scanPivotCaches(zip, rec);
+  await scanExternalData(zip, rec);
+}
+
+/* ---- XLSX: the copies of data a workbook keeps out of sight ----
+   A pivot table does not read the sheet it was built from: it reads its own
+   cache, a full copy of the source rows stored inside the workbook. Delete the
+   source sheet before sending and the cache still has every row — that is the
+   leak behind more than one "we removed the salary tab" incident. Excel's own
+   fix is the "Save source data with file" checkbox, which is on by default.
+   External links and data connections leak something different: not the rows
+   but the infrastructure — UNC paths to file servers, SQL hostnames, service
+   account names in connection strings — plus cached values pulled from the
+   other workbook. Both are detection-only for now: breaking a link or dropping
+   a connection changes formulas and refresh behaviour, which belongs in Excel. */
+// Values the cache definition holds even when the records part is gone: the
+// list of distinct entries per column, and — just as telling for a salary or
+// price column — the min/max it saw.
+function pivotItemValues(doc){
+  let n = 0;
+  for(const si of allLocal(doc, "sharedItems")){
+    for(let c = si.firstChild; c; c = c.nextSibling){
+      if(c.nodeType === 1 && attrLocal(c, "v")) n++;
+    }
+    for(const a of ["minValue","maxValue","minDate","maxDate"]) if(attrLocal(si, a)) n++;
+  }
+  return n;
+}
+async function scanPivotCaches(zip, rec){
+  const defs = zipPaths(zip, /^xl\/pivotCache\/pivotCacheDefinition\d*\.xml$/);
+  if(!defs.length) return;
+  let rows = 0, fields = 0, values = 0;
+  const sheets = new Set();
+  for(const p of defs){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    rows += parseInt(attrLocal(doc.documentElement, "recordCount") || "0", 10) || 0;
+    fields += allLocal(doc, "cacheField").length;
+    values += pivotItemValues(doc);
+    for(const ws of allLocal(doc, "worksheetSource")){
+      const n = attrLocal(ws, "sheet");
+      if(n) sheets.add(n);
+    }
+  }
+  const hasRecords = zipPaths(zip, /^xl\/pivotCache\/pivotCacheRecords\d*\.xml$/).length > 0;
+  if(!hasRecords && !rows && !values) return;          // cache saved without its data
+  const what = rows
+    ? rows + " row" + (rows > 1 ? "s" : "") + (fields ? " × " + fields + " column" + (fields > 1 ? "s" : "") : "")
+    : values + " stored value" + (values > 1 ? "s" : "") + (fields ? " across " + fields + " column" + (fields > 1 ? "s" : "") : "");
+  rec.fields.push({ label: "Pivot table cache",
+    value: what + " of source data stored inside the file" +
+      (sheets.size ? " (from " + authorList(sheets) + ")" : "") +
+      " — the pivot keeps its own copy, so deleting the source sheet does not delete the data",
+    leak: true, deep: "pivotCache" });
+}
+/* Put the workbook into the state Excel itself writes when "Save source data
+   with file" is switched off: no records part, saveData="0", and refreshOnLoad
+   so the cache is rebuilt from the source the next time the file is opened.
+   The definition keeps the field list (the pivot layout survives) but loses the
+   values — the item lists and the min/max of numeric columns go with them. If
+   the source sheet is gone, the pivot opens empty, which is the intended
+   outcome: the copy of the data was the thing being removed. */
+const PIVOT_VALUE_ATTRS = ["count","minValue","maxValue","minDate","maxDate","longText"];
+async function dropPivotCacheData(zip, info){
+  const records = removeParts(zip, [/^xl\/pivotCache\/pivotCacheRecords\d*\.xml$/]);
+  for(const rp of zipPaths(zip, /^xl\/pivotCache\/_rels\/pivotCacheDefinition\d*\.xml\.rels$/))
+    await removeRels(zip, rp, /pivotCacheRecords/i);
+  await removeContentTypeOverrides(zip, /pivotCacheRecords/i);
+
+  let defs = 0;
+  for(const p of zipPaths(zip, /^xl\/pivotCache\/pivotCacheDefinition\d*\.xml$/)){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    const root = doc.documentElement;
+    root.setAttribute("saveData", "0");
+    root.setAttribute("refreshOnLoad", "1");
+    root.removeAttribute("recordCount");
+    for(const at of [].slice.call(root.attributes))
+      if(at.localName === "id") root.removeAttributeNode(at);   // pointed at the records part
+    for(const si of allLocal(doc, "sharedItems")){
+      while(si.firstChild) si.removeChild(si.firstChild);
+      for(const at of [].slice.call(si.attributes))
+        if(PIVOT_VALUE_ATTRS.indexOf(at.localName) !== -1) si.removeAttributeNode(at);
+    }
+    zip.file(p, serializeXml(doc));
+    defs++;
+  }
+  if(!defs && !records.length) return;
+  info.push("Dropped the pivot table's copy of the source data" +
+    (records.length ? " (" + records.length + " cache part" + (records.length > 1 ? "s" : "") + ")" : "") +
+    " — Excel rebuilds it from the source when the file is opened");
+}
+
+async function scanExternalData(zip, rec){
+  // External workbook links: the rels carry the path, the part carries values
+  // cached from that workbook.
+  const targets = [];
+  let cached = 0;
+  for(const rp of zipPaths(zip, /^xl\/externalLinks\/_rels\/externalLink\d*\.xml\.rels$/)){
+    const doc = await partDoc(zip, rp);
+    if(!doc) continue;
+    for(const el of allLocal(doc, "Relationship")){
+      const tgt = el.getAttribute("Target") || "";
+      if(!tgt || /\.xml$/i.test(tgt)) continue;
+      let path = tgt;
+      try{ path = decodeURIComponent(tgt); }catch(e){}
+      targets.push(path.replace(/^file:\/{2,}/i, ""));
+    }
+  }
+  for(const p of zipPaths(zip, /^xl\/externalLinks\/externalLink\d*\.xml$/)){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    cached += allLocal(doc, "cell").length;
+    for(const b of allLocal(doc, "externalBook")) if(!targets.length) targets.push("an external workbook");
+  }
+  if(targets.length){
+    rec.fields.push({ label: "Links to other workbooks",
+      value: authorList(new Set(targets)) +
+        (cached ? " — with " + cached + " cached cell value" + (cached > 1 ? "s" : "") + " from it" : "") +
+        "; the path shows your folders and file servers. Data → Edit Links → Break Link in Excel to cut them",
+      leak: true, deep: "externalData" });
+  }
+  // Data connections: server names, database names, sometimes a user id.
+  const conn = await partDoc(zip, "xl/connections.xml");
+  if(conn){
+    const where = new Set();
+    for(const c of allLocal(conn, "connection")){
+      const n = attrLocal(c, "name"), d = attrLocal(c, "description");
+      if(n) where.add(n); else if(d) where.add(d);
+    }
+    for(const db of allLocal(conn, "dbPr")){
+      const cs = attrLocal(db, "connection");
+      const m = /(?:data source|server)\s*=\s*([^;]+)/i.exec(cs);
+      if(m) where.add(m[1].trim());
+    }
+    if(where.size){
+      rec.fields.push({ label: "Data connections",
+        value: authorList(where) + " — connection strings name your servers, databases and sometimes the account used; remove them in Data → Queries & Connections",
+        leak: true, deep: "externalData" });
+    }
+  }
 }
 async function deepCleanXlsx(zip, rec, info){
   const sel = rec.deepSelected;
+  if(sel.has("pivotCache")) await dropPivotCacheData(zip, info);
   if(!sel.has("comments")) return;
   // Modern comments + threaded comments + person parts.
   const removed = removeParts(zip, [/^xl\/comments\d*\.xml$/, /^xl\/threadedComments\//, /^xl\/persons\//]);
@@ -1368,6 +1609,302 @@ async function deepCleanXlsx(zip, rec, info){
   }
   await removeContentTypeOverrides(zip, /comments|threadedComment|person/i);
   info.push("Removed cell comments");
+}
+
+/* ---- Printer setup and custom XML: two parts nobody looks at ----
+   printerSettings*.bin is a Windows DEVMODE blob saved with the file. It opens
+   with the full device name of the printer the file was last set up for —
+   "\\\\PRINTSRV1.corp.local\\Finance 3rd floor" — which hands a recipient an
+   internal hostname, a domain and an office location. Office's own Document
+   Inspector does not touch it. Nothing needs it: Excel and Word fall back to
+   the default printer.
+   customXml/ holds the document-library properties SharePoint (or an add-in)
+   attaches: content types, site columns, managed metadata, sometimes the
+   people-picker values behind them. Document Inspector calls this "Custom XML
+   Data" and removes it; removal is opt-in here because a document-assembly
+   add-in can genuinely depend on it. */
+const DEVMODE_NAME_BYTES = 64;                 // CCHDEVICENAME, UTF-16LE
+async function printerDeviceName(zip, path){
+  try{
+    const u8 = await zip.file(path).async("uint8array");
+    let s = "";
+    for(let i = 0; i + 1 < Math.min(DEVMODE_NAME_BYTES, u8.length); i += 2){
+      const c = u8[i] | (u8[i + 1] << 8);
+      if(!c) break;
+      if(c < 32 || c > 0xFFFD) return "";      // not the text field we expected
+      s += String.fromCharCode(c);
+    }
+    return s.trim();
+  }catch(e){ return ""; }
+}
+async function scanPrinterSettings(zip, rec){
+  const parts = zipPaths(zip, /printerSettings\/printerSettings\d*\.bin$/);
+  if(!parts.length) return;
+  const names = new Set();
+  for(const p of parts){
+    const n = await printerDeviceName(zip, p);
+    if(n) names.add(n);
+  }
+  rec.fields.push({ label: "Printer setup",
+    value: (names.size ? authorList(names) : parts.length + " saved printer configuration" + (parts.length > 1 ? "s" : "")) +
+      " — the printer this file was last set up for; a network name gives away a host and often an office",
+    leak: true, deep: "printerSettings" });
+}
+async function dropPrinterSettings(zip, info){
+  const gone = removeParts(zip, [/printerSettings\/printerSettings\d*\.bin$/]);
+  if(!gone.length) return;
+  for(const rp of zipPaths(zip, /_rels\/[^\/]+\.rels$/)) await removeRels(zip, rp, /printerSettings/i);
+  // Sheets point at their printer setup from <pageSetup r:id="…">; drop the
+  // pointer but keep the element, which also carries paper size and scale.
+  for(const p of zipPaths(zip, /^xl\/(worksheets|chartsheets)\/[^\/]+\.xml$/)){
+    const doc = await partDoc(zip, p);
+    if(!doc) continue;
+    let ch = false;
+    for(const ps of allLocal(doc, "pageSetup")){
+      for(const at of [].slice.call(ps.attributes))
+        if(at.localName === "id"){ ps.removeAttributeNode(at); ch = true; }
+    }
+    if(ch) zip.file(p, serializeXml(doc));
+  }
+  info.push("Removed the saved printer setup (" + gone.length + " part" + (gone.length > 1 ? "s" : "") + ")");
+}
+/* Two more things xl/workbook.xml carries about the person and the place:
+   <fileSharing userName="…"> — who set "read-only recommended" (the write
+   reservation next to it keeps a password hash, which is not ours to touch) —
+   and x15ac:absPath, the full URL or folder the workbook was last saved to,
+   which spells out the SharePoint tenant, the site and the folder tree. Both
+   are plain identity metadata like the author, so they go in the standard
+   clean rather than behind an opt-in. */
+async function scanXlsxWorkbook(zip, rec){
+  const doc = await partDoc(zip, "xl/workbook.xml");
+  if(!doc) return;
+  for(const fs of allLocal(doc, "fileSharing")){
+    const who = attrLocal(fs, "userName");
+    if(who) rec.fields.push({ label: "Write-reservation user",
+      value: who + " — the name stored with “read-only recommended”", leak: true });
+  }
+  for(const ap of allLocal(doc, "absPath")){
+    const url = attrLocal(ap, "url");
+    if(url) rec.fields.push({ label: "Storage path",
+      value: url + " — where this workbook was last saved; names the site, the library and the folder tree",
+      leak: true });
+  }
+}
+async function cleanXlsxWorkbook(zip){
+  const doc = await partDoc(zip, "xl/workbook.xml");
+  if(!doc) return;
+  let changed = false;
+  for(const fs of allLocal(doc, "fileSharing")){
+    if(attrLocal(fs, "userName")){
+      for(const at of [].slice.call(fs.attributes))
+        if(at.localName === "userName") fs.removeAttributeNode(at);
+      changed = true;
+    }
+  }
+  for(const ap of allLocal(doc, "absPath")){
+    // drop the wrapper too, so no empty mc:AlternateContent is left behind
+    let node = ap;
+    while(node.parentNode && node.parentNode.localName === "Choice") node = node.parentNode;
+    while(node.parentNode && node.parentNode.localName === "AlternateContent") node = node.parentNode;
+    if(node.parentNode){ node.parentNode.removeChild(node); changed = true; }
+  }
+  if(changed) zip.file("xl/workbook.xml", serializeXml(doc));
+}
+
+async function scanCustomXml(zip, rec){
+  const items = zipPaths(zip, /^customXml\/item\d*\.xml$/);
+  if(!items.length) return;
+  rec.fields.push({ label: "Custom XML data",
+    value: items.length + " embedded XML part" + (items.length > 1 ? "s" : "") +
+      " — document-library properties from SharePoint or an add-in; can carry site columns, record ids and the people behind them",
+    leak: true, deep: "customXml" });
+}
+async function dropCustomXml(zip, info){
+  const gone = removeParts(zip, [/^customXml\//]);
+  if(!gone.length) return;
+  for(const rp of zipPaths(zip, /_rels\/[^\/]+\.rels$/)) await removeRels(zip, rp, /customXml/i);
+  await removeContentTypeOverrides(zip, /customXml/i);
+  info.push("Removed custom XML data (" + gone.length + " part" + (gone.length > 1 ? "s" : "") + ")");
+}
+
+/* ---- Cropped pictures (DrawingML a:srcRect), all three OOXML formats ----
+   Cropping a picture in Word/PowerPoint/Excel only changes how much of it is
+   shown: the full original image stays in the package, and dragging the crop
+   handles back reveals whatever was cropped out — the face, the next column of
+   the screenshot, the rest of the letterhead. Office hides the real fix behind
+   "Compress Pictures → Delete cropped areas of pictures".
+   Detection is free; removal (Pro, opt-in) re-encodes each picture down to the
+   visible rectangle and drops the crop, which leaves the document looking
+   identical. Pictures shared by more than one shape, tiled fills and formats
+   the browser can't re-encode (EMF/WMF/SVG) are left untouched. */
+const CROP_PARTS = {
+  docx: /^word\/(document|header\d*|footer\d*|footnotes|endnotes)\.xml$/,
+  pptx: /^ppt\/(slides|slideLayouts|slideMasters|notesSlides)\/[^\/]+\.xml$/,
+  xlsx: /^xl\/drawings\/drawing\d+\.xml$/
+};
+const CROP_MIME = { png:"image/png", jpg:"image/jpeg", jpeg:"image/jpeg" };
+
+function relsPathFor(part){
+  const i = part.lastIndexOf("/");
+  return part.slice(0, i + 1) + "_rels/" + part.slice(i + 1) + ".rels";
+}
+// Resolve a relationship Target against the folder of the part that owns it.
+function resolveTarget(part, target){
+  if(target.charAt(0) === "/") return target.slice(1);
+  const segs = part.split("/").slice(0, -1);
+  for(const s of target.split("/")){
+    if(s === "" || s === ".") continue;
+    if(s === "..") segs.pop(); else segs.push(s);
+  }
+  return segs.join("/");
+}
+function isInternalRel(el){
+  const tgt = el.getAttribute("Target") || "";
+  return tgt && (el.getAttribute("TargetMode") || "") !== "External" && !/^[a-z]+:\/\//i.test(tgt);
+}
+async function relMap(zip, part){
+  const map = new Map();
+  const doc = await partDoc(zip, relsPathFor(part));
+  if(!doc) return map;
+  for(const el of allLocal(doc, "Relationship")){
+    const id = el.getAttribute("Id");
+    if(id && isInternalRel(el)) map.set(id, resolveTarget(part, el.getAttribute("Target")));
+  }
+  return map;
+}
+// How many relationships in the whole package point at each media part. Used to
+// leave shared pictures alone: cropping one would crop it everywhere it is used.
+async function mediaRelCounts(zip){
+  const counts = new Map();
+  for(const rp of zipPaths(zip, /_rels\/[^\/]+\.rels$/)){
+    const doc = await partDoc(zip, rp);
+    if(!doc) continue;
+    const owner = rp.replace(/_rels\/([^\/]+)\.rels$/, "$1");
+    for(const el of allLocal(doc, "Relationship")){
+      if(!isInternalRel(el)) continue;
+      // Count anything that points at an image, wherever the package keeps it.
+      if(!/image/i.test(el.getAttribute("Type") || "") && !/\/media\//.test(el.getAttribute("Target"))) continue;
+      const p = resolveTarget(owner, el.getAttribute("Target"));
+      counts.set(p, (counts.get(p) || 0) + 1);
+    }
+  }
+  return counts;
+}
+function cropSides(srcRect){
+  const num = n => { const v = parseInt(attrLocal(srcRect, n) || "0", 10); return isNaN(v) || v < 0 ? 0 : v; };
+  return { l:num("l"), t:num("t"), r:num("r"), b:num("b") };  // 1/1000 of a percent
+}
+// Share of the picture hidden by the crop, 0..1.
+function hiddenShare(c){
+  const w = Math.max(0, 1 - (c.l + c.r) / 100000);
+  const h = Math.max(0, 1 - (c.t + c.b) / 100000);
+  return 1 - w * h;
+}
+// Every cropped picture in the package, plus how often each media part is used
+// by a picture (a second use in the same part shares one relationship).
+async function findCroppedPics(zip, rec){
+  const pics = [], uses = new Map();
+  const rx = CROP_PARTS[rec.ext];
+  if(!rx) return { pics, uses };
+  for(const part of zipPaths(zip, rx)){
+    const doc = await partDoc(zip, part);
+    if(!doc) continue;
+    const rels = await relMap(zip, part);
+    const mediaOf = fill => {
+      for(const blip of allWithin(fill, "blip")){
+        const id = attrLocal(blip, "embed");
+        if(id && rels.has(id)) return rels.get(id);
+      }
+      return "";
+    };
+    for(const fill of allLocal(doc, "blipFill")){
+      const media = mediaOf(fill);
+      if(media) uses.set(media, (uses.get(media) || 0) + 1);
+      let srcRect = null;
+      for(let c = fill.firstChild; c; c = c.nextSibling){
+        if(c.nodeType === 1 && c.localName === "srcRect"){ srcRect = c; break; }
+      }
+      if(!srcRect) continue;
+      const sides = cropSides(srcRect);
+      if(!(sides.l || sides.t || sides.r || sides.b)) continue;
+      pics.push({ part, doc, srcRect, sides, media,
+        tiled: allWithin(fill, "tile").length > 0 });
+    }
+  }
+  return { pics, uses };
+}
+async function scanCroppedPics(zip, rec){
+  const { pics } = await findCroppedPics(zip, rec);
+  if(!pics.length) return;
+  let worst = 0;
+  for(const p of pics) worst = Math.max(worst, hiddenShare(p.sides));
+  rec.fields.push({ label:"Cropped pictures",
+    value: pics.length + " cropped picture" + (pics.length > 1 ? "s" : "") +
+      " — the cropped-away parts are still stored in full (up to " +
+      Math.round(worst * 100) + "% of a picture is hidden, not removed)",
+    leak:true, deep:"croppedImages" });
+}
+// Re-encode one picture down to its visible rectangle. Returns null when the
+// browser can't decode it, so the caller can leave the original in place.
+async function cropPictureBytes(bytes, mime, sides){
+  let bmp;
+  try{ bmp = await createImageBitmap(new Blob([bytes], { type:mime }), { imageOrientation:"none" }); }
+  catch(e){ return null; }
+  try{
+    const w = bmp.width, h = bmp.height;
+    const sx = Math.round(w * sides.l / 100000), sy = Math.round(h * sides.t / 100000);
+    const sw = Math.max(1, Math.round(w * (1 - (sides.l + sides.r) / 100000)));
+    const sh = Math.max(1, Math.round(h * (1 - (sides.t + sides.b) / 100000)));
+    if(sw >= w && sh >= h) return null;                       // nothing actually hidden
+    const canvas = document.createElement("canvas");
+    canvas.width = sw; canvas.height = sh;
+    const ctx = canvas.getContext("2d");
+    if(!ctx) return null;
+    ctx.drawImage(bmp, sx, sy, sw, sh, 0, 0, sw, sh);
+    const blob = await new Promise(res => canvas.toBlob(res, mime, 0.92));
+    if(!blob) return null;
+    return new Uint8Array(await blob.arrayBuffer());
+  }finally{
+    if(bmp && bmp.close) bmp.close();
+  }
+}
+// Why a picture had to be left alone, said plainly — "we could not do this one"
+// is different from "you did not ask", and the card must not treat it as a
+// failure of the clean (see deepPartial / wasRemoved).
+function cropLeftNote(shared, unsupported){
+  const why = [];
+  if(shared) why.push(shared + " used by more than one shape");
+  if(unsupported) why.push(unsupported + " in a format the browser can't re-save (EMF, WMF, TIFF)");
+  return why.join(", ");
+}
+async function deepCleanCrops(zip, rec, info){
+  const { pics, uses } = await findCroppedPics(zip, rec);
+  if(!pics.length) return;
+  const relCounts = await mediaRelCounts(zip);
+  const touched = new Map();
+  let done = 0, shared = 0, unsupported = 0;
+  for(const p of pics){
+    const mime = CROP_MIME[(p.media.split(".").pop() || "").toLowerCase()];
+    if(!p.media || p.tiled || (relCounts.get(p.media) || 0) > 1 || (uses.get(p.media) || 0) > 1){ shared++; continue; }
+    if(!mime){ unsupported++; continue; }
+    try{
+      const src = await zip.file(p.media).async("uint8array");
+      const out = await cropPictureBytes(src, mime, p.sides);
+      if(!out){ unsupported++; continue; }
+      zip.file(p.media, out);
+      p.srcRect.parentNode.removeChild(p.srcRect);
+      touched.set(p.part, p.doc);
+      done++;
+    }catch(e){ unsupported++; }
+  }
+  for(const [part, doc] of touched) zip.file(part, serializeXml(doc));
+  const left = shared + unsupported;
+  if(left) rec.deepPartial.add("croppedImages");
+  const note = cropLeftNote(shared, unsupported);
+  if(done) info.push("Cropped " + done + " picture" + (done > 1 ? "s" : "") + " down to the visible area" +
+    (left ? "; " + left + " left untouched (" + note + ") — crop " + (left > 1 ? "those" : "that one") + " in the Office app" : ""));
+  else info.push("Cropped pictures left untouched (" + note +
+    ") — remove the cropped areas in the Office app (Picture Format → Compress Pictures)");
 }
 /* ==DEEP:END== */
 
@@ -1443,6 +1980,10 @@ async function analyzeOoxml(rec, buf){
   if(rec.ext === "docx") await deepScanDocx(zip, rec);
   else if(rec.ext === "pptx") await deepScanPptx(zip, rec);
   else if(rec.ext === "xlsx") await deepScanXlsx(zip, rec);
+  await scanCroppedPics(zip, rec);
+  await scanPrinterSettings(zip, rec);
+  await scanCustomXml(zip, rec);
+  if(rec.ext === "xlsx") await scanXlsxWorkbook(zip, rec);
 }
 
 const CLEAN_CORE =
@@ -1475,6 +2016,8 @@ async function cleanOoxmlMeta(zip, rec){
     zip.file("docProps/app.xml", new XMLSerializer().serializeToString(app));
   }
 
+  if(rec.ext === "xlsx") await cleanXlsxWorkbook(zip);
+
   if(rec.thumbPath){
     zip.remove(rec.thumbPath);
     const relsFile = zip.file("_rels/.rels");
@@ -1496,12 +2039,17 @@ async function deepCleanOoxml(zip, rec){
   if(rec.ext === "docx") await deepCleanDocx(zip, rec, rec.deepApplied);
   else if(rec.ext === "pptx") await deepCleanPptx(zip, rec, rec.deepApplied);
   else if(rec.ext === "xlsx") await deepCleanXlsx(zip, rec, rec.deepApplied);
+  // Run last, so they read the parts the format-specific cleaners just rewrote.
+  if(rec.deepSelected.has("croppedImages")) await deepCleanCrops(zip, rec, rec.deepApplied);
+  if(rec.deepSelected.has("printerSettings")) await dropPrinterSettings(zip, rec.deepApplied);
+  if(rec.deepSelected.has("customXml")) await dropCustomXml(zip, rec.deepApplied);
 }
 
 async function cleanOoxml(rec){
   let zip = rec.zip;
   await cleanOoxmlMeta(zip, rec);
   rec.deepApplied = [];
+  rec.deepPartial = new Set();
   rec.deepFailed = false;
 
   // Deep (content-level) removal — opt-in and Pro. If anything throws, the file
@@ -1515,6 +2063,7 @@ async function cleanOoxml(rec){
       rec.zip = zip;
       await cleanOoxmlMeta(zip, rec);
       rec.deepApplied = [];
+      rec.deepPartial = new Set(rec.deepSelected);   // asked for, none of it applied
       rec.deepFailed = true;
       if(rec.warnings.indexOf(DEEP_FAIL_WARN) === -1) rec.warnings.push(DEEP_FAIL_WARN);
     }
@@ -1582,7 +2131,124 @@ async function analyzeOdf(rec, buf){
     rec.thumbPath = "Thumbnails/thumbnail.png";
     rec.fields.push({ label: "Preview thumbnail", value: "embedded image of page 1", leak: true });
   }
+  await scanOdfCrops(zip, rec);
 }
+
+/* ---- Cropped pictures in OpenDocument ----
+   Same leak as in Office, expressed the other way round: the crop is not on the
+   picture but on the graphic style a <draw:frame> points at, as
+   fo:clip="rect(top right bottom left)", and the whole picture stays in
+   Pictures/. The clip lengths are absolute, so the original size is the frame
+   plus what was trimmed off each side — which is what turns them into the same
+   per-side fractions the Office path already works in. */
+const ODF_UNITS = { cm:1, mm:0.1, in:2.54, pt:2.54/72, pc:2.54/6, px:2.54/96 };
+function odfLen(v){
+  const m = /^\s*(-?[\d.]+)\s*(cm|mm|in|pt|pc|px)?\s*$/.exec(v || "");
+  if(!m) return null;
+  const n = parseFloat(m[1]);
+  return isNaN(n) ? null : n * (ODF_UNITS[m[2]] || 1);
+}
+function parseOdfClip(v){
+  const m = /^\s*rect\s*\(([^)]*)\)\s*$/i.exec(v || "");
+  if(!m) return null;
+  const parts = m[1].split(/[,\s]+/).filter(Boolean);
+  if(parts.length !== 4) return null;
+  const nums = parts.map(p => /^auto$/i.test(p) ? 0 : odfLen(p));
+  if(nums.some(x => x == null)) return null;
+  const [t, r, b, l] = nums;
+  if(t <= 0 && r <= 0 && b <= 0 && l <= 0) return null;     // nothing hidden (or an inset)
+  return { t: Math.max(0, t), r: Math.max(0, r), b: Math.max(0, b), l: Math.max(0, l) };
+}
+// Clip lengths + frame size -> the same 1/1000-of-a-percent sides as DrawingML.
+function odfSides(rect, frameW, frameH){
+  const fullW = frameW + rect.l + rect.r, fullH = frameH + rect.t + rect.b;
+  if(!(fullW > 0) || !(fullH > 0)) return null;
+  return { l: Math.round(rect.l / fullW * 100000), r: Math.round(rect.r / fullW * 100000),
+           t: Math.round(rect.t / fullH * 100000), b: Math.round(rect.b / fullH * 100000) };
+}
+// Graphic styles that carry a crop, by style name. Styles live in either part.
+async function odfCropStyles(zip){
+  const map = new Map();
+  for(const part of ["content.xml", "styles.xml"]){
+    const doc = await partDoc(zip, part);
+    if(!doc) continue;
+    for(const st of allLocal(doc, "style")){
+      const name = attrLocal(st, "name");
+      if(!name) continue;
+      for(const gp of allWithin(st, "graphic-properties")){
+        const rect = parseOdfClip(attrLocal(gp, "clip"));
+        if(rect) map.set(name, { rect, part, doc, gp });
+      }
+    }
+  }
+  return map;
+}
+async function findOdfCrops(zip){
+  const pics = [], styleUse = new Map(), imageUse = new Map();
+  const styles = await odfCropStyles(zip);
+  const doc = await partDoc(zip, "content.xml");
+  if(!doc) return { pics, styles, styleUse, imageUse };
+  for(const frame of allLocal(doc, "frame")){
+    const styleName = attrLocal(frame, "style-name");
+    if(styleName) styleUse.set(styleName, (styleUse.get(styleName) || 0) + 1);
+    let href = "";
+    for(const img of allWithin(frame, "image")){
+      href = attrLocal(img, "href").replace(/^\.\//, "");
+      if(href) break;
+    }
+    if(href) imageUse.set(href, (imageUse.get(href) || 0) + 1);
+    const st = styles.get(styleName);
+    if(!st || !href) continue;
+    pics.push({ href, styleName, st,
+      sides: odfSides(st.rect, odfLen(attrLocal(frame, "width")), odfLen(attrLocal(frame, "height"))) });
+  }
+  return { pics, styles, styleUse, imageUse, doc };
+}
+async function scanOdfCrops(zip, rec){
+  const { pics } = await findOdfCrops(zip);
+  if(!pics.length) return;
+  let worst = 0;
+  for(const p of pics) if(p.sides) worst = Math.max(worst, hiddenShare(p.sides));
+  rec.fields.push({ label: "Cropped pictures",
+    value: pics.length + " cropped picture" + (pics.length > 1 ? "s" : "") +
+      " — the cropped-away parts are still stored in full" +
+      (worst > 0 ? " (up to " + Math.round(worst * 100) + "% of a picture is hidden, not removed)" : ""),
+    leak:true, deep:"croppedImages" });
+}
+async function deepCleanOdfCrops(zip, rec, info){
+  const { pics, styleUse, imageUse, doc } = await findOdfCrops(zip);
+  if(!pics.length) return;
+  const touched = new Map();
+  let done = 0, shared = 0, unsupported = 0;
+  for(const p of pics){
+    const mime = CROP_MIME[(p.href.split(".").pop() || "").toLowerCase()];
+    const file = zip.file(p.href);
+    if((styleUse.get(p.styleName) || 0) > 1 || (imageUse.get(p.href) || 0) > 1){ shared++; continue; }
+    if(!mime || !p.sides || !file){ unsupported++; continue; }
+    try{
+      const out = await cropPictureBytes(await file.async("uint8array"), mime, p.sides);
+      if(!out){ unsupported++; continue; }
+      zip.file(p.href, out);
+      for(const at of [].slice.call(p.st.gp.attributes))
+        if(at.localName === "clip") p.st.gp.removeAttributeNode(at);
+      touched.set(p.st.part, p.st.doc);
+      done++;
+    }catch(e){ unsupported++; }
+  }
+  // Only the style parts are written back: `doc` here is a second parse of
+  // content.xml used to read frames, and writing it would undo the edits made
+  // to the style DOM when both live in that same part.
+  for(const [part, d] of touched) zip.file(part, serializeXml(d));
+  const left = shared + unsupported;
+  if(left) rec.deepPartial.add("croppedImages");
+  const note = cropLeftNote(shared, unsupported);
+  if(done) info.push("Cropped " + done + " picture" + (done > 1 ? "s" : "") + " down to the visible area" +
+    (left ? "; " + left + " left untouched (" + note + ")" : ""));
+  else info.push("Cropped pictures left untouched (" + note +
+    ") — remove the cropped areas in LibreOffice (right-click the picture → Compress)");
+}
+
+const ODF_DEEP_FAIL_WARN = "Deep clean couldn't be applied to this file safely, so only standard metadata was removed. The cropped-away parts of pictures may remain \u2014 remove them in LibreOffice (right-click the picture \u2192 Compress) before sending.";
 
 const CLEAN_ODF_META =
 '<?xml version="1.0" encoding="UTF-8"?>' +
@@ -1590,8 +2256,7 @@ const CLEAN_ODF_META =
 'xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" ' +
 'xmlns:dc="http://purl.org/dc/elements/1.1/" office:version="1.2"><office:meta/></office:document-meta>';
 
-async function cleanOdf(rec){
-  const zip = rec.zip;
+async function cleanOdfMeta(zip, rec){
   if(zip.file("meta.xml")) zip.file("meta.xml", CLEAN_ODF_META);
   if(rec.thumbPath) zip.remove(rec.thumbPath);
 
@@ -1607,6 +2272,31 @@ async function cleanOdf(rec){
       if(changed) zip.file("META-INF/manifest.xml", serializeXml(doc));
     }
   }
+}
+
+async function cleanOdf(rec){
+  let zip = rec.zip;
+  await cleanOdfMeta(zip, rec);
+  rec.deepApplied = [];
+  rec.deepPartial = new Set();
+  rec.deepFailed = false;
+
+  // Same contract as the OOXML path: if a content-level removal throws, rebuild
+  // a metadata-only clean from the original bytes rather than hand over a
+  // package with dangling references.
+  if(rec.deepSelected && rec.deepSelected.has("croppedImages")){
+    try{
+      await deepCleanOdfCrops(zip, rec, rec.deepApplied);
+    }catch(e){
+      zip = await JSZip.loadAsync(rec.buffer);
+      rec.zip = zip;
+      await cleanOdfMeta(zip, rec);
+      rec.deepApplied = [];
+      rec.deepPartial = new Set(rec.deepSelected);
+      rec.deepFailed = true;
+      if(rec.warnings.indexOf(ODF_DEEP_FAIL_WARN) === -1) rec.warnings.push(ODF_DEEP_FAIL_WARN);
+    }
+  }
 
   // ODF requires the 'mimetype' entry to be first and STORED (uncompressed);
   // re-set it in place with STORE so a re-zip doesn't deflate it.
@@ -1618,12 +2308,437 @@ async function cleanOdf(rec){
 }
 
 /* ---------------- PDF ---------------- */
+
+/* A PDF that was saved incrementally (Acrobat's plain "Save", digital signing,
+   most form fillers) keeps every earlier revision inside the same file: the new
+   objects are appended and the old ones are simply no longer referenced. Text
+   under a redaction box, a deleted page, a replaced logo — all still there, and
+   any parser that walks the file linearly can read them back.
+   pdf-lib parses every object it finds, including those orphans, and writes
+   them back out on save(), so removing them takes an explicit sweep: keep what
+   the catalog can reach, drop the rest (see dropPdfOrphans). */
+const PDF_EOF = [0x25,0x25,0x45,0x4F,0x46];               // %%EOF
+const PDF_STARTXREF = [0x73,0x74,0x61,0x72,0x74,0x78,0x72,0x65,0x66];            // startxref
+const PDF_LINEARIZED = [0x2F,0x4C,0x69,0x6E,0x65,0x61,0x72,0x69,0x7A,0x65,0x64]; // /Linearized
+
+function bytesMatch(u8, pat, at){
+  for(let j = 0; j < pat.length; j++) if(u8[at+j] !== pat[j]) return false;
+  return true;
+}
+function bytesHave(u8, pat, from, to){
+  const lim = Math.min(to === undefined ? u8.length : to, u8.length) - pat.length;
+  for(let i = from || 0; i <= lim; i++) if(bytesMatch(u8, pat, i)) return true;
+  return false;
+}
+// How many times this file has been saved. Every save ends with the same
+// signature — "startxref", the offset, then %%EOF — and an incremental save
+// simply appends another one, keeping everything the previous save wrote.
+// Matching the pair rather than a bare %%EOF keeps an embedded PDF attachment
+// from being counted as a revision of this document. A linearized ("fast web
+// view") file writes a second pair for its front xref without being a second
+// revision, so don't count that one.
+function pdfRevisionMarks(u8){
+  let n = 0;
+  const lim = u8.length - PDF_STARTXREF.length;
+  for(let i = 0; i <= lim; i++){
+    if(u8[i] !== PDF_STARTXREF[0] || !bytesMatch(u8, PDF_STARTXREF, i)) continue;
+    // the byte offset and %%EOF follow within a few bytes of whitespace/digits
+    if(bytesHave(u8, PDF_EOF, i + PDF_STARTXREF.length, i + PDF_STARTXREF.length + 40)) n++;
+    i += PDF_STARTXREF.length - 1;
+  }
+  return n;
+}
+function pdfPriorRevisions(buf){
+  const u8 = new Uint8Array(buf);
+  const marks = pdfRevisionMarks(u8);
+  if(marks < 2) return 0;
+  const linear = bytesHave(u8, PDF_LINEARIZED, 0, 2048);
+  return Math.max(0, marks - (linear ? 2 : 1));
+}
+// Objects the file still carries that nothing reachable from the catalog points
+// at — the residue of earlier revisions. Returns the leftover refs.
+function pdfOrphans(doc){
+  const ctx = doc.context;
+  const seen = new Set(), stack = [];
+  const push = v => { if(v != null) stack.push(v); };
+  push(ctx.trailerInfo.Root); push(ctx.trailerInfo.Info); push(ctx.trailerInfo.Encrypt);
+  while(stack.length){
+    const o = stack.pop();
+    if(o instanceof PDFLib.PDFRef){
+      if(seen.has(o.tag)) continue;
+      seen.add(o.tag);
+      push(ctx.lookup(o));
+    }
+    else if(o instanceof PDFLib.PDFArray){ const a = o.asArray(); for(let i = 0; i < a.length; i++) push(a[i]); }
+    else if(o instanceof PDFLib.PDFDict){ for(const v of o.values()) push(v); }
+    else if(o && o.dict instanceof PDFLib.PDFDict){ for(const v of o.dict.values()) push(v); }  // streams
+  }
+  const out = [];
+  for(const [ref] of ctx.enumerateIndirectObjects()) if(!seen.has(ref.tag)) out.push(ref);
+  return out;
+}
+/* A digital signature covers the exact bytes of the file — the signature
+   dictionary records the byte ranges it signs. Any metadata change rewrites
+   those bytes, so the signature stops validating, and a recipient sees a
+   BROKEN signature, which reads worse than no signature at all. Barecopy
+   can't avoid that (the metadata sits inside the signed bytes), so it says so
+   before you clean instead of handing back a quietly invalidated file. */
+const PDF_SIGNED_WARN = "This PDF is digitally signed. Removing metadata rewrites the file, so the signature can no longer validate — send the signed original if the signature is the point, or sign the clean copy again.";
+
+function pdfText(v){
+  try{
+    if(v && typeof v.decodeText === "function") return v.decodeText().trim();
+    if(v && typeof v.asString === "function") return v.asString().trim();
+  }catch(e){}
+  return "";
+}
+// PDF date syntax: D:YYYYMMDDHHmmSSOHH'mm' (everything after the year optional).
+function pdfDate(v){
+  const s = pdfText(v).replace(/^D:/, "");
+  const m = /^(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?(?:([+-])(\d{2})'?(\d{2})?)?/.exec(s);
+  if(!m) return "";
+  let ms = Date.UTC(+m[1], (+m[2] || 1) - 1, +m[3] || 1, +m[4] || 0, +m[5] || 0, +m[6] || 0);
+  if(m[7]){                                   // shift the local time back to UTC
+    const off = ((+m[8] || 0) * 60 + (+m[9] || 0)) * 60000;
+    ms += (m[7] === "+" ? -off : off);
+  }
+  const d = new Date(ms);
+  return isNaN(d) ? "" : fmtDate(d);
+}
+// Walk the AcroForm field tree, inheriting /FT down through /Kids — form
+// fields, signatures included, are often nested under a parent field.
+function walkAcroFields(doc, visit){
+  let fields;
+  try{
+    const acro = doc.catalog.lookup(PDFLib.PDFName.of("AcroForm"), PDFLib.PDFDict);
+    if(acro) fields = acro.lookup(PDFLib.PDFName.of("Fields"), PDFLib.PDFArray);
+  }catch(e){}
+  if(!fields) return;
+  const seen = new Set();
+  const walk = (arr, inherited, depth) => {
+    if(depth > 8) return;
+    for(let i = 0; i < arr.size(); i++){
+      let f;
+      try{ f = arr.lookup(i, PDFLib.PDFDict); }catch(e){ continue; }
+      if(!f || seen.has(f)) continue;
+      seen.add(f);
+      let ft = inherited;
+      try{ const t = f.lookup(PDFLib.PDFName.of("FT")); if(t) ft = String(t); }catch(e){}
+      visit(f, ft);
+      let kids = null;
+      try{ kids = f.lookup(PDFLib.PDFName.of("Kids"), PDFLib.PDFArray); }catch(e){}
+      if(kids) walk(kids, ft, depth + 1);
+    }
+  };
+  try{ walk(fields, "", 0); }catch(e){}
+}
+function pdfSignatures(doc){
+  const sigs = [];
+  walkAcroFields(doc, (f, ft) => {
+    if(ft !== "/Sig") return;
+    let v = null;
+    try{ v = f.lookup(PDFLib.PDFName.of("V"), PDFLib.PDFDict); }catch(e){}
+    if(!v) return;
+    const at = k => { try{ return v.lookup(PDFLib.PDFName.of(k)); }catch(e){ return null; } };
+    sigs.push({ name: pdfText(at("Name")), date: pdfDate(at("M")),
+      reason: pdfText(at("Reason")), location: pdfText(at("Location")) });
+  });
+  return sigs;
+}
+// Answers held as form data rather than page content. A filled form showing its
+// values is not a leak — the recipient can see them anyway — but a field the
+// form keeps hidden is exactly that.
+function pdfFormValues(doc){
+  let filled = 0, hidden = 0;
+  const hiddenNames = [];
+  walkAcroFields(doc, (f, ft) => {
+    if(!ft || ft === "/Sig") return;
+    let v = null;
+    try{ v = f.lookup(PDFLib.PDFName.of("V")); }catch(e){}
+    if(v == null) return;
+    const val = (v instanceof PDFLib.PDFName) ? String(v) : pdfText(v);
+    if(!val || val === "/Off") return;
+    filled++;
+    let flags = 0;
+    try{
+      const fl = f.lookup(PDFLib.PDFName.of("F"));
+      if(fl && typeof fl.asNumber === "function") flags = fl.asNumber();
+    }catch(e){}
+    if(flags & 2){                                   // bit 2: Hidden
+      hidden++;
+      const t = pdfText(f.lookup(PDFLib.PDFName.of("T")));
+      if(t) hiddenNames.push(t);
+    }
+  });
+  return { filled, hidden, hiddenNames };
+}
+
+/* Annotations: everything drawn on a page that is not the page. Sticky notes,
+   highlights, ink scribbles and stamps each carry the author (/T), the comment
+   text (/Contents) and a timestamp, and they survive printing to PDF as often
+   as not. Two subtypes are deliberately left alone by the remover:
+   Link (navigation, not a comment) and Widget (the form itself). A third,
+   Redact, is never touched for a stronger reason — a redaction mark that has
+   not been applied means the text under the black box is still in the file, and
+   deleting the mark would remove the warning while leaving the secret. */
+const PDF_MARKUP = ["/Text","/FreeText","/Line","/Square","/Circle","/Polygon","/PolyLine","/Highlight",
+  "/Underline","/Squiggly","/StrikeOut","/Stamp","/Caret","/Ink","/FileAttachment","/Sound","/Movie"];
+
+function pdfAnnotSubtype(a){
+  try{ return String(a.lookup(PDFLib.PDFName.of("Subtype")) || ""); }catch(e){ return ""; }
+}
+function pdfPageAnnots(page){
+  try{ return page.node.lookup(PDFLib.PDFName.of("Annots"), PDFLib.PDFArray) || null; }catch(e){ return null; }
+}
+function pdfAnnotScan(doc){
+  const res = { markup: 0, withText: 0, redact: 0, authors: new Set(), kinds: new Set() };
+  for(const page of doc.getPages()){
+    const annots = pdfPageAnnots(page);
+    if(!annots) continue;
+    for(let i = 0; i < annots.size(); i++){
+      let a = null;
+      try{ a = annots.lookup(i, PDFLib.PDFDict); }catch(e){}
+      if(!a) continue;
+      const sub = pdfAnnotSubtype(a);
+      if(sub === "/Redact"){ res.redact++; continue; }
+      if(PDF_MARKUP.indexOf(sub) === -1) continue;
+      res.markup++;
+      res.kinds.add(sub.slice(1));
+      const who = pdfText(a.lookup(PDFLib.PDFName.of("T")));
+      if(who) res.authors.add(who);
+      if(pdfText(a.lookup(PDFLib.PDFName.of("Contents")))) res.withText++;
+    }
+  }
+  return res;
+}
+
+// Whole files carried inside the PDF: the catalog's EmbeddedFiles name tree
+// (Acrobat's "Attachments" pane) and any FileAttachment annotation.
+function pdfNameTreeSpecs(node, out, depth){
+  if(!node || depth > 8) return;
+  let names = null, kids = null;
+  try{ names = node.lookup(PDFLib.PDFName.of("Names"), PDFLib.PDFArray); }catch(e){}
+  if(names) for(let i = 0; i + 1 < names.size(); i += 2){
+    try{ const spec = names.lookup(i + 1, PDFLib.PDFDict); if(spec) out.push(spec); }catch(e){}
+  }
+  try{ kids = node.lookup(PDFLib.PDFName.of("Kids"), PDFLib.PDFArray); }catch(e){}
+  if(kids) for(let i = 0; i < kids.size(); i++){
+    let k = null;
+    try{ k = kids.lookup(i, PDFLib.PDFDict); }catch(e){}
+    pdfNameTreeSpecs(k, out, depth + 1);
+  }
+}
+function pdfFileSpecInfo(spec){
+  const at = k => { try{ return spec.lookup(PDFLib.PDFName.of(k)); }catch(e){ return null; } };
+  const name = pdfText(at("UF")) || pdfText(at("F")) || "unnamed file";
+  let size = 0;
+  try{
+    const ef = spec.lookup(PDFLib.PDFName.of("EF"), PDFLib.PDFDict);
+    const stream = ef && ef.lookup(PDFLib.PDFName.of("F"));
+    if(stream && stream.dict){
+      const num = k => {
+        const n = stream.dict.lookup(PDFLib.PDFName.of(k));
+        return n && typeof n.asNumber === "function" ? n.asNumber() : 0;
+      };
+      const params = stream.dict.lookup(PDFLib.PDFName.of("Params"), PDFLib.PDFDict);
+      const sz = params && params.lookup(PDFLib.PDFName.of("Size"));
+      size = (sz && typeof sz.asNumber === "function") ? sz.asNumber() : num("Length");
+    }
+  }catch(e){}
+  return { name, size };
+}
+function pdfEmbeddedFiles(doc){
+  const specs = [];
+  try{
+    const names = doc.catalog.lookup(PDFLib.PDFName.of("Names"), PDFLib.PDFDict);
+    const ef = names && names.lookup(PDFLib.PDFName.of("EmbeddedFiles"), PDFLib.PDFDict);
+    if(ef) pdfNameTreeSpecs(ef, specs, 0);
+  }catch(e){}
+  for(const page of doc.getPages()){
+    const annots = pdfPageAnnots(page);
+    if(!annots) continue;
+    for(let i = 0; i < annots.size(); i++){
+      let a = null;
+      try{ a = annots.lookup(i, PDFLib.PDFDict); }catch(e){}
+      if(!a || pdfAnnotSubtype(a) !== "/FileAttachment") continue;
+      try{ const fs = a.lookup(PDFLib.PDFName.of("FS"), PDFLib.PDFDict); if(fs) specs.push(fs); }catch(e){}
+    }
+  }
+  return specs.map(pdfFileSpecInfo);
+}
+
+/* A link does not have to point at the web. /Launch and /GoToR actions, and
+   file: URIs, point at a path on the machine the PDF was made on — the same
+   leak an Excel external link carries: the drive letter, the share, the folder
+   tree, often a user name. Detection only: the link is page content the author
+   put there, and a recipient seeing a dead link is better than Barecopy
+   silently rewriting the document. */
+function pdfLocalLinks(doc){
+  const paths = new Set();
+  const spec = fs => {
+    if(!fs) return "";
+    if(typeof fs.lookup !== "function") return pdfText(fs);
+    const at = k => { try{ return fs.lookup(PDFLib.PDFName.of(k)); }catch(e){ return null; } };
+    return pdfText(at("UF")) || pdfText(at("F")) || "";
+  };
+  for(const page of doc.getPages()){
+    const annots = pdfPageAnnots(page);
+    if(!annots) continue;
+    for(let i = 0; i < annots.size(); i++){
+      let a = null;
+      try{ a = annots.lookup(i, PDFLib.PDFDict); }catch(e){}
+      if(!a) continue;
+      let act = null;
+      try{ act = a.lookup(PDFLib.PDFName.of("A"), PDFLib.PDFDict); }catch(e){}
+      if(!act) continue;
+      let kind = "";
+      try{ kind = String(act.lookup(PDFLib.PDFName.of("S")) || ""); }catch(e){}
+      if(kind === "/URI"){
+        let uri = "";
+        try{ uri = pdfText(act.lookup(PDFLib.PDFName.of("URI"))); }catch(e){}
+        if(/^file:/i.test(uri)) paths.add(uri.replace(/^file:\/{2,}/i, ""));
+      }else if(kind === "/Launch" || kind === "/GoToR"){
+        let p = "";
+        try{ p = spec(act.lookup(PDFLib.PDFName.of("F"))); }catch(e){}
+        if(p) paths.add(p);
+      }
+    }
+  }
+  return [...paths];
+}
+
+function dropPdfAnnots(doc){
+  let removed = 0;
+  for(const page of doc.getPages()){
+    const annots = pdfPageAnnots(page);
+    if(!annots) continue;
+    for(let i = annots.size() - 1; i >= 0; i--){
+      let a = null;
+      try{ a = annots.lookup(i, PDFLib.PDFDict); }catch(e){}
+      if(!a || PDF_MARKUP.indexOf(pdfAnnotSubtype(a)) === -1) continue;
+      annots.remove(i);
+      removed++;
+    }
+    try{ if(annots.size() === 0) page.node.delete(PDFLib.PDFName.of("Annots")); }catch(e){}
+  }
+  return removed;
+}
+function dropPdfAttachments(doc){
+  let removed = 0;
+  try{
+    const names = doc.catalog.lookup(PDFLib.PDFName.of("Names"), PDFLib.PDFDict);
+    const ef = names && names.lookup(PDFLib.PDFName.of("EmbeddedFiles"), PDFLib.PDFDict);
+    if(ef){
+      const specs = [];
+      pdfNameTreeSpecs(ef, specs, 0);
+      removed += specs.length;
+      names.delete(PDFLib.PDFName.of("EmbeddedFiles"));
+      if(!names.keys().length) doc.catalog.delete(PDFLib.PDFName.of("Names"));
+    }
+  }catch(e){}
+  for(const page of doc.getPages()){
+    const annots = pdfPageAnnots(page);
+    if(annots) for(let i = annots.size() - 1; i >= 0; i--){
+      let a = null;
+      try{ a = annots.lookup(i, PDFLib.PDFDict); }catch(e){}
+      if(!a || pdfAnnotSubtype(a) !== "/FileAttachment") continue;
+      annots.remove(i);
+      removed++;
+    }
+    try{ page.node.delete(PDFLib.PDFName.of("AF")); }catch(e){}   // associated files
+  }
+  try{ doc.catalog.delete(PDFLib.PDFName.of("AF")); }catch(e){}
+  return removed;
+}
+
+// Unlink every signature: the field, its widget annotation on the page, the
+// AcroForm's signature flags and the document permission/validation
+// dictionaries that only exist to serve it. The signature dictionary itself —
+// the one holding the signer's name — is left unreferenced, so the caller must
+// follow this with dropPdfOrphans or the name stays in the file.
+function dropPdfSignatures(doc){
+  let acro = null, fields = null;
+  try{
+    acro = doc.catalog.lookup(PDFLib.PDFName.of("AcroForm"), PDFLib.PDFDict);
+    if(acro) fields = acro.lookup(PDFLib.PDFName.of("Fields"), PDFLib.PDFArray);
+  }catch(e){}
+  if(!fields) return 0;
+
+  const doomed = new Set();          // refs to unlink from the pages
+  let removed = 0;
+  const mark = raw => { if(raw instanceof PDFLib.PDFRef) doomed.add(raw.tag); };
+  const prune = (arr, inherited, depth) => {
+    if(depth > 8) return;
+    for(let i = arr.size() - 1; i >= 0; i--){
+      let f = null;
+      try{ f = arr.lookup(i, PDFLib.PDFDict); }catch(e){}
+      if(!f) continue;
+      let ft = inherited, kids = null;
+      try{ const t = f.lookup(PDFLib.PDFName.of("FT")); if(t) ft = String(t); }catch(e){}
+      try{ kids = f.lookup(PDFLib.PDFName.of("Kids"), PDFLib.PDFArray); }catch(e){}
+      if(ft === "/Sig"){
+        mark(arr.get(i));
+        if(kids) for(let k = 0; k < kids.size(); k++) mark(kids.get(k));
+        arr.remove(i);
+        removed++;
+        continue;
+      }
+      if(kids) prune(kids, ft, depth + 1);
+    }
+  };
+  try{ prune(fields, "", 0); }catch(e){}
+  if(!removed) return 0;
+
+  for(const page of doc.getPages()){
+    let annots = null;
+    try{ annots = page.node.lookup(PDFLib.PDFName.of("Annots"), PDFLib.PDFArray); }catch(e){}
+    if(!annots) continue;
+    for(let i = annots.size() - 1; i >= 0; i--){
+      const r = annots.get(i);
+      if(r instanceof PDFLib.PDFRef && doomed.has(r.tag)) annots.remove(i);
+    }
+  }
+  for(const [holder, key] of [[acro,"SigFlags"], [acro,"DSS"], [doc.catalog,"Perms"], [doc.catalog,"DSS"]]){
+    try{ holder.delete(PDFLib.PDFName.of(key)); }catch(e){}
+  }
+  try{ if(fields.size() === 0) doc.catalog.delete(PDFLib.PDFName.of("AcroForm")); }catch(e){}
+  return removed;
+}
+
+/* Which leftovers could actually carry something identifying. A dictionary, a
+   stream or a string can; a bare number or name cannot — and pdf-lib's writer
+   inlines every stream /Length while still emitting the number object the
+   source file had made indirect, so a plain save leaves unreferenced numbers
+   behind. Counting those would report a file as still dirty immediately after
+   we cleaned it (imagemagick and Ghostscript output hits this every time). */
+function pdfContentOrphans(doc){
+  const ctx = doc.context;
+  return pdfOrphans(doc).filter(ref => {
+    let o = null;
+    try{ o = ctx.lookup(ref); }catch(e){ return false; }
+    if(!o) return false;
+    return o instanceof PDFLib.PDFDict || o instanceof PDFLib.PDFString ||
+      o instanceof PDFLib.PDFHexString || (o.dict instanceof PDFLib.PDFDict);
+  });
+}
+function dropPdfOrphans(doc){
+  const orphans = pdfOrphans(doc);
+  for(const ref of orphans) doc.context.delete(ref);
+  return orphans.length;
+}
+
 async function analyzePdf(rec, buf){
   let doc;
   try{
     doc = await PDFLib.PDFDocument.load(buf, { updateMetadata:false, ignoreEncryption:true });
   }catch(e){
-    throw new Error("This PDF couldn't be opened. If it's password-protected, remove the password first.");
+    // Lesson 2 in CLAUDE.md: say what actually went wrong. Most failures here
+    // are odd exporters and scanners, not encryption — the genuinely encrypted
+    // case is caught below, by isEncrypted.
+    const why = (e && e.message ? String(e.message) : "").replace(/\s+/g, " ").trim();
+    throw new Error("This PDF couldn't be opened" + (why ? ": " + why.slice(0, 180) : ".") +
+      " If it is password-protected, remove the password first; otherwise re-save it " +
+      "(open it and print to PDF) and try that copy.");
   }
   if(doc.isEncrypted){
     throw new Error("This PDF is password-protected — cleaning it would corrupt the file. Open it with the password, save an unlocked copy (Print → Save as PDF works), then drop that copy here.");
@@ -1664,10 +2779,117 @@ async function analyzePdf(rec, buf){
         value:"timestamps on " + lastModPages + " page" + (lastModPages > 1 ? "s" : ""), leak:false });
     }
   }catch(e){}
+  // Digital signatures. Cleaning voids them either way, and the signature
+  // dictionary carries the signer's name, reason and location, so this is a
+  // real finding — removable on opt-in, never silently.
+  try{
+    const sigs = pdfSignatures(doc);
+    if(sigs.length){
+      const who = sigs.map(s => {
+        const bits = [s.name || "unnamed signer"];
+        if(s.date) bits.push(s.date);
+        if(s.reason) bits.push('"' + s.reason + '"');
+        if(s.location) bits.push(s.location);
+        return bits.join(", ");
+      });
+      rec.fields.push({ label: sigs.length > 1 ? "Digital signatures" : "Digital signature",
+        value: who.join(" · ") + " — cleaning rewrites the file, so this signature stops validating",
+        leak:true, deep:"pdfSignature" });
+      if(rec.warnings && rec.warnings.indexOf(PDF_SIGNED_WARN) === -1) rec.warnings.push(PDF_SIGNED_WARN);
+    }
+  }catch(e){}
+  // Annotations, attached files and form data.
+  try{
+    const an = pdfAnnotScan(doc);
+    if(an.markup){
+      rec.fields.push({ label: "Annotations",
+        value: an.markup + " annotation" + (an.markup > 1 ? "s" : "") +
+          " (" + authorList(an.kinds) + ")" +
+          (an.authors.size ? " by " + authorList(an.authors) : "") +
+          (an.withText ? ", " + an.withText + " with comment text" : "") +
+          " — review notes anyone can open in a PDF reader",
+        leak:true, deep:"pdfAnnots" });
+    }
+    if(an.redact){
+      rec.fields.push({ label: "Unapplied redactions",
+        value: an.redact + " redaction mark" + (an.redact > 1 ? "s that were" : " that was") +
+          " never applied — the text under " + (an.redact > 1 ? "those black boxes is" : "that black box is") +
+          " still in the file and can be copied out." +
+          " Apply " + (an.redact > 1 ? "them" : "it") + " in a PDF editor (Acrobat: Redact → Apply);" +
+          " Barecopy leaves the mark" + (an.redact > 1 ? "s" : "") + " alone rather than hide the warning",
+        leak:true, deep:"pdfRedact" });
+    }
+  }catch(e){}
+  try{
+    const links = pdfLocalLinks(doc);
+    if(links.length){
+      rec.fields.push({ label: "Links to local files",
+        value: authorList(new Set(links)) +
+          " — link targets on the machine this PDF was made on; they name drives, shares and folders. Edit or drop them in a PDF editor",
+        leak:true, deep:"pdfLocalLinks" });
+    }
+  }catch(e){}
+  try{
+    const files = pdfEmbeddedFiles(doc);
+    if(files.length){
+      const named = files.map(f => f.name + (f.size ? " (" + fmtSize(f.size) + ")" : ""));
+      rec.fields.push({ label: "Attached files",
+        value: files.length + " file" + (files.length > 1 ? "s" : "") + " carried inside this PDF: " +
+          authorList(new Set(named)) + " — they open straight from the attachments pane",
+        leak:true, deep:"pdfAttachments" });
+    }
+  }catch(e){}
+  try{
+    const fv = pdfFormValues(doc);
+    if(fv.hidden){
+      rec.fields.push({ label: "Hidden form fields",
+        value: fv.hidden + " filled field" + (fv.hidden > 1 ? "s are" : " is") + " marked hidden" +
+          (fv.hiddenNames.length ? " (" + authorList(new Set(fv.hiddenNames)) + ")" : "") +
+          " — the values are in the file but not on the page; flatten the form in a PDF editor to drop them",
+        leak:true, deep:"pdfFormHidden" });
+    }
+    if(fv.filled - fv.hidden > 0){
+      rec.fields.push({ label: "Form data",
+        value: (fv.filled - fv.hidden) + " filled field" + (fv.filled - fv.hidden > 1 ? "s" : "") +
+          " stored as data, not just drawn on the page", leak:false });
+    }
+  }catch(e){}
+  // Earlier revisions left behind by incremental saves (see the note above).
+  try{
+    const prior = pdfPriorRevisions(buf);
+    const orphans = pdfContentOrphans(doc).length;
+    if(prior || orphans){
+      const bits = [];
+      if(prior) bits.push(prior + " earlier revision" + (prior > 1 ? "s" : ""));
+      if(orphans) bits.push(orphans + " leftover object" + (orphans > 1 ? "s" : ""));
+      rec.fields.push({ label:"Earlier revisions",
+        value: bits.join(" · ") + " kept inside the file — text or images deleted in a later save can be recovered",
+        leak:true, deep:"pdfRevisions" });
+    }
+  }catch(e){}
+  // Pages cropped to show less than they contain. The hidden margin is still
+  // full content — anyone can reset the crop and read it. Nothing safe to
+  // remove here (that needs re-rasterising), so this is detection only.
+  try{
+    const cropped = [];
+    for(const page of doc.getPages()){
+      const mb = page.getMediaBox(), cb = page.getCropBox();
+      if(!mb || !cb) continue;
+      if(Math.abs(mb.x - cb.x) > 1 || Math.abs(mb.y - cb.y) > 1 ||
+         Math.abs(mb.width - cb.width) > 1 || Math.abs(mb.height - cb.height) > 1) cropped.push(page);
+    }
+    if(cropped.length){
+      rec.fields.push({ label:"Cropped pages",
+        value: cropped.length + " page" + (cropped.length > 1 ? "s are" : " is") +
+          " cropped — the hidden area is still in the file; re-crop in a PDF editor or print to a new PDF",
+        leak:true, deep:"pdfCrop" });
+    }
+  }catch(e){}
 }
 
-async function cleanPdf(rec){
-  const doc = rec.pdf;
+const PDF_REV_FAIL_WARN = "The deep clean couldn't be applied to this PDF safely, so only its metadata was removed. Earlier revisions and any signature are still in the file — content deleted in an earlier save may remain recoverable.";
+
+function cleanPdfMeta(doc){
   doc.setTitle(""); doc.setAuthor(""); doc.setSubject(""); doc.setKeywords([]);
   doc.setCreator(""); doc.setProducer("");
   const epoch = new Date(0);
@@ -1681,6 +2903,55 @@ async function cleanPdf(rec){
       try{ page.node.delete(PDFLib.PDFName.of("Metadata")); }catch(e){}
     }
   }catch(e){}
+}
+
+async function cleanPdf(rec){
+  // Parse a fresh copy when we can: cleaning mutates the document, and the
+  // orphan sweep is destructive, so re-running it after the user changes the
+  // deep-clean choices must start from the original bytes.
+  let doc = rec.pdf;
+  if(rec.buffer){
+    try{ doc = await PDFLib.PDFDocument.load(rec.buffer, { updateMetadata:false, ignoreEncryption:true }); }
+    catch(e){ doc = rec.pdf; }
+  }
+  rec.deepApplied = [];
+  rec.deepPartial = new Set();
+  cleanPdfMeta(doc);
+
+  // Deep (Pro, opt-in): unlink the void signature, and drop everything the
+  // catalog can't reach so earlier revisions stop travelling with the file. If
+  // anything throws — or leaves the page tree unusable — fall back to a
+  // metadata-only clean rather than hand over a broken PDF.
+  const sel = rec.deepSelected || new Set();
+  const wantsDeep = ["pdfSignature","pdfRevisions","pdfAnnots","pdfAttachments"].some(k => sel.has(k));
+  if(wantsDeep){
+    try{
+      let sigs = 0, annots = 0, files = 0;
+      if(sel.has("pdfSignature")) sigs = dropPdfSignatures(doc);
+      if(sel.has("pdfAnnots")) annots = dropPdfAnnots(doc);
+      if(sel.has("pdfAttachments")) files = dropPdfAttachments(doc);
+      // Unlinking is not deleting: the signature dictionary with the signer's
+      // name, the annotation dictionary with the comment text and the attached
+      // file's stream all stay in the file, readable, until the sweep runs.
+      const dropped = (sigs || annots || files || sel.has("pdfRevisions")) ? dropPdfOrphans(doc) : 0;
+      if(doc.getPageCount() < 1) throw new Error("page tree lost");
+      if(sigs) rec.deepApplied.push("Removed " + sigs + " invalidated signature" + (sigs > 1 ? "s" : "") +
+        " with the signer's name, reason and location");
+      if(annots) rec.deepApplied.push("Removed " + annots + " annotation" + (annots > 1 ? "s" : "") +
+        " with their authors and comment text");
+      if(files) rec.deepApplied.push("Removed " + files + " attached file" + (files > 1 ? "s" : ""));
+      if(sel.has("pdfRevisions")) rec.deepApplied.push(dropped
+        ? "Removed " + dropped + " leftover object" + (dropped > 1 ? "s" : "") + " from earlier revisions"
+        : "Rewrote the file as a single revision");
+    }catch(e){
+      doc = await PDFLib.PDFDocument.load(rec.buffer || await rec.file.arrayBuffer(),
+        { updateMetadata:false, ignoreEncryption:true });
+      cleanPdfMeta(doc);
+      rec.deepApplied = [];
+      rec.deepPartial = new Set(rec.deepSelected);
+      if(rec.warnings.indexOf(PDF_REV_FAIL_WARN) === -1) rec.warnings.push(PDF_REV_FAIL_WARN);
+    }
+  }
   const bytes = await doc.save({ useObjectStreams:false });
   return new Blob([bytes], { type:"application/pdf" });
 }
@@ -2220,7 +3491,17 @@ async function ensureCleanedBlob(rec){
 // or a deep item the user opted into. Deep items left in place on purpose
 // (unchecked, or detection-only like hidden sheets) are NOT failures.
 function wasRemoved(rec, f){
-  return f.leak && f.value && (!f.deep || (rec.deepSelected && rec.deepSelected.has(f.deep)));
+  if(!f.leak || !f.value) return false;
+  if(!f.deep) return true;                                   // standard metadata: always removed
+  if(!(rec.deepSelected && rec.deepSelected.has(f.deep))) return false;   // not asked for
+  // Asked for, but the cleaner could only do part of it (a picture in a format
+  // the browser can't re-save, one shared between shapes). What remains was
+  // left on purpose and explained in deepApplied — it is not a failed clean.
+  return !(rec.deepPartial && rec.deepPartial.has(f.deep));
+}
+// Anything identifying that is still in the file by choice or by limitation.
+function keptOnPurpose(rec, f){
+  return !!(f.leak && f.value && f.deep && !wasRemoved(rec, f));
 }
 async function reScanCleaned(rec){
   if(rec.verify) return rec.verify;
@@ -2238,7 +3519,7 @@ async function reScanCleaned(rec){
     // Only fields we intended to remove count against verification; intentionally
     // kept deep items (e.g. hidden sheets) are reported separately, not as leaks.
     const remaining = probe.fields.filter(f => wasRemoved(rec, f));
-    const kept = probe.fields.filter(f => f.leak && f.value && f.deep && !(rec.deepSelected && rec.deepSelected.has(f.deep)));
+    const kept = probe.fields.filter(f => keptOnPurpose(rec, f));
     rec.verify = { ok: remaining.length === 0, remaining, kept, error: null };
   }catch(e){
     rec.verify = { ok: null, remaining: [], kept: [], error: (e && e.message) || "re-scan failed" };
@@ -2279,14 +3560,23 @@ $cleanAll.addEventListener("click", async () => {
 
 /* ---------------- render ---------------- */
 // Deep-clean options: which content-level removals to offer, in display order.
-// hiddenSheets is intentionally absent — it's detection-only (no safe remover).
+// hiddenSheets and pdfCrop are intentionally absent — they're detection-only
+// (no safe remover; both need a decision inside the app that made the file).
 const DEEP_META = {
   trackedChanges: { label: "Accept &amp; remove tracked changes", note: "Removes revision history. Changes the visible document, like Accept All in Word." },
   comments:       { label: "Remove comments &amp; reviewer names", note: "" },
   notes:          { label: "Remove speaker notes", note: "" },
+  croppedImages:  { label: "Crop pictures to what's visible", note: "Throws away the cropped-off parts for good. The document looks the same; pictures are re-saved, so they're recompressed once." },
+  pivotCache:     { label: "Drop the pivot table's copy of the source data", note: "Same as turning off “Save source data with file” in Excel: the pivot rebuilds from its source on open. If the source sheet is gone, it opens empty." },
+  pdfAnnots:      { label: "Remove annotations & comments", note: "Sticky notes, highlights, ink and stamps, with the author and text behind each. Links and form fields stay; so do unapplied redaction marks." },
+  pdfAttachments: { label: "Remove attached files", note: "Whole files riding inside the PDF, visible in the attachments pane." },
+  pdfRevisions:   { label: "Remove earlier revisions", note: "Drops what previous saves left inside the file. The visible document is unchanged.", def: true },
+  pdfSignature:   { label: "Remove the invalidated signature", note: "Cleaning voids the signature anyway. This drops it along with the signer's name, reason and location, instead of leaving a signature that reads as broken." },
+  printerSettings:{ label: "Remove the saved printer setup", note: "The printer name and its host. Nothing needs it \u2014 Office falls back to the default printer.", def: true },
+  customXml:      { label: "Remove custom XML data", note: "SharePoint / add-in properties travelling with the file. Leave it on if a document-assembly add-in reads this file." },
   rsid:           { label: "Strip revision IDs (rsid)", note: "Invisible editing-session fingerprints. Safe to remove.", def: true }
 };
-const DEEP_ORDER = ["trackedChanges","comments","notes","rsid"];
+const DEEP_ORDER = ["trackedChanges","comments","notes","croppedImages","pivotCache","customXml","pdfAnnots","pdfAttachments","pdfRevisions","pdfSignature","printerSettings","rsid"];
 
 function renderDeepBlock(rec){
   const keys = DEEP_ORDER.filter(k => rec.fields.some(f => f.deep === k));
@@ -2345,8 +3635,7 @@ function renderCard(rec){
     let rows = "";
     rec.fields.forEach(f => {
       const removed = rec.status === "cleaned" && wasRemoved(rec, f);
-      const kept = rec.status === "cleaned" && f.leak && f.value && !!f.deep &&
-        !(rec.deepSelected && rec.deepSelected.has(f.deep));
+      const kept = rec.status === "cleaned" && keptOnPurpose(rec, f);
       rows += '<div class="row' + (f.leak ? ' leak' : '') + (removed ? ' removed' : '') + (kept ? ' kept' : '') + '">' +
         '<span class="k">' + esc(f.label) + '</span>' +
         '<span class="v">' + esc(f.value) + '</span></div>';
@@ -2356,9 +3645,21 @@ function renderCard(rec){
     if(rec.status === "cleaned" && rec.verify){
       if(rec.verify.ok === true && !keptAfter)
         verifyLine = '<div class="verified-badge"><span class="tick">✓</span> Re-scanned after cleaning: 0 identifying fields remain.</div>';
-      else if(rec.verify.ok === true && keptAfter)
+      else if(rec.verify.ok === true && keptAfter){
+        // Three different reasons something can still be there, and each needs
+        // its own sentence: the switch is off, the switch was on but this file
+        // put it out of reach, or there is no switch at all (hidden sheets,
+        // cropped pages) — never point at a button that won't help.
+        const stuck = rec.verify.kept.some(f => rec.deepPartial && rec.deepPartial.has(f.deep));
+        const fixable = rec.verify.kept.some(f => DEEP_META[f.deep] && !(rec.deepPartial && rec.deepPartial.has(f.deep)));
+        const why = stuck
+          ? '. Deep clean couldn\'t finish ' + (keptAfter > 1 ? 'these' : 'this one') + ' in the browser — see the note above'
+          : fixable
+            ? '. Use Deep clean above to remove ' + (keptAfter > 1 ? 'them' : 'it')
+            : '. This is document content — review ' + (keptAfter > 1 ? 'these' : 'it') + ' in the app that made the file';
         verifyLine = '<div class="verified-badge partial"><span class="tick">✓</span> Standard metadata removed &amp; re-scanned. Still in the file: ' +
-          esc(rec.verify.kept.map(f => f.label).join(", ")) + '. Use Deep clean above to remove ' + (keptAfter > 1 ? 'them' : 'it') + '.</div>';
+          esc(rec.verify.kept.map(f => f.label).join(", ")) + why + '.</div>';
+      }
       else if(rec.verify.ok === false)
         verifyLine = '<div class="verified-badge fail"><span class="tick">!</span> Re-scan still found: ' + esc(rec.verify.remaining.map(f => f.label).join(", ")) + '. Please report this file.</div>';
       else
@@ -2403,14 +3704,14 @@ function renderCard(rec){
     cb.addEventListener("change", () => {
       if(!isPro()){
         cb.checked = false;
-        nudgePro("One-click deep clean (tracked changes, comments, notes) is a Pro feature. Detection is free.");
+        nudgePro("One-click deep clean (tracked changes, comments, notes, cropped pictures, earlier PDF revisions) is a Pro feature. Detection is free.");
         return;
       }
       const k = cb.getAttribute("data-deep");
       if(cb.checked) rec.deepSelected.add(k); else rec.deepSelected.delete(k);
       // Selection changed — invalidate the cached clean + its verification so the
       // next download reflects the new choice.
-      rec.cleanedBlob = null; rec.verify = null; rec.deepApplied = [];
+      rec.cleanedBlob = null; rec.verify = null; rec.deepApplied = []; rec.deepPartial = new Set();
       if(rec.status === "cleaned") rec.status = "analyzed";
       renderCard(rec);
     });
@@ -2804,7 +4105,14 @@ try{
   if(typeof window !== "undefined" && window.__BC_ALLOW_TEST){
     window.__BC = { analyzeOoxml, cleanOoxml, deepScanDocx, deepCleanDocx,
       deepScanPptx, deepCleanPptx, deepScanXlsx, deepCleanXlsx,
-      flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved,
+      flattenRevisions, stripRsids, stripCommentRefs, winAnsiSafe, wasRemoved, keptOnPurpose,
+      analyzePdf, cleanPdf, pdfPriorRevisions, pdfOrphans, dropPdfOrphans,
+      pdfSignatures, dropPdfSignatures, scanPivotCaches, scanExternalData, dropPivotCacheData,
+      pdfAnnotScan, dropPdfAnnots, pdfEmbeddedFiles, dropPdfAttachments, pdfFormValues, pdfLocalLinks, pdfContentOrphans,
+      scanOdfCrops, deepCleanOdfCrops, parseOdfClip, odfSides, odfLen,
+      scanPrinterSettings, dropPrinterSettings, scanCustomXml, dropCustomXml, printerDeviceName,
+      scanXlsxWorkbook, cleanXlsxWorkbook,
+      findCroppedPics, scanCroppedPics, deepCleanCrops, hiddenShare, resolveTarget,
       renderCard, refreshBar, setPro, isPro, files,
       analyzeOdf, cleanOdf, analyzeImage, stripGif, gifBlocks,
       analyzeVideo, stripVideo, mp4Boxes,

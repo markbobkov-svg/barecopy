@@ -120,6 +120,15 @@ Deployed on Vercel (static hosting). Payments via Polar (Pro subscription, €4/
   `/lib`, never bundled into the page.)
 - Bump `BC_CONFIG.version` when shipping a user-visible change (and regenerate
   the sample report: `node tools/gen-sample-report.mjs`).
+- Run the tests after touching an analyzer or cleaner: `node tools/test-browser.mjs`.
+  They drive the real page in headless Chromium (everything here depends on
+  DOMParser, canvas, jszip and pdf-lib, so mocking would prove nothing), serve
+  the repo themselves, and reach the internals through the `window.__BC` hook
+  that `index.html` opens only when `window.__BC_ALLOW_TEST` is set first.
+  Playwright is deliberately **not** in `package.json` — it must not ship to the
+  serverless functions; install it globally (`npm i -g playwright && npx
+  playwright install chromium`) and the script finds it. When a real file
+  teaches you something the fixtures did not, add the case.
 - Preserve the client-only guarantee and the security posture in `vercel.json`
   (`X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: no-referrer`, and the
   strict CSP). The CSP's one cross-origin allowance is `frame-src https://polar.sh
