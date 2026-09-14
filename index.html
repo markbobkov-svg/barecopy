@@ -108,11 +108,6 @@
   @keyframes pulseSoft{0%,100%{opacity:1}50%{opacity:.45}}
   /* Keep the header on ONE line at phone widths — no wrap to a second row.
      Tighten padding, gaps, wordmark and the trust-chip so it all fits. */
-  @media (max-width:700px){
-    /* Two nav links don't fit next to the trust chip on a phone; Pricing is the
-       one that has to stay reachable from the header. */
-    .nav-link.nav-hide-sm{display:none}
-  }
   @media (max-width:480px){
     .local-badge .lb-more{display:none}
     .head-in{flex-wrap:nowrap;padding:14px 15px;gap:10px}
@@ -508,7 +503,6 @@
   <div class="wrap head-in">
     <div class="wordmark"><svg width="24" height="30" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V64.75" stroke="currentColor" stroke-width="7"/><circle cx="39" cy="45.25" r="16" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</div>
     <div class="head-right">
-      <a class="nav-link nav-hide-sm" href="#hidden">Hidden content</a>
       <a class="nav-link" href="#pro">Pricing</a>
       <div class="local-badge" aria-label="Runs locally — nothing uploaded" title="All processing happens in this browser tab. You can disconnect from the internet and it still works.">
         <span class="pulse" aria-hidden="true"></span>Runs locally<span class="lb-more"> · nothing uploaded</span>
@@ -624,9 +618,9 @@
       <div class="sample-copy">
         <p>Removing metadata is only half the job when a client, reviewer or court needs to know it was done. Barecopy Pro produces a <strong>verification report</strong>: a PDF listing every field removed from every file, the SHA-256 checksum of each file <em>before and after</em> cleaning, and the result of an automatic re-scan of the cleaned copy.</p>
         <p>The before/after hashes are a chain-of-custody record — the recipient can confirm the exact file that was verified. No other metadata tool produces this.</p>
-        <a class="btn btn-sample" href="/sample-report.pdf?v=e8b6c6ba13" target="_blank" rel="noopener">View a sample report (PDF) →</a>
+        <a class="btn btn-sample" href="/sample-report.pdf?v=25d4ce63ab" target="_blank" rel="noopener">View a sample report (PDF) →</a>
       </div>
-      <a class="sample-shot" href="/sample-report.pdf?v=e8b6c6ba13" target="_blank" rel="noopener" aria-label="Open the sample verification report">
+      <a class="sample-shot" href="/sample-report.pdf?v=25d4ce63ab" target="_blank" rel="noopener" aria-label="Open the sample verification report">
         <img src="/sample-report-preview.png?v=5c7a84260c" alt="Sample Barecopy verification report showing removed fields and SHA-256 hashes before and after" loading="lazy">
       </a>
     </div>
@@ -725,7 +719,7 @@
    this script) is now mostly vestigial: its BARECOPY_CHECKOUT is used only as a
    redirect fallback below. Do not put secrets in this file — it ships to the browser. */
 const BC_CONFIG = {
-  version: "1.14.1",
+  version: "1.14.2",
   freeBatchLimit: 3,
   // Entitlement is server-side now: a session cookie set by /api/confirm after
   // payment, read back on every load via /api/me. No Polar org id or license
