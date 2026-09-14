@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F6F5F0">
+<title>Why a PDF Still Contains the Version You Edited Away (2026) | Barecopy</title>
+<meta name="description" content="Saving a PDF often appends the changes and keeps the version before them inside the same file — deleted pages, replaced text and covered content included. Here is how to check and how to save a copy that carries only one version.">
+<link rel="canonical" href="https://www.barecopy.com/pdf-earlier-version-still-inside.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Why a PDF still contains the version you edited away">
+<meta property="og:description" content="A plain Save in a PDF editor appends changes and keeps the previous version in the same file. How to check what yours carries, and how to save a single-version copy.">
+<meta property="og:url" content="https://www.barecopy.com/pdf-earlier-version-still-inside.html">
+<meta property="og:image" content="https://www.barecopy.com/og.png">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Does a PDF keep previous versions of itself?", "acceptedAnswer": {"@type": "Answer", "text": "Often, yes. Most PDF editors save incrementally: the changes are appended to the end of the file and the previous version is left in place, because that is faster and it is what digital signatures require. Content you deleted or covered in the last edit can still be recovered from the earlier revision inside the same file."}}, {"@type": "Question", "name": "How do I remove earlier revisions from a PDF?", "acceptedAnswer": {"@type": "Answer", "text": "Use Save As rather than Save, which rewrites the file in one piece, or use an optimiser that rewrites the document. Exporting or printing to a new PDF also produces a single-revision file. Barecopy does the same in your browser: it rewrites the PDF as one revision and drops objects nothing refers to any more."}}, {"@type": "Question", "name": "Why do signed PDFs always have earlier revisions?", "acceptedAnswer": {"@type": "Answer", "text": "A signature covers an exact sequence of bytes, so any later change has to be appended rather than rewritten — otherwise the signature would no longer match. That means a signed PDF contains the document as it was when it was signed. It also means that cleaning metadata from a signed PDF invalidates the signature, because the bytes change."}}]}
+</script>
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{
+    --paper:#F6F5F0; --card:#FCFBF6; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE;--divider:rgba(28,36,48,.22);
+    --leak:#C2273A; --leak-bg:#FBEEEF; --leak-line:#EFCBD0;
+    --clean:#1E7F4F; --warn-bg:#FBF3E2; --warn-line:#EBD9AE; --warn:#8A5A00;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 20px}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:baseline;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .head-right{display:flex;align-items:center;gap:12px}
+  .wordmark .wm-div{width:1px;height:29px;background:var(--divider);flex:0 0 auto;transform:translateY(5px)}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  article{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--brand);font-weight:600;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:20ch}
+  h1 .strike{position:relative;white-space:nowrap}
+  h1 .strike::after{content:"";position:absolute;left:-2%;right:-2%;top:54%;height:.13em;background:var(--leak);border-radius:1px;transform:rotate(-1.2deg)}
+  .lead{margin-top:18px;font-size:18px;color:var(--ink-soft)}
+  h2{font-family:var(--brand);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h3{font-family:var(--brand);font-size:17px;font-weight:600;margin:22px 0 4px}
+  p{margin-top:12px}
+  ol,ul{margin:14px 0 0 0;padding-left:22px}
+  li{margin-top:7px}
+  code{font-family:var(--mono);font-size:.9em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
+  .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
+  .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--leak)}
+  .callout h3{margin-top:6px}
+  .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
+  .warnbox{margin-top:18px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;padding:14px 16px;font-size:15px;color:var(--warn)}
+  .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
+  .faq summary{font-weight:600;cursor:pointer;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq details[open] summary::before{content:"–"}
+  .faq p{font-size:15.5px;color:var(--ink-soft)}
+  footer{border-top:1px solid var(--line);margin-top:50px}
+  .foot-in{padding:22px 20px 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<!-- Vercel Web Analytics: anonymous, cookieless page views, same-origin
+     (/_vercel/insights/*), no file data. Loaded only where that endpoint
+     exists (live site / Vercel); skipped on localhost & preview hosts so it
+     doesn't 404 there. See security.html / privacy.html. -->
+<script>(function(){var h=location.hostname;if(h==="localhost"||h==="127.0.0.1"||h===""||h.endsWith(".github.dev")||h.endsWith(".gitpod.io"))return;window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";document.head.appendChild(s);})();</script>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="24" height="30" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V64.75" stroke="currentColor" stroke-width="7"/><circle cx="39" cy="45.25" r="16" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <div class="head-right"><a class="head-cta" href="/">Open the tool</a></div>
+  </div>
+</header>
+
+<main class="wrap">
+<article>
+  <div class="eyebrow">Guide · updated 2026</div>
+  <h1>Your PDF still contains <span class="strike">the version before</span> your edit</h1>
+  <p class="lead">You deleted a page, replaced a paragraph, covered a figure, and saved. In most PDF editors that save did not rewrite the file — it appended the changes to the end and left the previous version sitting in front of them.</p>
+
+  <h2>Why PDFs are saved this way</h2>
+  <p>The format allows <strong>incremental updates</strong>: rather than rewriting the whole document, an editor appends the new objects and a small index pointing at them. It is fast, it is safe against corrupting a large file, and it is required for digital signatures, which have to leave the signed bytes exactly as they were.</p>
+  <p>The side effect is that the file now contains both versions. The reader shows you the latest one. Everything the previous one contained — the page you deleted, the text you replaced, the image you swapped — is still inside, and tools that walk the file rather than render it can read it back.</p>
+
+  <div class="warnbox">This is why "I removed that page before sending" is not always true, and why a file can be noticeably larger than its visible contents suggest. It compounds with covering things up: text you hid under a black box may survive twice over — once under the box, once in the revision before it.</div>
+
+  <h2>How to check what your file carries</h2>
+  <p>A rough signal you can see yourself: a PDF that has been saved once ends with a single <code>%%EOF</code> marker. Each incremental save appends another one. Opening the file in a text editor and counting them gives you a quick answer, though a "fast web view" file adds one legitimately.</p>
+  <p>Signed documents will always show more than one, by design — the revision before the signature is the document as it was signed.</p>
+
+  <h2>How to save a copy with only one version</h2>
+  <ol>
+    <li>Use <strong>Save As</strong> rather than Save in your PDF editor — it rewrites the document in one piece instead of appending.</li>
+    <li>Or run the editor's optimiser (in Acrobat, <code>Save as Other → Optimized PDF</code>), which rebuilds the file.</li>
+    <li>Or export the document again from the application that produced it.</li>
+  </ol>
+  <p>Any of these produces a file with a single revision. Note that all of them also break an existing digital signature — unavoidably, since the signature covers the old bytes.</p>
+
+  <h2>A check before you send, without uploading the file</h2>
+  <p>Barecopy reads the PDF in your browser and reports how many earlier revisions it carries and how many objects are left over from them, alongside annotations, attachments and signatures. The file is never transmitted.</p>
+  <div class="callout">
+    <div class="k">Do it now</div>
+    <h3>See how many versions your PDF is carrying</h3>
+    <p>Drop a PDF on Barecopy. It reports earlier revisions, comments, attached files and signatures, and Pro rewrites the file as a single revision.</p>
+    <a class="btn" href="/">Open Barecopy &rarr;</a>
+  </div>
+
+  <h2>What Barecopy does about it</h2>
+  <p>Detection is free. Removal is a Pro option: Barecopy rewrites the document as one revision and drops every object the catalog can no longer reach, so content from earlier saves stops travelling with the file. The visible document is unchanged.</p>
+  <p>If the PDF is signed, Barecopy says so before you clean it. Removing metadata rewrites the bytes and the signature can no longer validate — so either send the signed original, sign the clean copy again, or let Barecopy drop the void signature along with the signer's name, reason and location rather than leave one that reads as broken.</p>
+
+  <h2>Frequently asked</h2>
+  <div class="faq">
+    <details open>
+      <summary>Does every PDF contain earlier versions?</summary>
+      <p>No — only ones that were saved incrementally at least once, which is what most editors do on a plain Save. A file exported fresh from Word or a browser has a single revision.</p>
+    </details>
+    <details>
+      <summary>Can a recipient actually read the old version?</summary>
+      <p>Not in a normal reader, which shows the latest one. But the bytes are there, and tools that parse the file rather than render it can extract them. Assume anything in the file is readable.</p>
+    </details>
+    <details>
+      <summary>Will removing revisions change how my PDF looks?</summary>
+      <p>No. The current version is what gets written out; the earlier ones are what gets dropped. What does change is that a digital signature, if there is one, stops validating — that is inherent to changing the bytes at all.</p>
+    </details>
+  </div>
+  <div class="more" style="margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px">
+    <div style="font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)">More guides</div>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/pdf-redaction-black-box-not-applied.html">When a black box in a PDF isn't a redaction &rarr;</a>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/word-to-pdf-metadata.html">What metadata survives when Word exports a PDF &rarr;</a>
+  </div>
+</article>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — clean documents before you send them.</span>
+    <span><a href="/">Home</a> · <a href="/privacy.html">Privacy</a> &middot; <a href="/contact.html">Contact</a></span>
+  </div>
+</footer>
+</body>
+</html>
