@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F6F5F0">
+<title>Why a Cropped Picture in Word Still Contains the Original (2026) | Barecopy</title>
+<meta name="description" content="Cropping a picture in Word, Excel or PowerPoint only changes how much of it is shown — the whole original image stays in the file and can be dragged back out. Here is how to check and how to remove it for good.">
+<link rel="canonical" href="https://www.barecopy.com/cropped-image-still-in-file.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A cropped picture in Word still contains the original">
+<meta property="og:description" content="Office keeps the whole picture behind the crop. Anyone can drag the handles back. Here is how to remove the cropped-away part properly — checked locally, without uploading the file.">
+<meta property="og:url" content="https://www.barecopy.com/cropped-image-still-in-file.html">
+<meta property="og:image" content="https://www.barecopy.com/og.png">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Does cropping a picture in Word delete the cropped part?", "acceptedAnswer": {"@type": "Answer", "text": "No. Cropping in Word, Excel and PowerPoint only changes how much of the picture is displayed. The complete original image stays stored inside the file, and anyone who receives it can select the picture, drag the crop handles outward and see everything you cropped away. To delete it you have to use Picture Format → Compress Pictures and tick 'Delete cropped areas of pictures', or re-save the picture outside the document."}}, {"@type": "Question", "name": "How do I permanently remove the cropped areas of a picture?", "acceptedAnswer": {"@type": "Answer", "text": "In Word, Excel or PowerPoint: select the picture, open the Picture Format tab, click Compress Pictures, tick 'Delete cropped areas of pictures', choose whether to apply it to this picture only or all pictures, then click OK and save the file. In LibreOffice, right-click the picture and choose Compress. Note that this recompresses the image, so do it on the copy you are sending rather than your master document."}}, {"@type": "Question", "name": "How can I check whether a document has cropped pictures?", "acceptedAnswer": {"@type": "Answer", "text": "Drop the file on Barecopy. It reads the crop values stored next to each picture and reports how many pictures are cropped and how much of each one is hidden, without uploading the file anywhere. Removing the cropped-away areas is a Pro option; detection is free."}}]}
+</script>
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{
+    --paper:#F6F5F0; --card:#FCFBF6; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE;--divider:rgba(28,36,48,.22);
+    --leak:#C2273A; --leak-bg:#FBEEEF; --leak-line:#EFCBD0;
+    --clean:#1E7F4F; --warn-bg:#FBF3E2; --warn-line:#EBD9AE; --warn:#8A5A00;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 20px}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:baseline;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .head-right{display:flex;align-items:center;gap:12px}
+  .wordmark .wm-div{width:1px;height:29px;background:var(--divider);flex:0 0 auto;transform:translateY(5px)}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  article{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--brand);font-weight:600;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:20ch}
+  h1 .strike{position:relative;white-space:nowrap}
+  h1 .strike::after{content:"";position:absolute;left:-2%;right:-2%;top:54%;height:.13em;background:var(--leak);border-radius:1px;transform:rotate(-1.2deg)}
+  .lead{margin-top:18px;font-size:18px;color:var(--ink-soft)}
+  h2{font-family:var(--brand);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h3{font-family:var(--brand);font-size:17px;font-weight:600;margin:22px 0 4px}
+  p{margin-top:12px}
+  ol,ul{margin:14px 0 0 0;padding-left:22px}
+  li{margin-top:7px}
+  code{font-family:var(--mono);font-size:.9em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
+  .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
+  .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--leak)}
+  .callout h3{margin-top:6px}
+  .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
+  .warnbox{margin-top:18px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;padding:14px 16px;font-size:15px;color:var(--warn)}
+  .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
+  .faq summary{font-weight:600;cursor:pointer;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq details[open] summary::before{content:"–"}
+  .faq p{font-size:15.5px;color:var(--ink-soft)}
+  footer{border-top:1px solid var(--line);margin-top:50px}
+  .foot-in{padding:22px 20px 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<!-- Vercel Web Analytics: anonymous, cookieless page views, same-origin
+     (/_vercel/insights/*), no file data. Loaded only where that endpoint
+     exists (live site / Vercel); skipped on localhost & preview hosts so it
+     doesn't 404 there. See security.html / privacy.html. -->
+<script>(function(){var h=location.hostname;if(h==="localhost"||h==="127.0.0.1"||h===""||h.endsWith(".github.dev")||h.endsWith(".gitpod.io"))return;window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";document.head.appendChild(s);})();</script>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="24" height="30" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V64.75" stroke="currentColor" stroke-width="7"/><circle cx="39" cy="45.25" r="16" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <div class="head-right"><a class="head-cta" href="/">Open the tool</a></div>
+  </div>
+</header>
+
+<main class="wrap">
+<article>
+  <div class="eyebrow">Guide · updated 2026</div>
+  <h1>A cropped picture still contains <span class="strike">everything you cropped</span></h1>
+  <p class="lead">You pasted a screenshot into a report and cropped it down to hide the column next to it. On screen that column is gone. Inside the file it is still there — complete, at full resolution, one drag of a handle away.</p>
+
+  <h2>What cropping actually does</h2>
+  <p>When you crop a picture in Word, Excel or PowerPoint, Office does not touch the picture. It stores the original image in the file exactly as you inserted it, and writes four numbers next to it saying how much to trim off each side when drawing it. Those four numbers are the crop.</p>
+  <p>The consequence is simple: the recipient gets the whole picture. They do not need a special tool or any technical knowledge. They click the picture, choose Crop, drag a handle outwards, and whatever you cropped away reappears. OpenDocument files work the same way, with the crop recorded on the picture's style instead.</p>
+
+  <div class="warnbox">This is one of the most common accidental disclosures in office documents, because the person doing the cropping is usually cropping <em>precisely</em> to hide something — a salary column, a name, another client's logo, the rest of a dashboard. The cropping feels like deletion. It isn't.</div>
+
+  <h2>How to check a picture you've already cropped</h2>
+  <p>Open the document, click the picture, and on the Picture Format tab choose <code>Crop</code>. Drag a handle outward. If more of the image appears, that part is stored in the file and travels with it.</p>
+  <p>Worth knowing: Word's Document Inspector does not report this. It checks document properties, comments, hidden text and similar, and says nothing about pictures that carry more than they show — so a file can pass the inspector and still hand over the cropped-away half.</p>
+
+  <h2>How to remove the cropped areas for good</h2>
+  <ol>
+    <li>Select the picture in Word, Excel or PowerPoint.</li>
+    <li>On the <code>Picture Format</code> tab, click <code>Compress Pictures</code>.</li>
+    <li>Tick <strong>Delete cropped areas of pictures</strong>.</li>
+    <li>Choose whether it applies to this picture only or to every picture in the file, then click OK.</li>
+    <li>Save. The cropped-away pixels are gone from the saved copy.</li>
+  </ol>
+  <p>In LibreOffice the equivalent is right-clicking the picture and choosing <code>Compress</code>. Either way the picture is re-encoded, so it is worth doing this on the copy you are about to send rather than on the master you keep editing.</p>
+
+  <h2>A faster check, without uploading the file</h2>
+  <p>The file is usually sensitive — that is why you cropped in the first place — so uploading it to an online tool to find out is backwards. Barecopy runs entirely in your browser: drop the document on the page and it reads the crop values stored beside every picture, tells you how many are cropped and how much of each is hidden, and never transmits the file. You can disconnect from the internet after the page loads and it still works.</p>
+  <div class="callout">
+    <div class="k">Do it now</div>
+    <h3>See whether your document is carrying cropped-away pixels</h3>
+    <p>Drop a <code>.docx</code>, <code>.xlsx</code>, <code>.pptx</code> or OpenDocument file on Barecopy. It reports every cropped picture; Pro re-saves each one as only the part you can see.</p>
+    <a class="btn" href="/">Open Barecopy &rarr;</a>
+  </div>
+
+  <h2>What Barecopy will and won't do here</h2>
+  <p>Detection is free and covers Word, Excel, PowerPoint and OpenDocument files. Removing the hidden parts is a Pro option: Barecopy re-saves each cropped picture as exactly the visible rectangle and drops the crop, so the document looks identical while the rest of the image is gone.</p>
+  <p>Two cases it deliberately leaves alone, and says so rather than reporting success. A picture used by more than one shape is skipped, because cropping it once would crop it everywhere it appears. And pictures stored as EMF, WMF or TIFF are skipped, because a browser cannot re-encode those formats — for those, use the Compress Pictures route above.</p>
+
+  <h2>Frequently asked</h2>
+  <div class="faq">
+    <details open>
+      <summary>Does cropping delete the cropped part?</summary>
+      <p>No. It only changes how much of the picture is drawn. The whole original stays in the file, and dragging the crop handles back out reveals it. Deleting it takes Compress Pictures with "Delete cropped areas of pictures" ticked.</p>
+    </details>
+    <details>
+      <summary>Does saving as PDF get rid of it?</summary>
+      <p>Usually yes for the crop itself — a PDF export draws only the visible part. But it is not a guarantee across every exporter and version, and a PDF brings its own hidden content, from earlier revisions to annotations. Check the export rather than assume.</p>
+    </details>
+    <details>
+      <summary>Why doesn't the Document Inspector catch this?</summary>
+      <p>It was built to check document properties, comments, hidden text, ink and similar — not what pictures carry beyond their visible area. A file can pass the inspector with the cropped-away half fully intact.</p>
+    </details>
+  </div>
+  <div class="more" style="margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px">
+    <div style="font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)">More guides</div>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/find-hidden-sheets-excel.html">How to find hidden and very hidden sheets in Excel &rarr;</a>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/check-file-metadata.html">How to check what metadata a file reveals &rarr;</a>
+  </div>
+</article>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — clean documents before you send them.</span>
+    <span><a href="/">Home</a> · <a href="/privacy.html">Privacy</a> &middot; <a href="/contact.html">Contact</a></span>
+  </div>
+</footer>
+</body>
+</html>

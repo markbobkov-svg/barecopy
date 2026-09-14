@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F6F5F0">
+<title>Your Pivot Table Still Has the Sheet You Deleted (2026) | Barecopy</title>
+<meta name="description" content="A pivot table stores its own copy of every source row inside the workbook, so deleting the source sheet does not delete the data. Here is how to check what your file still carries and how to remove it.">
+<link rel="canonical" href="https://www.barecopy.com/pivot-table-keeps-source-data.html">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/app-icons/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Your pivot table still has the sheet you deleted">
+<meta property="og:description" content="A pivot table keeps a full copy of its source rows inside the workbook — deleting the sheet leaves the data behind. How to check and clear it, without uploading the file.">
+<meta property="og:url" content="https://www.barecopy.com/pivot-table-keeps-source-data.html">
+<meta property="og:image" content="https://www.barecopy.com/og.png">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Does deleting the source sheet remove the data from a pivot table?", "acceptedAnswer": {"@type": "Answer", "text": "No. A pivot table does not read the sheet when you open the file — it reads the pivot cache, a full copy of every source row that Excel stores inside the workbook. Deleting the source sheet leaves that copy untouched, and the rows can be read back out of the file or exposed by double-clicking a value in the pivot."}}, {"@type": "Question", "name": "How do I stop Excel saving the source data with the file?", "acceptedAnswer": {"@type": "Answer", "text": "Right-click the pivot table and choose PivotTable Options, open the Data tab and untick 'Save source data with file'. Tick 'Refresh data when opening the file' so the pivot rebuilds from its source, then save. The cached copy is dropped from the saved workbook. If the source sheet is gone, the pivot will open empty — which is the point."}}, {"@type": "Question", "name": "How can I tell whether a workbook carries a pivot cache?", "acceptedAnswer": {"@type": "Answer", "text": "Drop the file on Barecopy. It reports how many rows and columns of source data are stored in the cache and which sheet they came from, without uploading anything. Dropping the cache is a Pro option; detection is free."}}]}
+</script>
+<style>
+  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 600;font-display:swap;src:url(/fonts/space-grotesk-latin.woff2) format('woff2')}
+  :root{
+    --paper:#F6F5F0; --card:#FCFBF6; --ink:#1C2430; --ink-soft:#5B6472;
+    --ink-faint:#8A8F98; --line:#DCD9CF; --line-soft:#E8E6DE;--divider:rgba(28,36,48,.22);
+    --leak:#C2273A; --leak-bg:#FBEEEF; --leak-line:#EFCBD0;
+    --clean:#1E7F4F; --warn-bg:#FBF3E2; --warn-line:#EBD9AE; --warn:#8A5A00;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--brand:"Space Grotesk",var(--sans);
+    --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;justify-content:space-between;padding:16px 20px}
+  .wordmark{font-family:var(--brand);font-weight:600;font-size:20px;display:flex;align-items:baseline;gap:11px;color:var(--ink);text-decoration:none}
+  .wordmark svg{flex:0 0 auto;display:block}
+  .head-right{display:flex;align-items:center;gap:12px}
+  .wordmark .wm-div{width:1px;height:29px;background:var(--divider);flex:0 0 auto;transform:translateY(5px)}
+  .head-cta{font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:6px;padding:8px 14px}
+  article{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--brand);font-weight:600;font-size:clamp(26px,4.6vw,36px);line-height:1.16;letter-spacing:-.015em;margin-top:12px;max-width:20ch}
+  h1 .strike{position:relative;white-space:nowrap}
+  h1 .strike::after{content:"";position:absolute;left:-2%;right:-2%;top:54%;height:.13em;background:var(--leak);border-radius:1px;transform:rotate(-1.2deg)}
+  .lead{margin-top:18px;font-size:18px;color:var(--ink-soft)}
+  h2{font-family:var(--brand);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:40px 0 4px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  h3{font-family:var(--brand);font-size:17px;font-weight:600;margin:22px 0 4px}
+  p{margin-top:12px}
+  ol,ul{margin:14px 0 0 0;padding-left:22px}
+  li{margin-top:7px}
+  code{font-family:var(--mono);font-size:.9em;background:var(--line-soft);border-radius:3px;padding:1px 5px}
+  .callout{margin-top:20px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:20px 22px}
+  .callout .k{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--leak)}
+  .callout h3{margin-top:6px}
+  .callout .btn{display:inline-block;margin-top:14px;font-weight:600;font-size:15px;color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:10px 18px;text-decoration:none}
+  .warnbox{margin-top:18px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;padding:14px 16px;font-size:15px;color:var(--warn)}
+  .faq details{border-top:1px solid var(--line-soft);padding:12px 0}
+  .faq summary{font-weight:600;cursor:pointer;list-style:none}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"+";font-family:var(--mono);margin-right:10px;color:var(--ink-faint)}
+  .faq details[open] summary::before{content:"–"}
+  .faq p{font-size:15.5px;color:var(--ink-soft)}
+  footer{border-top:1px solid var(--line);margin-top:50px}
+  .foot-in{padding:22px 20px 44px;font-size:13.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .foot-in a{color:var(--ink-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<!-- Vercel Web Analytics: anonymous, cookieless page views, same-origin
+     (/_vercel/insights/*), no file data. Loaded only where that endpoint
+     exists (live site / Vercel); skipped on localhost & preview hosts so it
+     doesn't 404 there. See security.html / privacy.html. -->
+<script>(function(){var h=location.hostname;if(h==="localhost"||h==="127.0.0.1"||h===""||h.endsWith(".github.dev")||h.endsWith(".gitpod.io"))return;window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";document.head.appendChild(s);})();</script>
+</head>
+<body>
+<header>
+  <div class="wrap head-in">
+    <a class="wordmark" href="/"><svg width="24" height="30" viewBox="13 7 47 58" fill="none" aria-hidden="true"><path d="M19 11V64.75" stroke="currentColor" stroke-width="7"/><circle cx="39" cy="45.25" r="16" stroke="currentColor" stroke-width="7"/></svg><span class="wm-div" aria-hidden="true"></span>barecopy</a>
+    <div class="head-right"><a class="head-cta" href="/">Open the tool</a></div>
+  </div>
+</header>
+
+<main class="wrap">
+<article>
+  <div class="eyebrow">Guide · updated 2026</div>
+  <h1>Your pivot table keeps <span class="strike">its own copy</span> of the data</h1>
+  <p class="lead">You deleted the sheet with the salaries before sending the workbook. The pivot table built from it still works. That is not a coincidence — it is the warning sign.</p>
+
+  <h2>Why the pivot still works without its sheet</h2>
+  <p>A pivot table does not read the worksheet each time you open the file. It reads the <strong>pivot cache</strong>: a full copy of every source row that Excel stores inside the workbook when the pivot is created. The cache is what makes pivots fast, and it is saved with the file by default.</p>
+  <p>So deleting the source sheet removes the visible tab and leaves the copy in place. Every row you thought you deleted is still in the file. A recipient does not need to go looking for it either — double-clicking any value in a pivot table makes Excel write out the underlying rows for that cell on a new sheet.</p>
+
+  <div class="warnbox">This is the mechanism behind a familiar kind of incident: a summary is shared on purpose, the detail sheet is deleted on purpose, and the detail goes out anyway. Nothing was done wrong at the visible level — the copy simply lives somewhere nobody looks.</div>
+
+  <h2>How to check what your workbook carries</h2>
+  <p>Inside Excel, right-click the pivot table, choose <code>PivotTable Options</code> and open the <code>Data</code> tab. If <strong>Save source data with file</strong> is ticked — it is, by default — the workbook you send contains the cached rows.</p>
+  <p>You can also test it the blunt way: double-click a number in the pivot. If Excel produces a sheet full of the underlying records, those records are in the file.</p>
+
+  <h2>How to remove the cached copy</h2>
+  <ol>
+    <li>Right-click the pivot table and choose <code>PivotTable Options</code>.</li>
+    <li>On the <code>Data</code> tab, untick <strong>Save source data with file</strong>.</li>
+    <li>Tick <strong>Refresh data when opening the file</strong> so the pivot rebuilds itself from its source.</li>
+    <li>Save the workbook.</li>
+  </ol>
+  <p>If the source sheet is still in the file, the pivot refreshes and behaves exactly as before. If you deleted the source, the pivot opens empty — which is the correct outcome when the data was not meant to travel.</p>
+  <p>Two related things worth checking at the same time: external links to other workbooks store cached values from those files, and data connections store server and database names in their connection strings. Both are visible in <code>Data → Queries &amp; Connections</code>.</p>
+
+  <h2>A faster check, without uploading the file</h2>
+  <p>Barecopy reads the workbook in your browser and reports what the pivot cache holds — how many rows and columns, and the name of the sheet they came from, even when that sheet no longer exists. The file is never transmitted; it is read by JavaScript in your own tab.</p>
+  <div class="callout">
+    <div class="k">Do it now</div>
+    <h3>See what your workbook still carries</h3>
+    <p>Drop an <code>.xlsx</code> on Barecopy. It reports the pivot cache, links to other workbooks, data connections and the usual author and company metadata — locally, on your device.</p>
+    <a class="btn" href="/">Open Barecopy &rarr;</a>
+  </div>
+
+  <h2>What Barecopy does about it</h2>
+  <p>Detection is free. Removal is a Pro option, and it does exactly what the Excel setting does: it drops the cached records, switches the pivot definition to save no data, and marks it to refresh from its source on open. The field list stays, so the pivot layout survives.</p>
+  <p>External links and data connections are reported but not cut, on purpose — breaking a link turns the formulas that depend on it into errors. Barecopy shows you the paths and names the Excel command that does it safely.</p>
+
+  <h2>Frequently asked</h2>
+  <div class="faq">
+    <details open>
+      <summary>Does deleting the source sheet delete the data?</summary>
+      <p>No. The pivot cache is a separate copy stored inside the workbook. Deleting the sheet leaves the copy, and double-clicking a pivot value can write those rows back out.</p>
+    </details>
+    <details>
+      <summary>Will dropping the cache break my pivot table?</summary>
+      <p>Not if the source data is still in the workbook — the pivot refreshes on open and looks the same. If the source is gone, the pivot opens empty, because there is nothing left to build it from.</p>
+    </details>
+    <details>
+      <summary>Does the Document Inspector remove pivot caches?</summary>
+      <p>No. Excel's inspector covers document properties, comments, hidden sheets and similar. The cached source data is not on its list.</p>
+    </details>
+  </div>
+  <div class="more" style="margin-top:44px;border-top:1px solid var(--line-soft);padding-top:22px">
+    <div style="font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)">More guides</div>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/find-hidden-sheets-excel.html">How to find hidden and very hidden sheets in Excel &rarr;</a>
+    <a style="display:block;margin-top:10px;color:var(--ink);font-weight:600;text-decoration:none" href="/vs-microsoft-document-inspector.html">Barecopy vs the Microsoft Document Inspector &rarr;</a>
+  </div>
+</article>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Barecopy — clean documents before you send them.</span>
+    <span><a href="/">Home</a> · <a href="/privacy.html">Privacy</a> &middot; <a href="/contact.html">Contact</a></span>
+  </div>
+</footer>
+</body>
+</html>
